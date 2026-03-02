@@ -64,7 +64,7 @@ app.use('/uploads', express.static(path.resolve(uploadDir)))
 app.get('/api/health', (_req, res) => {
   res.json({
     success: true,
-    message: 'Studio Lumière API funcionando correctamente',
+    message: 'Pedro Vargas Fotografía API funcionando correctamente',
     timestamp: new Date().toISOString(),
     env: process.env.NODE_ENV,
   })

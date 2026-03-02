@@ -1,7 +1,7 @@
 {
-  "name": "studio-lumiere-api",
+  "name": "pedro-vargas-fotografia-api",
   "version": "1.0.0",
-  "description": "Backend API para Studio Lumière Photography",
+  "description": "Backend API para Pedro Vargas Fotografía",
   "main": "dist/server.js",
   "type": "commonjs",
   "scripts": {

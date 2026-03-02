@@ -25,7 +25,7 @@ export async function sendContactNotification(data: {
     to: process.env.SMTP_USER,
     subject: `Nueva solicitud de contacto - ${data.service}`,
     html: `
-      <h2>Nueva solicitud de Studio Lumière</h2>
+      <h2>Nueva solicitud de Pedro Vargas Fotografía</h2>
       <p><strong>Nombre:</strong> ${data.name}</p>
       <p><strong>Email:</strong> ${data.email}</p>
       <p><strong>Teléfono:</strong> ${data.phone || 'No proporcionado'}</p>
@@ -47,12 +47,12 @@ export async function sendWelcomeEmail(data: {
   await transporter.sendMail({
     from: process.env.SMTP_FROM,
     to: data.to,
-    subject: 'Bienvenido a Studio Lumière',
+    subject: 'Bienvenido a Pedro Vargas Fotografía',
     html: `
       <h2>¡Bienvenido, ${data.name}!</h2>
-      <p>Tu cuenta ha sido creada exitosamente en Studio Lumière.</p>
+      <p>Tu cuenta ha sido creada exitosamente en Pedro Vargas Fotografía.</p>
       ${data.tempPassword ? `<p>Contraseña temporal: <strong>${data.tempPassword}</strong></p>` : ''}
-      <p>Inicia sesión en: <a href="${process.env.FRONTEND_URL}/login">Studio Lumière</a></p>
+      <p>Inicia sesión en: <a href="${process.env.FRONTEND_URL}/login">Pedro Vargas Fotografía</a></p>
     `,
   })
 }
@@ -69,7 +69,7 @@ export async function sendBookingConfirmation(data: {
   await transporter.sendMail({
     from: process.env.SMTP_FROM,
     to: data.to,
-    subject: 'Confirmación de reserva - Studio Lumière',
+    subject: 'Confirmación de reserva - Pedro Vargas Fotografía',
     html: `
       <h2>¡Tu reserva fue recibida, ${data.name}!</h2>
       <p><strong>Servicio:</strong> ${data.service}</p>

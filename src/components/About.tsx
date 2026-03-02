@@ -84,7 +84,7 @@ export default function About() {
 
             <div className="space-y-5 font-dm text-ivory/55 text-[0.9rem] leading-[1.85] mb-10">
               <p>
-                Soy <strong className="text-ivory font-medium">Miguel Ángel Lumière</strong>, fotógrafo profesional con más de 12 años capturando los momentos más importantes en la vida de las personas. Mi trabajo va más allá de las fotos: es la preservación de emociones.
+                Soy <strong className="text-ivory font-medium">Pedro Vargas</strong>, fotógrafo profesional con más de 12 años capturando los momentos más importantes en la vida de las personas. Mi trabajo va más allá de las fotos: es la preservación de emociones.
               </p>
               <p>
                 Formado en la <em className="text-ivory/70">Academia de Artes Visuales de la UNAM</em> y con estudios en Nueva York bajo la tutoría del maestro Robert Klein, mi estilo fusiona la estética cinematográfica internacional con la calidez de la cultura mexicana.

@@ -31,7 +31,7 @@ const testimonials = [
     gradient: 'from-emerald-900/40 to-emerald-700/20',
   },
   {
-    quote: 'Para nuestra campaña de moda necesitábamos alguien con visión artística. Studio Lumière lo tiene de sobra.',
+    quote: 'Para nuestra campaña de moda necesitábamos alguien con visión artística. Pedro Vargas Fotografía lo tiene de sobra.',
     name: 'Valeria Montoya',
     event: 'Editorial · Moda',
     initials: 'VM',

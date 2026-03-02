@@ -62,7 +62,7 @@ function LoadingScreen() {
     <div className="min-h-screen bg-near-black flex items-center justify-center">
       <div className="text-center">
         <div className="w-10 h-10 border-2 border-gold border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-        <p className="font-cormorant text-ivory/40 text-lg">Studio Lumière</p>
+        <p className="font-cormorant text-ivory/40 text-lg">Pedro Vargas Fotografía</p>
       </div>
     </div>
   )

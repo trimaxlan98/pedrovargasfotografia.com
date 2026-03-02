@@ -34,7 +34,7 @@ export default function Footer() {
             transition={{ duration: 0.7 }}
           >
             <h3 className="font-cormorant italic text-ivory text-3xl font-light mb-4">
-              Studio <span className="not-italic font-semibold">Lumière</span>
+              Pedro <span className="not-italic font-semibold">Vargas</span>
             </h3>
             <p className="font-dm text-ivory/35 text-sm leading-relaxed mb-6 max-w-[280px]">
               Capturamos los momentos que definen tu historia. Fotografía profesional en Ciudad de México y toda la República.
@@ -80,7 +80,7 @@ export default function Footer() {
         {/* Bottom bar */}
         <div className="border-t border-ivory/6 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="font-dm text-ivory/20 text-xs">
-            © 2024 Studio Lumière. Todos los derechos reservados.
+            © 2024 Pedro Vargas Fotografía. Todos los derechos reservados.
           </p>
           <p className="font-dm text-ivory/15 text-xs">
             Fotografía Profesional · Ciudad de México

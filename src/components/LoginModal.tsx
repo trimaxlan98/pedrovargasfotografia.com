@@ -82,7 +82,7 @@ export default function LoginModal({ isOpen, onClose, onSuccess }: LoginModalPro
 
             {/* Logo */}
             <div className="text-center mb-6">
-              <p className="label-caps text-gold text-xs mb-1">Studio Lumière</p>
+              <p className="label-caps text-gold text-xs mb-1">Pedro Vargas Fotografía</p>
               <h2 className="font-cormorant text-2xl text-ivory">
                 {mode === 'login' ? 'Iniciar Sesión' : 'Crear Cuenta'}
               </h2>

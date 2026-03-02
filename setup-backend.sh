@@ -1,9 +1,9 @@
 #!/bin/bash
 # ============================================================
-# Studio Lumière — Setup del Backend
+# Pedro Vargas Fotografía — Setup del Backend
 # ============================================================
 
-echo "🎯 Studio Lumière — Iniciando setup del backend..."
+echo "🎯 Pedro Vargas Fotografía — Iniciando setup del backend..."
 echo ""
 
 # 1. Instalar dependencias del frontend (react-router-dom)

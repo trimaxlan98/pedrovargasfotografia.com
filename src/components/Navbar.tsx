@@ -65,7 +65,7 @@ export default function Navbar() {
             className="flex-shrink-0"
           >
             <span className="font-cormorant italic text-ivory text-xl md:text-2xl font-light tracking-wide">
-              Studio <span className="not-italic font-semibold">Lumière</span>
+              Pedro <span className="not-italic font-semibold">Vargas</span>
             </span>
           </button>
 

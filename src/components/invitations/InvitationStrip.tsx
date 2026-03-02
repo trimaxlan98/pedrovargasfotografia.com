@@ -428,7 +428,7 @@ export default function InvitationStrip({
             className="text-[0.5rem] uppercase tracking-[0.3em]"
             style={{ color: s.textMuted, opacity: 0.45 }}
           >
-            Invitación creada por Studio Lumière
+            Invitación creada por Pedro Vargas Fotografía
           </p>
         </div>
       </section>

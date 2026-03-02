@@ -167,7 +167,7 @@ export default function Hero() {
               {/* Frame overlay */}
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20" />
               <div className="absolute bottom-6 left-6 right-6">
-                <p className="label-caps text-ivory/40 text-[0.6rem]">© Studio Lumière — 2024</p>
+                <p className="label-caps text-ivory/40 text-[0.6rem]">© Pedro Vargas Fotografía — 2024</p>
               </div>
             </div>
           </motion.div>

@@ -120,7 +120,7 @@ export default function AdminDashboard() {
         {/* Logo */}
         <div className="p-6 border-b border-white/5">
           <p className="label-caps text-gold text-xs">Panel Admin</p>
-          <h1 className="font-cormorant text-xl text-ivory mt-1">Studio Lumière</h1>
+          <h1 className="font-cormorant text-xl text-ivory mt-1">Pedro Vargas Fotografía</h1>
           <p className="text-ivory/40 text-xs font-dm mt-1">{user?.email}</p>
         </div>
 

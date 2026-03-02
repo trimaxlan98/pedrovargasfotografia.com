@@ -238,7 +238,7 @@ function InvitePreview({
       >
         <div className="w-12 h-px mt-5" style={{ background: accent, opacity: 0.4 }} />
         <p className="text-[0.5rem] tracking-[0.2em] uppercase mt-3" style={{ color: fg, opacity: 0.3, fontFamily: '"DM Sans", sans-serif' }}>
-          Studio Lumière
+          Pedro Vargas Fotografía
         </p>
       </div>
     </div>
