@@ -1,7 +1,7 @@
-import { useState, useRef } from 'react'
+import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useInView } from './useInView'
-import { Download, MessageCircle, Link, ChevronDown, ArrowRight, Save, Check, ExternalLink, LogIn } from 'lucide-react'
+import { Download, MessageCircle, Link, ChevronDown, ArrowRight, Save, Check, ExternalLink, LogIn, Images } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import api from '../api/client'
 
@@ -119,7 +119,7 @@ function InvitePreview({
     'Cumpleaños': '★',
     'Bautizo': '✝',
     'Graduación': '♦',
-    'Corporativo': '◈',
+    'Corporativo': '◆',
   }
 
   return (
@@ -249,7 +249,7 @@ type SaveState = 'idle' | 'saving' | 'saved'
 
 export default function InvitationBuilder() {
   const { ref, inView } = useInView()
-  const { isAuthenticated, user } = useAuth()
+  const { isAuthenticated } = useAuth()
 
   const [tab, setTab] = useState<Tab>('estilo')
   const [template, setTemplate] = useState<Template>('warm')
@@ -272,7 +272,9 @@ export default function InvitationBuilder() {
   })
 
   const [saveState, setSaveState] = useState<SaveState>('idle')
+  const [savedInvitationId, setSavedInvitationId] = useState<string | null>(null)
   const [savedToken, setSavedToken] = useState<string | null>(null)
+  const [photos, setPhotos] = useState<File[]>([])
   const [saveError, setSaveError] = useState('')
   const [copied, setCopied] = useState(false)
 
@@ -287,10 +289,10 @@ export default function InvitationBuilder() {
     `¡Estás invitado a mi ${data.eventType}!\n${data.name ? `${data.name}\n` : ''}${data.date ? `Fecha: ${data.date}\n` : ''}${data.venue ? `Lugar: ${data.venue}` : ''}`
   )
 
-  const handleSave = async () => {
+  const handleSave = async (): Promise<string | null> => {
     if (!isAuthenticated) {
       document.querySelector('#contacto')?.scrollIntoView({ behavior: 'smooth' })
-      return
+      return null
     }
 
     setSaveState('saving')
@@ -315,32 +317,46 @@ export default function InvitationBuilder() {
         isPublished: true,
       }
 
-      const res = await api.post<{ data: { shareToken: string } }>('/client/invitations', payload)
-      setSavedToken(res.data.shareToken)
+      const res = savedInvitationId
+        ? await api.put<{ data: { id: string; shareToken: string } }>(`/client/invitations/${savedInvitationId}`, payload)
+        : await api.post<{ data: { id: string; shareToken: string } }>('/client/invitations', payload)
+
+      const invitationId = res.data.id
+      const token = res.data.shareToken
+
+      setSavedInvitationId(invitationId)
+      setSavedToken(token)
+
+      if (photos.length > 0) {
+        const form = new FormData()
+        photos.forEach(photo => form.append('images', photo))
+        await api.postForm(`/client/invitations/${invitationId}/photos`, form)
+        setPhotos([])
+      }
+
       setSaveState('saved')
+      return token
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : 'Error al guardar')
       setSaveState('idle')
+      return null
     }
   }
 
-  const handleCopyLink = () => {
-    if (!savedToken) {
-      handleSave()
-      return
-    }
-    const url = `${window.location.origin}/invitacion/${savedToken}`
+  const handleCopyLink = async () => {
+    const token = savedToken ?? await handleSave()
+    if (!token) return
+
+    const url = `${window.location.origin}/invitacion/${token}`
     navigator.clipboard.writeText(url).catch(() => {})
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
 
-  const handleDownload = () => {
-    if (!savedToken) {
-      handleSave()
-      return
-    }
-    window.open(`/invitacion/${savedToken}`, '_blank')
+  const handleDownload = async () => {
+    const token = savedToken ?? await handleSave()
+    if (!token) return
+    window.open(`/invitacion/${token}`, '_blank')
   }
 
   return (
@@ -566,6 +582,27 @@ export default function InvitationBuilder() {
                       )}
                     </AnimatePresence>
                   </div>
+                  <div>
+                    <label className="label-caps text-ivory/40 text-[0.6rem] block mb-2">
+                      Fotos para la invitacion
+                    </label>
+                    <div className="w-full bg-[#1A1A1A] border border-ivory/10 px-4 py-3">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Images className="w-4 h-4 text-gold/70" />
+                        <p className="font-dm text-ivory/70 text-xs">Galeria de la invitacion (maximo 8)</p>
+                      </div>
+                      <input
+                        type="file"
+                        multiple
+                        accept="image/*"
+                        onChange={e => setPhotos(Array.from(e.target.files || []).slice(0, 8))}
+                        className="w-full bg-black/20 border border-ivory/10 text-ivory/70 font-dm text-xs px-3 py-2"
+                      />
+                      <p className="font-dm text-ivory/35 text-[0.65rem] mt-2">
+                        {photos.length > 0 ? photos.length + ' foto(s) lista(s) para subir.' : 'Aun no has agregado fotos.'}
+                      </p>
+                    </div>
+                  </div>
                 </motion.div>
               )}
 
@@ -694,11 +731,11 @@ export default function InvitationBuilder() {
             {/* Action buttons */}
             <div className="flex flex-col gap-3">
               {/* Save / saved state */}
-              {saveState === 'saved' && savedToken ? (
+              {saveState === 'saved' && savedToken && (
                 <div className="border border-green-500/30 bg-green-500/5 rounded-sm px-4 py-3 flex items-center gap-3">
                   <Check className="w-4 h-4 text-green-400 flex-shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-green-400 text-xs font-dm font-medium">¡Invitación guardada!</p>
+                    <p className="text-green-400 text-xs font-dm font-medium">Invitacion guardada</p>
                     <p className="text-ivory/40 text-xs font-dm truncate mt-0.5">
                       /invitacion/{savedToken}
                     </p>
@@ -708,35 +745,35 @@ export default function InvitationBuilder() {
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-gold hover:text-gold-light flex-shrink-0"
-                    title="Abrir invitación"
+                    title="Abrir invitacion"
                   >
                     <ExternalLink className="w-4 h-4" />
                   </a>
                 </div>
-              ) : (
-                <button
-                  onClick={handleSave}
-                  disabled={saveState === 'saving'}
-                  className={`btn-primary justify-center gap-3 py-3 ${saveState === 'saving' ? 'opacity-70 cursor-wait' : ''}`}
-                >
-                  {saveState === 'saving' ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                      Guardando...
-                    </>
-                  ) : isAuthenticated ? (
-                    <>
-                      <Save className="w-4 h-4" />
-                      Guardar Invitación
-                    </>
-                  ) : (
-                    <>
-                      <LogIn className="w-4 h-4" />
-                      Inicia sesión para guardar
-                    </>
-                  )}
-                </button>
               )}
+
+              <button
+                onClick={handleSave}
+                disabled={saveState === 'saving'}
+                className={`btn-primary justify-center gap-3 py-3 ${saveState === 'saving' ? 'opacity-70 cursor-wait' : ''}`}
+              >
+                {saveState === 'saving' ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                    Guardando...
+                  </>
+                ) : isAuthenticated ? (
+                  <>
+                    <Save className="w-4 h-4" />
+                    {savedInvitationId ? 'Actualizar invitacion' : 'Guardar invitacion'}
+                  </>
+                ) : (
+                  <>
+                    <LogIn className="w-4 h-4" />
+                    Inicia sesion para guardar
+                  </>
+                )}
+              </button>
 
               {saveError && (
                 <p className="text-red-400 text-xs font-dm text-center">{saveError}</p>

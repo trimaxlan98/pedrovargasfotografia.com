@@ -1,9 +1,12 @@
-import { useState } from 'react'
+﻿import { useMemo, useState } from 'react'
 import { Copy, Check, MessageCircle } from 'lucide-react'
-import { ApiInvitation } from './invitationTypes'
+import {
+  ApiInvitation,
+  getDemoGalleryForTemplate,
+  resolveInvitationImageUrl,
+} from './invitationTypes'
 import QrCodeImage from './QrCodeImage'
 
-/* ── Template Design System ──────────────────────────────────────────────── */
 type TemplateStyle = {
   isDark: boolean
   bg: string
@@ -16,14 +19,10 @@ type TemplateStyle = {
   divider: string
   rsvpBg: string
   rsvpText: string
-  heroPhoto: string
-  galleryA: string
-  galleryB: string
   ornament: string
 }
 
 const TEMPLATE_STYLES: Record<string, TemplateStyle> = {
-  /* ── Warm — cremas suaves, dorado miel ─────────────────────────────── */
   warm: {
     isDark: false,
     bg: 'linear-gradient(180deg, #fdf6ee 0%, #f5e8d4 50%, #ecdbc0 100%)',
@@ -37,13 +36,8 @@ const TEMPLATE_STYLES: Record<string, TemplateStyle> = {
     divider: 'rgba(168,114,58,0.15)',
     rsvpBg: 'rgba(168,114,58,0.1)',
     rsvpText: '#a8723a',
-    heroPhoto: 'photo-placeholder-amber',
-    galleryA: 'photo-placeholder-amber',
-    galleryB: 'photo-placeholder-warm',
-    ornament: '✦',
+    ornament: '*',
   },
-
-  /* ── Floral — rosa polvoso, romanticismo ───────────────────────────── */
   floral: {
     isDark: false,
     bg: 'linear-gradient(180deg, #fdf0f4 0%, #f8e4ee 50%, #f2d8e6 100%)',
@@ -57,13 +51,8 @@ const TEMPLATE_STYLES: Record<string, TemplateStyle> = {
     divider: 'rgba(181,96,122,0.14)',
     rsvpBg: 'rgba(181,96,122,0.1)',
     rsvpText: '#b5607a',
-    heroPhoto: 'photo-placeholder-rose',
-    galleryA: 'photo-placeholder-rose',
-    galleryB: 'photo-placeholder-warm',
-    ornament: '❀',
+    ornament: 'o',
   },
-
-  /* ── Rustic — tierra oscura, detalles dorados ──────────────────────── */
   rustic: {
     isDark: true,
     bg: 'linear-gradient(180deg, #1e1008 0%, #2e1a0a 50%, #1e1208 100%)',
@@ -77,13 +66,8 @@ const TEMPLATE_STYLES: Record<string, TemplateStyle> = {
     divider: 'rgba(201,169,110,0.15)',
     rsvpBg: '#c9a96e',
     rsvpText: '#1e1008',
-    heroPhoto: 'photo-placeholder-amber',
-    galleryA: 'photo-placeholder-neutral',
-    galleryB: 'photo-placeholder-amber',
-    ornament: '◆',
+    ornament: '+',
   },
-
-  /* ── Moderno — navy elegante, líneas limpias ───────────────────────── */
   moderno: {
     isDark: true,
     bg: 'linear-gradient(180deg, #08101e 0%, #0e1a2e 50%, #08101e 100%)',
@@ -97,10 +81,7 @@ const TEMPLATE_STYLES: Record<string, TemplateStyle> = {
     divider: 'rgba(123,174,224,0.12)',
     rsvpBg: '#7baee0',
     rsvpText: '#08101e',
-    heroPhoto: 'photo-placeholder-cool',
-    galleryA: 'photo-placeholder-cool',
-    galleryB: 'photo-placeholder-neutral',
-    ornament: '◈',
+    ornament: '#',
   },
 }
 
@@ -110,7 +91,9 @@ function Ornament({ s }: { s: TemplateStyle }) {
   return (
     <div className="flex items-center justify-center gap-3">
       <div className="h-px w-10 flex-none" style={{ background: s.accent, opacity: 0.35 }} />
-      <span className="text-xs flex-none" style={{ color: s.accent, opacity: 0.65 }}>{s.ornament}</span>
+      <span className="text-xs flex-none" style={{ color: s.accent, opacity: 0.65 }}>
+        {s.ornament}
+      </span>
       <div className="h-px w-10 flex-none" style={{ background: s.accent, opacity: 0.35 }} />
     </div>
   )
@@ -128,21 +111,18 @@ function ThinDivider({ s }: { s: TemplateStyle }) {
   return <div className="h-px w-8 mx-auto" style={{ background: s.divider }} />
 }
 
-/* ── RSVP action resolver ────────────────────────────────────────────────── */
 function getRsvpHref(rsvpValue: string): string {
   const clean = rsvpValue.replace(/^WhatsApp:\s*/i, '').trim()
-  // Is a URL?
   if (/^https?:\/\//i.test(clean)) return clean
-  // Is a phone number?
-  const digits = clean.replace(/[\s\-().+]/g, '')
+
+  const digits = clean.replace(/\D/g, '')
   if (/^\d{7,}$/.test(digits)) {
-    return `https://wa.me/${digits}?text=${encodeURIComponent('¡Hola! Confirmo mi asistencia.')}`
+    return `https://wa.me/${digits}?text=${encodeURIComponent('Hola, confirmo mi asistencia.')}`
   }
-  // Try WhatsApp with whatever they typed
+
   return `https://wa.me/?text=${encodeURIComponent(`RSVP: ${clean}`)}`
 }
 
-/* ── Main Strip ──────────────────────────────────────────────────────────── */
 export default function InvitationStrip({
   invitation,
   shareUrl,
@@ -151,8 +131,32 @@ export default function InvitationStrip({
   shareUrl: string
 }) {
   const s = TEMPLATE_STYLES[invitation.template] ?? TEMPLATE_STYLES.warm
-
   const [copied, setCopied] = useState(false)
+
+  const fallbackGallery = getDemoGalleryForTemplate(String(invitation.template))
+
+  const normalizedGallery = useMemo(() => {
+    const source = invitation.gallery && invitation.gallery.length > 0 ? invitation.gallery : fallbackGallery
+    const resolved = source
+      .map(resolveInvitationImageUrl)
+      .filter(Boolean)
+
+    if (resolved.length >= 4) return resolved.slice(0, 8)
+
+    const fallbackResolved = fallbackGallery.map(resolveInvitationImageUrl)
+    const unique = [...resolved]
+    fallbackResolved.forEach(url => {
+      if (unique.length < 8 && !unique.includes(url)) unique.push(url)
+    })
+    return unique
+  }, [invitation.gallery, invitation.template])
+
+  const heroPhoto = useMemo(() => {
+    const explicit = resolveInvitationImageUrl(invitation.heroImage)
+    if (explicit) return explicit
+    if (normalizedGallery.length > 0) return normalizedGallery[0]
+    return resolveInvitationImageUrl(fallbackGallery[0])
+  }, [invitation.heroImage, normalizedGallery, fallbackGallery])
 
   const title = invitation.title
   const names = invitation.names
@@ -167,8 +171,6 @@ export default function InvitationStrip({
   const dressCode = invitation.dressCode || ''
   const rsvpLabel = invitation.rsvpLabel || 'Confirmar asistencia'
   const rsvpValue = invitation.rsvpValue || ''
-  const gallery = invitation.gallery || []
-  const placeholderCount = gallery.length === 0 ? 4 : 0
 
   const handleCopy = () => {
     navigator.clipboard.writeText(shareUrl).catch(() => {})
@@ -176,19 +178,12 @@ export default function InvitationStrip({
     setTimeout(() => setCopied(false), 2500)
   }
 
-  const whatsappShare = `https://wa.me/?text=${encodeURIComponent(
-    `¡Mira mi invitación digital! ${shareUrl}`
-  )}`
+  const whatsappShare = `https://wa.me/?text=${encodeURIComponent(`Mira mi invitacion digital: ${shareUrl}`)}`
 
   return (
     <div className="w-full text-sm leading-relaxed" style={{ background: s.bg, color: s.text }}>
-
-      {/* ── Hero ─────────────────────────────────────────────────────────── */}
       <section className={`min-h-[90vh] ${PAD} pt-14 pb-12 text-center relative overflow-hidden`}>
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{ background: s.heroOverlay }}
-        />
+        <div className="absolute inset-0 pointer-events-none" style={{ background: s.heroOverlay }} />
         <div className="relative z-10 flex flex-col items-center">
           <div className="mb-8">
             <Ornament s={s} />
@@ -196,26 +191,27 @@ export default function InvitationStrip({
 
           <SectionLabel s={s}>{eventType}</SectionLabel>
 
-          <h1
-            className="font-cormorant text-4xl sm:text-5xl leading-tight mt-4 mb-8"
-            style={{ color: s.text }}
-          >
+          <h1 className="font-cormorant text-4xl sm:text-5xl leading-tight mt-4 mb-8" style={{ color: s.text }}>
             {title}
           </h1>
 
-          {/* Couple photo */}
           <div
             className="w-40 h-56 sm:w-48 sm:h-64 rounded-[999px] overflow-hidden shadow-2xl"
             style={{ border: `1px solid ${s.accent}28` }}
           >
-            <div className={`w-full h-full ${s.heroPhoto}`} />
+            {heroPhoto ? (
+              <img src={heroPhoto} alt={names} className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full" style={{ background: 'linear-gradient(135deg, #2b2017 0%, #3d2b1d 100%)' }} />
+            )}
           </div>
 
           <p className="mt-6 text-2xl font-cormorant tracking-wide" style={{ color: s.text }}>
             {names}
           </p>
           <p className="text-[0.65rem] uppercase tracking-[0.3em] mt-2" style={{ color: s.accent }}>
-            {date}{time ? ` · ${time}` : ''}
+            {date}
+            {time ? ` · ${time}` : ''}
           </p>
 
           <div className="mt-8">
@@ -224,7 +220,6 @@ export default function InvitationStrip({
         </div>
       </section>
 
-      {/* ── Quote ────────────────────────────────────────────────────────── */}
       {quote ? (
         <section className={`${PAD} py-12`}>
           <div
@@ -232,9 +227,7 @@ export default function InvitationStrip({
             style={{
               background: s.glass,
               border: `1px solid ${s.glassBorder}`,
-              boxShadow: s.isDark
-                ? '0 8px 32px rgba(0,0,0,0.3)'
-                : '0 8px 32px rgba(0,0,0,0.05)',
+              boxShadow: s.isDark ? '0 8px 32px rgba(0,0,0,0.3)' : '0 8px 32px rgba(0,0,0,0.05)',
             }}
           >
             <p className="text-base font-cormorant italic leading-relaxed" style={{ color: s.text }}>
@@ -244,45 +237,41 @@ export default function InvitationStrip({
         </section>
       ) : null}
 
-      {/* ── Personal Message ─────────────────────────────────────────────── */}
       {message ? (
         <section className={`${PAD} pb-12 text-center`}>
           <SectionLabel s={s}>Con mucho amor</SectionLabel>
           <ThinDivider s={s} />
-          <p
-            className="mt-5 text-base font-cormorant leading-relaxed"
-            style={{ color: s.text, opacity: 0.85 }}
-          >
+          <p className="mt-5 text-base font-cormorant leading-relaxed" style={{ color: s.text, opacity: 0.85 }}>
             {message}
           </p>
         </section>
       ) : null}
 
-      {/* ── Event Details ─────────────────────────────────────────────────── */}
       <section className={`${PAD} pb-12`}>
         <div className="grid gap-8">
           {[
             { label: 'Fecha', value: date },
             { label: 'Hora', value: time },
             { label: 'Lugar', value: venue, note: locationNote },
-          ].filter(item => item.value).map(item => (
-            <div key={item.label} className="text-center">
-              <SectionLabel s={s}>{item.label}</SectionLabel>
-              <ThinDivider s={s} />
-              <p className="font-cormorant text-xl mt-3" style={{ color: s.text }}>
-                {item.value}
-              </p>
-              {item.note ? (
-                <p className="text-xs mt-1" style={{ color: s.textMuted }}>
-                  {item.note}
+          ]
+            .filter(item => item.value)
+            .map(item => (
+              <div key={item.label} className="text-center">
+                <SectionLabel s={s}>{item.label}</SectionLabel>
+                <ThinDivider s={s} />
+                <p className="font-cormorant text-xl mt-3" style={{ color: s.text }}>
+                  {item.value}
                 </p>
-              ) : null}
-            </div>
-          ))}
+                {item.note ? (
+                  <p className="text-xs mt-1" style={{ color: s.textMuted }}>
+                    {item.note}
+                  </p>
+                ) : null}
+              </div>
+            ))}
         </div>
       </section>
 
-      {/* ── Gallery ──────────────────────────────────────────────────────── */}
       <section className={`${PAD} pb-12`}>
         <div className="text-center mb-6">
           <SectionLabel s={s}>Nuestra historia</SectionLabel>
@@ -291,42 +280,25 @@ export default function InvitationStrip({
           </p>
         </div>
         <div className="grid grid-cols-2 gap-3">
-          {gallery.length > 0
-            ? gallery.map((url, idx) => (
-                <div
-                  key={`gallery-${idx}`}
-                  className={`overflow-hidden ${idx % 3 === 0 ? 'aspect-[3/4]' : 'aspect-square'}`}
-                  style={{
-                    borderRadius: s.isDark ? '4px' : '18px',
-                    border: `1px solid ${s.divider}`,
-                  }}
-                >
-                  <img src={url} alt="Galería" className="w-full h-full object-cover" />
-                </div>
-              ))
-            : Array.from({ length: placeholderCount }).map((_, idx) => (
-                <div
-                  key={`ph-${idx}`}
-                  className={`overflow-hidden shadow-lg ${idx % 3 === 0 ? 'aspect-[3/4]' : 'aspect-square'}`}
-                  style={{
-                    borderRadius: s.isDark ? '4px' : '18px',
-                    border: `1px solid ${s.divider}`,
-                  }}
-                >
-                  <div className={`w-full h-full ${idx % 2 === 0 ? s.galleryA : s.galleryB}`} />
-                </div>
-              ))}
+          {normalizedGallery.map((url, idx) => (
+            <div
+              key={`gallery-${idx}`}
+              className={`overflow-hidden ${idx % 3 === 0 ? 'aspect-[3/4]' : 'aspect-square'}`}
+              style={{
+                borderRadius: s.isDark ? '4px' : '18px',
+                border: `1px solid ${s.divider}`,
+              }}
+            >
+              <img src={url} alt={`Galeria ${idx + 1}`} className="w-full h-full object-cover" loading="lazy" />
+            </div>
+          ))}
         </div>
       </section>
 
-      {/* ── Dress Code ───────────────────────────────────────────────────── */}
       {dressCode ? (
         <section className={`${PAD} pb-12`}>
-          <div
-            className="px-6 py-6 text-center"
-            style={{ background: s.glass, border: `1px solid ${s.glassBorder}` }}
-          >
-            <SectionLabel s={s}>Código de Vestimenta</SectionLabel>
+          <div className="px-6 py-6 text-center" style={{ background: s.glass, border: `1px solid ${s.glassBorder}` }}>
+            <SectionLabel s={s}>Codigo de vestimenta</SectionLabel>
             <p className="font-cormorant text-lg mt-3" style={{ color: s.text }}>
               {dressCode}
             </p>
@@ -334,7 +306,6 @@ export default function InvitationStrip({
         </section>
       ) : null}
 
-      {/* ── RSVP ─────────────────────────────────────────────────────────── */}
       {rsvpValue ? (
         <section className={`${PAD} pb-12 text-center`}>
           <SectionLabel s={s}>{rsvpLabel}</SectionLabel>
@@ -346,11 +317,7 @@ export default function InvitationStrip({
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center justify-center gap-2 px-8 py-3 text-[0.65rem] uppercase tracking-[0.25em] font-dm transition-opacity duration-200 hover:opacity-80"
-            style={{
-              background: s.rsvpBg,
-              color: s.rsvpText,
-              border: `1px solid ${s.glassBorder}`,
-            }}
+            style={{ background: s.rsvpBg, color: s.rsvpText, border: `1px solid ${s.glassBorder}` }}
           >
             <MessageCircle size={13} />
             Confirmar asistencia
@@ -358,7 +325,6 @@ export default function InvitationStrip({
         </section>
       ) : null}
 
-      {/* ── QR / Share ───────────────────────────────────────────────────── */}
       <section className={`${PAD} pb-16 text-center`}>
         <div className="flex items-center gap-3 mb-8">
           <div className="flex-1 h-px" style={{ background: s.divider }} />
@@ -368,7 +334,7 @@ export default function InvitationStrip({
           <div className="flex-1 h-px" style={{ background: s.divider }} />
         </div>
 
-        <SectionLabel s={s}>Comparte esta invitación</SectionLabel>
+        <SectionLabel s={s}>Comparte esta invitacion</SectionLabel>
 
         <div
           className="mt-6 mx-auto w-32 h-32 grid place-items-center shadow-xl"
@@ -386,7 +352,6 @@ export default function InvitationStrip({
           </p>
         ) : null}
 
-        {/* Share action buttons */}
         <div className="mt-6 flex items-center justify-center gap-3">
           <button
             onClick={handleCopy}
@@ -419,19 +384,13 @@ export default function InvitationStrip({
           </a>
         </div>
 
-        {/* Studio watermark */}
-        <div
-          className="mt-10 pt-6"
-          style={{ borderTop: `1px solid ${s.divider}` }}
-        >
-          <p
-            className="text-[0.5rem] uppercase tracking-[0.3em]"
-            style={{ color: s.textMuted, opacity: 0.45 }}
-          >
-            Invitación creada por Pedro Vargas Fotografía
+        <div className="mt-10 pt-6" style={{ borderTop: `1px solid ${s.divider}` }}>
+          <p className="text-[0.5rem] uppercase tracking-[0.3em]" style={{ color: s.textMuted, opacity: 0.45 }}>
+            Invitacion creada por Pedro Vargas Fotografia
           </p>
         </div>
       </section>
     </div>
   )
 }
+

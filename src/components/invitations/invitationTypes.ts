@@ -1,3 +1,23 @@
+﻿import portfolioBodaCamioneta from '../../assets/photos-web/portfolio-boda-camioneta.jpg'
+import portfolioBodasSesionCampo from '../../assets/photos-web/portfolio-bodas-sesion-campo.jpg'
+import portfolioBodaFuente from '../../assets/photos-web/portfolio-boda-fuente.jpg'
+import portfolioBodaBosque from '../../assets/photos-web/portfolio-boda-bosque.jpg'
+
+import portfolioXvRetratoJardin from '../../assets/photos-web/portfolio-xv-retrato-jardin.jpg'
+import portfolioXvRamo from '../../assets/photos-web/portfolio-xv-ramo.jpg'
+import portfolioXvVestidoRojo from '../../assets/photos-web/portfolio-xv-vestido-rojo.jpg'
+import portfolioXvVestidoNegro from '../../assets/photos-web/portfolio-xv-vestido-negro.jpg'
+
+import portfolioBodaDetalles from '../../assets/photos-web/portfolio-boda-detalles.jpg'
+import portfolioBodaPreparativos from '../../assets/photos-web/portfolio-boda-preparativos.jpg'
+import eventBodaDecoracion from '../../assets/photos-web/evento-boda-decoracion.jpg'
+import eventBodaEmotivo from '../../assets/photos-web/evento-boda-emotivo.jpg'
+
+import eventBodaEntrada from '../../assets/photos-web/evento-boda-entrada.jpg'
+import eventXvSalon from '../../assets/photos-web/evento-xv-salon.jpg'
+import eventXvBaileFamiliar from '../../assets/photos-web/evento-xv-baile-familiar.jpg'
+import eventXvPreparativos from '../../assets/photos-web/evento-xv-preparativos.jpg'
+
 export type InvitationTemplate = 'warm' | 'floral' | 'rustic' | 'moderno'
 
 export interface ApiInvitation {
@@ -21,6 +41,7 @@ export interface ApiInvitation {
   dressCode?: string
   rsvpLabel?: string
   rsvpValue?: string
+  heroImage?: string
   gallery?: string[]
   shareToken: string
   views: number
@@ -29,27 +50,76 @@ export interface ApiInvitation {
   client?: { id: string; name: string; email: string }
 }
 
+export const DEMO_GALLERY_BY_TEMPLATE: Record<InvitationTemplate, string[]> = {
+  warm: [
+    portfolioBodaCamioneta,
+    portfolioBodasSesionCampo,
+    portfolioBodaFuente,
+    portfolioBodaBosque,
+  ],
+  floral: [
+    portfolioXvRetratoJardin,
+    portfolioXvRamo,
+    portfolioXvVestidoRojo,
+    portfolioXvVestidoNegro,
+  ],
+  rustic: [
+    portfolioBodaDetalles,
+    portfolioBodaPreparativos,
+    eventBodaDecoracion,
+    eventBodaEmotivo,
+  ],
+  moderno: [
+    eventBodaEntrada,
+    eventXvSalon,
+    eventXvBaileFamiliar,
+    eventXvPreparativos,
+  ],
+}
+
+export function getDemoGalleryForTemplate(template?: string): string[] {
+  if (!template) return DEMO_GALLERY_BY_TEMPLATE.warm
+  return DEMO_GALLERY_BY_TEMPLATE[template as InvitationTemplate] ?? DEMO_GALLERY_BY_TEMPLATE.warm
+}
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
+const API_ORIGIN = API_URL.replace(/\/api\/?$/, '')
+
+export function resolveInvitationImageUrl(url?: string): string {
+  if (!url) return ''
+  if (/^(https?:)?\/\//i.test(url) || url.startsWith('data:') || url.startsWith('blob:')) {
+    return url
+  }
+  if (url.startsWith('/uploads/')) return `${API_ORIGIN}${url}`
+  if (url.startsWith('uploads/')) return `${API_ORIGIN}/${url}`
+  return url
+}
+
+const demoTemplate: InvitationTemplate = 'rustic'
+
 export const demoInvitation: ApiInvitation = {
   id: 'demo',
   eventType: 'Boda',
-  title: 'Estas invitado a nuestra boda',
-  names: 'Elizabeth & Salomon',
+  title: 'Estás invitado a nuestra boda',
+  names: 'Elizabeth & Salomón',
   eventDate: '12 junio 2026',
   eventTime: '18:00',
   venue: 'Hacienda San Rafael',
-  locationNote: 'Queretaro, Mexico',
-  message: 'El amor contigo es un viaje sin fin, y cada dia es una nueva aventura.',
+  locationNote: 'Querétaro, México',
+  message: 'El amor contigo es un viaje sin fin, y cada día es una nueva aventura.',
   quote: 'Amar es encontrar en la felicidad de otro tu propia felicidad.',
   hashtag: '#BodaElizabethSalomon',
-  template: 'rustic',
+  template: demoTemplate,
   primaryColor: '#b07b4b',
   textColor: '#2b1a10',
   dressCode: 'Etiqueta formal, tonos claros',
   rsvpLabel: 'Confirmar asistencia',
   rsvpValue: 'WhatsApp: +52 555 123 4567',
-  gallery: [],
+  heroImage: portfolioBodasSesionCampo,
+  gallery: getDemoGalleryForTemplate(demoTemplate),
   shareToken: 'demo',
   views: 0,
   isPublished: true,
   createdAt: new Date().toISOString(),
 }
+

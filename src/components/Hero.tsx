@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { ChevronDown } from 'lucide-react'
+import { profilePhotos } from '../data/galleryData'
 
 const stats = [
   { value: '+500', label: 'Eventos' },
@@ -148,7 +149,13 @@ export default function Hero() {
                 boxShadow: '0 60px 120px rgba(0,0,0,0.8), inset 0 0 0 1px rgba(245,240,232,0.06)',
               }}
             >
-              <div className="absolute inset-0 photo-placeholder-warm" />
+              <img
+                src={profilePhotos.hero.src}
+                alt={profilePhotos.hero.alt}
+                loading="eager"
+                className="absolute inset-0 w-full h-full object-cover"
+                style={{ objectPosition: profilePhotos.hero.position }}
+              />
               {/* Inner bokeh light */}
               <div
                 className="absolute bottom-[20%] right-[15%] w-40 h-40 rounded-full"

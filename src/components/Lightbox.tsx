@@ -5,9 +5,9 @@ import { X, ChevronLeft, ChevronRight } from 'lucide-react'
 interface LightboxPhoto {
   id: number
   title: string
-  category: string
-  bgClass: string
-  aspect: string
+  type: string
+  src: string
+  alt: string
 }
 
 interface LightboxProps {
@@ -22,25 +22,30 @@ export default function Lightbox({ photos, index, onClose, onPrev, onNext }: Lig
   const photo = photos[index]
 
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
-      if (e.key === 'ArrowLeft') onPrev()
-      if (e.key === 'ArrowRight') onNext()
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose()
+      if (event.key === 'ArrowLeft') onPrev()
+      if (event.key === 'ArrowRight') onNext()
     }
+
     window.addEventListener('keydown', onKey)
     document.body.style.overflow = 'hidden'
+
     return () => {
       window.removeEventListener('keydown', onKey)
       document.body.style.overflow = ''
     }
   }, [onClose, onPrev, onNext])
 
-  // Touch swipe
   let startX = 0
-  const onTouchStart = (e: React.TouchEvent) => { startX = e.touches[0].clientX }
-  const onTouchEnd = (e: React.TouchEvent) => {
-    const dx = e.changedTouches[0].clientX - startX
-    if (Math.abs(dx) > 50) dx < 0 ? onNext() : onPrev()
+  const onTouchStart = (event: React.TouchEvent) => {
+    startX = event.touches[0].clientX
+  }
+  const onTouchEnd = (event: React.TouchEvent) => {
+    const deltaX = event.changedTouches[0].clientX - startX
+    if (Math.abs(deltaX) > 50) {
+      deltaX < 0 ? onNext() : onPrev()
+    }
   }
 
   return (
@@ -54,7 +59,6 @@ export default function Lightbox({ photos, index, onClose, onPrev, onNext }: Lig
       onTouchStart={onTouchStart}
       onTouchEnd={onTouchEnd}
     >
-      {/* Close */}
       <button
         className="absolute top-6 right-6 w-10 h-10 flex items-center justify-center text-ivory/70 hover:text-ivory transition-colors z-10"
         onClick={onClose}
@@ -63,46 +67,49 @@ export default function Lightbox({ photos, index, onClose, onPrev, onNext }: Lig
         <X className="w-6 h-6" />
       </button>
 
-      {/* Prev */}
       <button
         className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 w-12 h-12 flex items-center justify-center text-ivory/60 hover:text-ivory transition-colors z-10"
-        onClick={e => { e.stopPropagation(); onPrev() }}
+        onClick={event => {
+          event.stopPropagation()
+          onPrev()
+        }}
         aria-label="Previous"
       >
         <ChevronLeft className="w-8 h-8" />
       </button>
 
-      {/* Next */}
       <button
         className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 w-12 h-12 flex items-center justify-center text-ivory/60 hover:text-ivory transition-colors z-10"
-        onClick={e => { e.stopPropagation(); onNext() }}
+        onClick={event => {
+          event.stopPropagation()
+          onNext()
+        }}
         aria-label="Next"
       >
         <ChevronRight className="w-8 h-8" />
       </button>
 
-      {/* Image */}
       <motion.div
         key={index}
         initial={{ scale: 0.88, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.92, opacity: 0 }}
         transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-        className="relative max-w-[90vw] max-h-[75vh] w-full"
-        onClick={e => e.stopPropagation()}
+        className="relative max-w-[92vw] w-full h-[78vh]"
+        onClick={event => event.stopPropagation()}
       >
-        <div
-          className={`w-full ${photo.aspect === 'portrait' ? 'h-[65vh]' : photo.aspect === 'square' ? 'h-[55vh]' : 'h-[45vh]'} ${photo.bgClass} rounded-sm relative overflow-hidden`}
-        >
-          <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
+        <div className="w-full h-full rounded-sm overflow-hidden bg-black/70 relative">
+          <img src={photo.src} alt={photo.alt} className="w-full h-full object-contain" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent pointer-events-none" />
         </div>
       </motion.div>
 
-      {/* Caption */}
       <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-center">
         <p className="font-cormorant italic text-ivory/80 text-lg">{photo.title}</p>
-        <p className="label-caps text-gold text-[0.6rem] mt-1">{photo.category}</p>
-        <p className="label-caps text-ivory/30 text-[0.55rem] mt-2">{index + 1} / {photos.length}</p>
+        <p className="label-caps text-gold text-[0.6rem] mt-1">{photo.type}</p>
+        <p className="label-caps text-ivory/30 text-[0.55rem] mt-2">
+          {index + 1} / {photos.length}
+        </p>
       </div>
     </motion.div>
   )

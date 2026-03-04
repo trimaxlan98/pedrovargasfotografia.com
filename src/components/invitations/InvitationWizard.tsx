@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { CheckCircle, ChevronLeft, ChevronRight, Eye } from 'lucide-react'
 import api from '../../api/client'
-import { ApiInvitation, InvitationTemplate } from './invitationTypes'
+import { ApiInvitation, InvitationTemplate, resolveInvitationImageUrl } from './invitationTypes'
 
 const TEMPLATES: Array<{ id: InvitationTemplate; label: string; desc: string; gradient: string; isDark: boolean }> = [
   {
@@ -128,7 +128,7 @@ export default function InvitationWizard({
   const [clients, setClients] = useState<Client[]>([])
   const [clientSearch, setClientSearch] = useState(
     initialData?.client
-      ? `${initialData.client.name} — ${initialData.client.email}`
+      ? `${initialData.client.name} – ${initialData.client.email}`
       : ''
   )
   const [showDropdown, setShowDropdown] = useState(false)
@@ -391,7 +391,7 @@ export default function InvitationWizard({
                               type="button"
                               onClick={() => {
                                 setDraft(p => ({ ...p, clientId: c.id }))
-                                setClientSearch(`${c.name} — ${c.email}`)
+                                setClientSearch(`${c.name} – ${c.email}`)
                                 setShowDropdown(false)
                               }}
                               className="w-full px-4 py-3 text-left hover:bg-white/5 transition-colors border-b border-white/5 last:border-0"
@@ -471,7 +471,7 @@ export default function InvitationWizard({
                         key={i}
                         className="aspect-square rounded-lg overflow-hidden border border-white/10"
                       >
-                        <img src={url} alt="" className="w-full h-full object-cover" />
+                        <img src={resolveInvitationImageUrl(url)} alt="" className="w-full h-full object-cover" />
                       </div>
                     ))}
                   </div>

@@ -15,7 +15,7 @@ export default function QrCodeImage({
   useEffect(() => {
     let mounted = true
     QRCode.toDataURL(value, { width: size, margin: 1 })
-      .then(url => {
+      .then((url: string) => {
         if (mounted) setDataUrl(url)
       })
       .catch(() => {

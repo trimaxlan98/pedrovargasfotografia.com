@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion'
 import { useInView } from './useInView'
 import { Award, Camera, Users, Globe } from 'lucide-react'
+import { profilePhotos } from '../data/galleryData'
 
 const highlights = [
   { icon: Camera, value: '+500', label: 'Eventos fotografiados' },
@@ -28,11 +29,18 @@ export default function About() {
             className="relative"
           >
             <div
-              className="w-full max-w-[480px] h-[580px] photo-placeholder-warm relative overflow-hidden"
+              className="w-full max-w-[480px] h-[580px] relative overflow-hidden"
               style={{
                 boxShadow: '40px 40px 80px rgba(0,0,0,0.6)',
               }}
             >
+              <img
+                src={profilePhotos.about.src}
+                alt={profilePhotos.about.alt}
+                loading="lazy"
+                className="absolute inset-0 w-full h-full object-cover"
+                style={{ objectPosition: profilePhotos.about.position }}
+              />
               {/* Warm bokeh */}
               <div
                 className="absolute bottom-1/4 right-1/4 w-48 h-48 rounded-full"

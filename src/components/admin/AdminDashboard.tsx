@@ -3,7 +3,7 @@ import { motion } from 'framer-motion'
 import {
   LayoutDashboard, MessageSquare, CalendarDays, Image,
   Users, Settings, LogOut, Clock, CheckCircle,
-  XCircle, TrendingUp, Menu, Mail
+  TrendingUp, Menu, Mail
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import api from '../../api/client'
@@ -297,8 +297,6 @@ function ContactsView({
   onRefresh: () => void
   onUpdateStatus: (id: string, status: string) => void
 }) {
-  const [selected, setSelected] = useState<ContactRequest | null>(null)
-
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
