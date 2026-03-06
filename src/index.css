@@ -15,8 +15,8 @@ html {
 }
 
 body {
-  background-color: #0A0A0A;
-  color: #F5F0E8;
+  background-color: #F7F4EE;
+  color: #1F1C17;
   font-family: 'DM Sans', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -76,7 +76,7 @@ a, button, input, select, textarea, [role="button"] {
   letter-spacing: 0.12em;
   text-transform: uppercase;
   font-weight: 400;
-  color: rgba(245, 240, 232, 0.7);
+  color: rgba(31, 28, 23, 0.65);
   text-decoration: none;
   transition: color 0.3s ease;
   padding-bottom: 3px;
@@ -95,7 +95,7 @@ a, button, input, select, textarea, [role="button"] {
 
 .nav-link:hover,
 .nav-link.active {
-  color: #F5F0E8;
+  color: #1F1C17;
 }
 
 .nav-link:hover::after,
@@ -124,7 +124,7 @@ a, button, input, select, textarea, [role="button"] {
 
 /* ── Scrollbar ──────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 4px; }
-::-webkit-scrollbar-track { background: #0A0A0A; }
+::-webkit-scrollbar-track { background: #EFE8DC; }
 ::-webkit-scrollbar-thumb { background: #C9A96E44; border-radius: 2px; }
 ::-webkit-scrollbar-thumb:hover { background: #C9A96E88; }
 
@@ -152,38 +152,38 @@ a, button, input, select, textarea, [role="button"] {
 
 /* ── Gradient Photo Placeholders ───────────────────────── */
 .photo-placeholder-warm {
-  background: linear-gradient(135deg, #1a1209 0%, #2d1f0a 30%, #1a1510 60%, #0d0b08 100%);
+  background: linear-gradient(135deg, #fff9ef 0%, #f7e9d0 35%, #efe0c2 65%, #ead8b5 100%);
 }
 
 .photo-placeholder-cool {
-  background: linear-gradient(135deg, #0a0d1a 0%, #0f1520 40%, #0d1018 70%, #08090d 100%);
+  background: linear-gradient(135deg, #f7f9ff 0%, #e8edf7 40%, #dfe6f2 70%, #d8dfec 100%);
 }
 
 .photo-placeholder-neutral {
-  background: linear-gradient(135deg, #111111 0%, #1a1a18 40%, #141412 70%, #0a0a09 100%);
+  background: linear-gradient(135deg, #ffffff 0%, #f4f0e8 40%, #ece6dc 70%, #e4ddd1 100%);
 }
 
 .photo-placeholder-amber {
-  background: linear-gradient(135deg, #180f04 0%, #2a1a08 35%, #1a1108 65%, #0d0906 100%);
+  background: linear-gradient(135deg, #fff7ea 0%, #f9e8ca 35%, #f2dcba 65%, #ebceaa 100%);
 }
 
 .photo-placeholder-rose {
-  background: linear-gradient(135deg, #180812 0%, #251020 40%, #1a0d15 70%, #0d080a 100%);
+  background: linear-gradient(135deg, #fff6f8 0%, #f6e6ec 40%, #eddce5 70%, #e5d2dd 100%);
 }
 
 /* ── Frosted Glass ──────────────────────────────────────── */
 .glass {
-  background: rgba(17, 17, 17, 0.6);
+  background: rgba(255, 255, 255, 0.72);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(245, 240, 232, 0.06);
+  border: 1px solid rgba(31, 28, 23, 0.1);
 }
 
 .glass-nav {
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(247, 244, 238, 0.84);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  border-bottom: 1px solid rgba(245, 240, 232, 0.06);
+  border-bottom: 1px solid rgba(31, 28, 23, 0.12);
 }
 
 /* ── CTA Buttons ────────────────────────────────────────── */
@@ -191,8 +191,8 @@ a, button, input, select, textarea, [role="button"] {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: #F5F0E8;
-  color: #0A0A0A;
+  background: #1F1C17;
+  color: #F7F4EE;
   font-family: 'DM Sans', sans-serif;
   font-size: 0.78rem;
   font-weight: 600;
@@ -200,13 +200,13 @@ a, button, input, select, textarea, [role="button"] {
   text-transform: uppercase;
   padding: 14px 32px;
   transition: all 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  border: 1px solid #F5F0E8;
+  border: 1px solid #1F1C17;
 }
 
 .btn-primary:hover {
   background: #C9A96E;
   border-color: #C9A96E;
-  color: #0A0A0A;
+  color: #1F1C17;
   transform: translateY(-1px);
 }
 
@@ -215,14 +215,14 @@ a, button, input, select, textarea, [role="button"] {
   align-items: center;
   gap: 8px;
   background: transparent;
-  color: #F5F0E8;
+  color: #1F1C17;
   font-family: 'DM Sans', sans-serif;
   font-size: 0.78rem;
   font-weight: 500;
   letter-spacing: 0.18em;
   text-transform: uppercase;
   padding: 14px 32px;
-  border: 1px solid rgba(245, 240, 232, 0.4);
+  border: 1px solid rgba(31, 28, 23, 0.35);
   transition: all 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
@@ -257,16 +257,80 @@ a, button, input, select, textarea, [role="button"] {
   aspect-ratio: 9/16;
   border-radius: 24px;
   overflow: hidden;
-  box-shadow: 0 40px 80px rgba(0,0,0,0.8), 0 0 0 1px rgba(245,240,232,0.08);
+  box-shadow: 0 28px 60px rgba(54, 43, 30, 0.2), 0 0 0 1px rgba(31, 28, 23, 0.08);
 }
 
 /* ── Lightbox ───────────────────────────────────────────── */
 .lightbox-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.95);
+  background: rgba(247, 244, 238, 0.95);
   z-index: 9999;
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+/* Global light-theme overrides for hardcoded Tailwind classes */
+.bg-\[\#0A0A0A\],
+.bg-\[\#111111\],
+.bg-\[\#1A1A1A\],
+.bg-\[\#0f0b08\],
+.bg-\[\#1a120d\],
+.bg-black {
+  background-color: #F7F4EE !important;
+}
+
+/* Semi-transparent dark overlays restored for modal backdrops */
+.bg-black\/95,
+.bg-black\/90,
+.bg-black\/80,
+.bg-black\/70,
+.bg-black\/60,
+.bg-black\/50,
+.bg-black\/40,
+.bg-\[\#0A0A0A\]\/95,
+.bg-\[\#0A0A0A\]\/90,
+.bg-\[\#1a120d\]\/90 {
+  background-color: rgba(31, 28, 23, 0.88) !important;
+}
+
+/* bg-black/20 used for subtle overlays — keep semi-dark */
+.bg-black\/20 {
+  background-color: rgba(31, 28, 23, 0.20) !important;
+}
+
+/* Gradient from-stops: transparent in light theme (no dark vignettes) */
+.from-black,
+.from-black\/80,
+.from-black\/60,
+.from-black\/50,
+.from-\[\#0A0A0A\],
+.from-\[\#0A0A0A\]\/60 {
+  --tw-gradient-from: transparent var(--tw-gradient-from-position) !important;
+  --tw-gradient-to: transparent var(--tw-gradient-to-position) !important;
+}
+
+.via-black,
+.via-black\/20 {
+  --tw-gradient-stops: var(--tw-gradient-from), transparent var(--tw-gradient-via-position), var(--tw-gradient-to) !important;
+}
+
+.to-black,
+.to-black\/20,
+.to-\[\#0A0A0A\],
+.to-\[\#0A0A0A\]\/50 {
+  --tw-gradient-to: transparent var(--tw-gradient-to-position) !important;
+}
+
+select,
+textarea,
+input[type="date"] {
+  background-color: #F1ECE2 !important;
+  color: #1F1C17 !important;
+}
+
+select option {
+  background-color: #F1ECE2 !important;
+  color: #1F1C17 !important;
 }

@@ -22,7 +22,7 @@ export default function Footer() {
 
   return (
     <footer
-      className="bg-black border-t border-ivory/6"
+      className="bg-[#EAE5DB] border-t border-black/10"
       ref={ref as React.RefObject<HTMLElement>}
     >
       <div className="max-w-[1400px] mx-auto px-6 md:px-10 pt-20 pb-10">
@@ -36,13 +36,13 @@ export default function Footer() {
             <h3 className="font-cormorant italic text-ivory text-3xl font-light mb-4">
               Pedro <span className="not-italic font-semibold">Vargas</span>
             </h3>
-            <p className="font-dm text-ivory/35 text-sm leading-relaxed mb-6 max-w-[280px]">
+            <p className="font-dm text-black/50 text-sm leading-relaxed mb-6 max-w-[280px]">
               Capturamos los momentos que definen tu historia. Fotografía profesional en Ciudad de México y toda la República.
             </p>
             <div className="flex gap-3">
               <a
                 href="#"
-                className="w-9 h-9 border border-ivory/10 flex items-center justify-center text-ivory/40 hover:text-ivory hover:border-ivory/40 transition-all"
+                className="w-9 h-9 border border-black/15 flex items-center justify-center text-black/45 hover:text-gold hover:border-gold/40 transition-all"
                 aria-label="Instagram"
               >
                 <Instagram className="w-4 h-4" />
@@ -65,7 +65,7 @@ export default function Footer() {
                     <li key={link}>
                       <a
                         href="#"
-                        className="font-dm text-ivory/35 text-xs hover:text-ivory/70 transition-colors"
+                        className="font-dm text-black/45 text-xs hover:text-gold transition-colors"
                       >
                         {link}
                       </a>
@@ -78,16 +78,16 @@ export default function Footer() {
         </div>
 
         {/* Bottom bar */}
-        <div className="border-t border-ivory/6 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="font-dm text-ivory/20 text-xs">
+        <div className="border-t border-black/10 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <p className="font-dm text-black/35 text-xs">
             © 2024 Pedro Vargas Fotografía. Todos los derechos reservados.
           </p>
-          <p className="font-dm text-ivory/15 text-xs">
+          <p className="font-dm text-black/30 text-xs">
             Fotografía Profesional · Ciudad de México
           </p>
           <button
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            className="w-9 h-9 border border-ivory/10 flex items-center justify-center text-ivory/30 hover:text-ivory hover:border-ivory/40 transition-all"
+            className="w-9 h-9 border border-black/15 flex items-center justify-center text-black/35 hover:text-gold hover:border-gold/40 transition-all"
             aria-label="Back to top"
           >
             <ArrowUp className="w-4 h-4" />

@@ -46,9 +46,15 @@ export default function Hero() {
             filter: 'blur(100px)',
           }}
         />
-        {/* Deep vignette */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0A] via-transparent to-[#0A0A0A]/50" />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#0A0A0A]/60 via-transparent to-transparent" />
+        {/* Subtle light vignette — blends edges into cream body */}
+        <div
+          className="absolute inset-0"
+          style={{ background: 'linear-gradient(to top, rgba(247,244,238,0.55) 0%, transparent 35%, rgba(247,244,238,0.25) 100%)' }}
+        />
+        <div
+          className="absolute inset-0"
+          style={{ background: 'linear-gradient(to right, rgba(247,244,238,0.35) 0%, transparent 50%)' }}
+        />
       </div>
 
       {/* Main content */}
@@ -171,10 +177,13 @@ export default function Hero() {
                   filter: 'blur(20px)',
                 }}
               />
-              {/* Frame overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20" />
+              {/* Frame overlay — subtle scrim for copyright legibility */}
+              <div
+                className="absolute inset-0"
+                style={{ background: 'linear-gradient(to top, rgba(30,26,20,0.55) 0%, transparent 40%)' }}
+              />
               <div className="absolute bottom-6 left-6 right-6">
-                <p className="label-caps text-ivory/40 text-[0.6rem]">© Pedro Vargas Fotografía — 2024</p>
+                <p className="label-caps text-[#F7F4EE]/60 text-[0.6rem]">© Pedro Vargas Fotografía — 2024</p>
               </div>
             </div>
           </motion.div>
@@ -186,7 +195,7 @@ export default function Hero() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.7, delay: 1.3 }}
-        className="relative z-10 border-t border-ivory/8"
+        className="relative z-10 border-t border-black/10"
       >
         <div className="max-w-[1400px] mx-auto px-6 md:px-10 py-5 flex items-center justify-between md:justify-start gap-8 md:gap-16 overflow-x-auto">
           {stats.map((stat) => (

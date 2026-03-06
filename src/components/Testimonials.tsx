@@ -78,7 +78,7 @@ export default function Testimonials() {
 
   return (
     <section
-      className="section-padding bg-black overflow-hidden"
+      className="section-padding bg-[#EDE8DE] overflow-hidden"
       ref={ref as React.RefObject<HTMLElement>}
     >
       <div className="max-w-[1400px] mx-auto mb-14">
@@ -109,16 +109,16 @@ export default function Testimonials() {
               className="w-[340px] flex-shrink-0 mx-3 glass p-6 flex flex-col gap-4"
             >
               <Stars />
-              <p className="font-cormorant italic text-ivory/80 text-lg leading-relaxed flex-1">
+              <p className="font-cormorant italic text-black/75 text-lg leading-relaxed flex-1">
                 "{t.quote}"
               </p>
-              <div className="flex items-center gap-3 pt-3 border-t border-ivory/8">
+              <div className="flex items-center gap-3 pt-3 border-t border-black/12">
                 <div className={`w-9 h-9 rounded-full bg-gradient-to-br ${t.gradient} flex items-center justify-center flex-shrink-0`}>
-                  <span className="font-dm text-xs font-semibold text-ivory/70">{t.initials}</span>
+                  <span className="font-dm text-xs font-semibold text-white/80">{t.initials}</span>
                 </div>
                 <div>
-                  <p className="font-dm text-ivory text-sm font-medium leading-tight">{t.name}</p>
-                  <p className="font-dm text-ivory/35 text-xs mt-0.5">{t.event}</p>
+                  <p className="font-dm text-black text-sm font-medium leading-tight">{t.name}</p>
+                  <p className="font-dm text-black/45 text-xs mt-0.5">{t.event}</p>
                 </div>
               </div>
             </div>
