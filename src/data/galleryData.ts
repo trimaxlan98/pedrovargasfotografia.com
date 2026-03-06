@@ -1,4 +1,5 @@
 import heroPedro from '../assets/photos-web/hero-pedro.jpg'
+import heroBoda from '../assets/photos-web/hero-boda.jpg'
 import aboutPedro from '../assets/photos-web/about-pedro.jpg'
 
 import portfolioBodasSesionCampo from '../assets/photos-web/portfolio-bodas-sesion-campo.jpg'
@@ -23,9 +24,9 @@ import eventXvPreparativos from '../assets/photos-web/evento-xv-preparativos.jpg
 
 export const profilePhotos = {
   hero: {
-    src: heroPedro,
-    alt: 'Retrato del fotógrafo Pedro Vargas',
-    position: '50% 20%',
+    src: heroBoda,
+    alt: 'Pareja de novios besándose con fuegos artificiales de fondo',
+    position: '50% 0%',
   },
   about: {
     src: aboutPedro,

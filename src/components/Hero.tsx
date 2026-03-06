@@ -27,42 +27,30 @@ export default function Hero() {
   }, [])
 
   return (
-    <section id="inicio" className="relative h-[100svh] min-h-[640px] overflow-hidden flex flex-col">
-      {/* Parallax background */}
-      <div ref={bgRef} className="absolute inset-0 -top-[20%] film-grain" style={{ willChange: 'transform' }}>
-        {/* Warm amber orb */}
+    <section id="inicio" className="relative h-[100svh] min-h-[640px] overflow-hidden flex flex-col bg-[#F7F4EE]">
+      {/* Ambient orbs */}
+      <div ref={bgRef} className="absolute inset-0 film-grain pointer-events-none" style={{ willChange: 'transform' }}>
         <div
-          className="absolute bottom-[5%] left-[5%] w-[500px] h-[500px] rounded-full"
+          className="absolute bottom-[10%] left-[5%] w-[500px] h-[500px] rounded-full"
           style={{
-            background: 'radial-gradient(circle, rgba(201,169,110,0.18) 0%, rgba(180,120,40,0.08) 50%, transparent 70%)',
+            background: 'radial-gradient(circle, rgba(201,169,110,0.14) 0%, rgba(180,120,40,0.05) 50%, transparent 70%)',
             filter: 'blur(120px)',
           }}
         />
-        {/* Cool teal orb */}
         <div
-          className="absolute top-[5%] right-[5%] w-[400px] h-[400px] rounded-full"
+          className="absolute top-[5%] right-[30%] w-[400px] h-[400px] rounded-full"
           style={{
-            background: 'radial-gradient(circle, rgba(40,80,120,0.15) 0%, rgba(20,60,100,0.05) 60%, transparent 80%)',
+            background: 'radial-gradient(circle, rgba(40,80,120,0.08) 0%, transparent 70%)',
             filter: 'blur(100px)',
           }}
-        />
-        {/* Subtle light vignette — blends edges into cream body */}
-        <div
-          className="absolute inset-0"
-          style={{ background: 'linear-gradient(to top, rgba(247,244,238,0.55) 0%, transparent 35%, rgba(247,244,238,0.25) 100%)' }}
-        />
-        <div
-          className="absolute inset-0"
-          style={{ background: 'linear-gradient(to right, rgba(247,244,238,0.35) 0%, transparent 50%)' }}
         />
       </div>
 
       {/* Main content */}
       <div className="relative z-10 flex-1 flex items-center">
-        <div className="w-full max-w-[1400px] mx-auto px-6 md:px-10 grid lg:grid-cols-[1fr_auto] gap-12 lg:gap-20 items-center">
+        <div className="w-full max-w-[1400px] mx-auto px-6 md:px-10 grid lg:grid-cols-[1fr_auto] gap-10 lg:gap-16 items-center">
           {/* Left — Text */}
           <div>
-            {/* Overline */}
             <motion.p
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
@@ -72,7 +60,6 @@ export default function Hero() {
               Fotografía Profesional
             </motion.p>
 
-            {/* H1 line 1 */}
             <div className="overflow-hidden mb-1">
               <div className="flex flex-wrap gap-x-5">
                 {words1.map((word, i) => (
@@ -81,7 +68,7 @@ export default function Hero() {
                     initial={{ y: '110%', opacity: 0 }}
                     animate={{ y: '0%', opacity: 1 }}
                     transition={{ duration: 0.8, delay: 0.4 + i * 0.12, ease: [0.16, 1, 0.3, 1] }}
-                    className="font-cormorant font-light text-ivory text-fluid-hero inline-block"
+                    className="font-cormorant font-light text-[#0A0A0A] text-fluid-hero inline-block"
                   >
                     {word}
                   </motion.span>
@@ -89,7 +76,6 @@ export default function Hero() {
               </div>
             </div>
 
-            {/* H1 line 2 */}
             <div className="overflow-hidden mb-8">
               <div className="flex flex-wrap gap-x-5">
                 {words2.map((word, i) => (
@@ -99,7 +85,7 @@ export default function Hero() {
                     animate={{ y: '0%', opacity: 1 }}
                     transition={{ duration: 0.8, delay: 0.55 + i * 0.12, ease: [0.16, 1, 0.3, 1] }}
                     className={`font-cormorant font-light text-fluid-hero inline-block ${
-                      word === 'Luz' ? 'text-gold italic' : 'text-ivory'
+                      word === 'Luz' ? 'text-gold italic' : 'text-[#0A0A0A]'
                     }`}
                   >
                     {word}
@@ -108,17 +94,15 @@ export default function Hero() {
               </div>
             </div>
 
-            {/* Subline */}
             <motion.p
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.95 }}
-              className="font-cormorant italic text-ivory/50 text-xl md:text-2xl mb-10 tracking-wide"
+              className="font-cormorant italic text-[#0A0A0A]/45 text-xl md:text-2xl mb-10 tracking-wide"
             >
               Bodas · Corporativo · Retratos · Eventos Sociales
             </motion.p>
 
-            {/* CTAs */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -140,19 +124,17 @@ export default function Hero() {
             </motion.div>
           </div>
 
-          {/* Right — Portrait Placeholder */}
+          {/* Right — Landscape image card */}
           <motion.div
-            initial={{ opacity: 0, x: 60, rotateY: 8 }}
-            animate={{ opacity: 1, x: 0, rotateY: 3 }}
+            initial={{ opacity: 0, x: 60 }}
+            animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 1.1, delay: 0.6, ease: [0.16, 1, 0.3, 1] }}
             className="hidden lg:block flex-shrink-0"
-            style={{ perspective: '800px' }}
           >
             <div
-              className="w-[380px] xl:w-[440px] h-[520px] xl:h-[600px] rounded-sm relative overflow-hidden"
+              className="w-[500px] xl:w-[560px] h-[340px] xl:h-[380px] rounded-sm relative overflow-hidden"
               style={{
-                transform: 'rotateY(-4deg) rotateX(2deg)',
-                boxShadow: '0 60px 120px rgba(0,0,0,0.8), inset 0 0 0 1px rgba(245,240,232,0.06)',
+                boxShadow: '0 40px 90px rgba(0,0,0,0.22), 0 8px 24px rgba(0,0,0,0.10), inset 0 0 0 1px rgba(0,0,0,0.06)',
               }}
             >
               <img
@@ -160,30 +142,14 @@ export default function Hero() {
                 alt={profilePhotos.hero.alt}
                 loading="eager"
                 className="absolute inset-0 w-full h-full object-cover"
-                style={{ objectPosition: profilePhotos.hero.position }}
+                style={{ objectPosition: '50% 0%' }}
               />
-              {/* Inner bokeh light */}
-              <div
-                className="absolute bottom-[20%] right-[15%] w-40 h-40 rounded-full"
-                style={{
-                  background: 'radial-gradient(circle, rgba(201,169,110,0.25) 0%, transparent 70%)',
-                  filter: 'blur(30px)',
-                }}
-              />
-              <div
-                className="absolute top-[30%] left-[20%] w-20 h-20 rounded-full"
-                style={{
-                  background: 'radial-gradient(circle, rgba(245,240,232,0.08) 0%, transparent 70%)',
-                  filter: 'blur(20px)',
-                }}
-              />
-              {/* Frame overlay — subtle scrim for copyright legibility */}
               <div
                 className="absolute inset-0"
-                style={{ background: 'linear-gradient(to top, rgba(30,26,20,0.55) 0%, transparent 40%)' }}
+                style={{ background: 'linear-gradient(to top, rgba(10,10,10,0.45) 0%, transparent 45%)' }}
               />
-              <div className="absolute bottom-6 left-6 right-6">
-                <p className="label-caps text-[#F7F4EE]/60 text-[0.6rem]">© Pedro Vargas Fotografía — 2024</p>
+              <div className="absolute bottom-4 left-5 right-5">
+                <p className="label-caps text-white/55 text-[0.6rem]">© Pedro Vargas Fotografía — 2024</p>
               </div>
             </div>
           </motion.div>
@@ -200,8 +166,8 @@ export default function Hero() {
         <div className="max-w-[1400px] mx-auto px-6 md:px-10 py-5 flex items-center justify-between md:justify-start gap-8 md:gap-16 overflow-x-auto">
           {stats.map((stat) => (
             <div key={stat.label} className="flex-shrink-0 text-center md:text-left">
-              <p className="font-cormorant text-2xl font-semibold text-ivory">{stat.value}</p>
-              <p className="label-caps text-ivory/40 text-[0.6rem] mt-0.5">{stat.label}</p>
+              <p className="font-cormorant text-2xl font-semibold text-[#0A0A0A]">{stat.value}</p>
+              <p className="label-caps text-[#0A0A0A]/40 text-[0.6rem] mt-0.5">{stat.label}</p>
             </div>
           ))}
         </div>
@@ -214,8 +180,8 @@ export default function Hero() {
         transition={{ delay: 1.6, duration: 0.6 }}
         className="absolute bottom-20 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-2 lg:bottom-24"
       >
-        <span className="label-caps text-ivory/25 text-[0.55rem]">Scroll</span>
-        <ChevronDown className="w-4 h-4 text-ivory/30 bounce-slow" />
+        <span className="label-caps text-[#0A0A0A]/25 text-[0.55rem]">Scroll</span>
+        <ChevronDown className="w-4 h-4 text-[#0A0A0A]/30 bounce-slow" />
       </motion.div>
     </section>
   )
