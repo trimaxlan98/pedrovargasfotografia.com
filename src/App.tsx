@@ -15,6 +15,7 @@ import Contact from './components/Contact'
 import Footer from './components/Footer'
 import CustomCursor from './components/CustomCursor'
 import InvitationPage from './components/invitations/InvitationPage'
+import GuestInvitationPage from './components/invitations/GuestInvitationPage'
 
 // Dashboards
 import AdminDashboard from './components/admin/AdminDashboard'
@@ -76,6 +77,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<MainSite />} />
           <Route path="/invitacion/:token" element={<InvitationPage />} />
+          <Route path="/g/:guestToken" element={<GuestInvitationPage />} />
           <Route path="/admin" element={<ProtectedAdmin />} />
           <Route path="/cliente" element={<ProtectedClient />} />
           <Route path="*" element={<Navigate to="/" replace />} />

@@ -1,13 +1,39 @@
 import 'dotenv/config'
 import { PrismaClient } from '@prisma/client'
 import bcrypt from 'bcryptjs'
+import fs from 'fs'
+import path from 'path'
 
 const prisma = new PrismaClient()
+const ROOT_DIR = path.resolve(__dirname, '..', '..')
+
+const SAMPLE_PORTFOLIO_IMAGES = [
+  { name: 'sample1.jpg', source: path.resolve(ROOT_DIR, 'src/assets/photos-web/portfolio-boda-bosque.jpg') },
+  { name: 'sample2.jpg', source: path.resolve(ROOT_DIR, 'src/assets/photos-web/portfolio-boda-fuente.jpg') },
+  { name: 'sample3.jpg', source: path.resolve(ROOT_DIR, 'src/assets/photos-web/portfolio-boda-fiesta.jpg') },
+  { name: 'sample4.jpg', source: path.resolve(ROOT_DIR, 'src/assets/photos-web/portfolio-boda-preparativos.jpg') },
+  { name: 'sample5.jpg', source: path.resolve(ROOT_DIR, 'src/assets/photos-web/portfolio-xv-retrato-jardin.jpg') },
+  { name: 'sample6.jpg', source: path.resolve(ROOT_DIR, 'src/assets/photos-web/portfolio-xv-vestido-rojo.jpg') },
+]
+
+function ensureSamplePortfolioUploads(): string[] {
+  const uploadDir = path.resolve(process.cwd(), process.env.UPLOAD_DIR || 'uploads')
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true })
+  }
+
+  return SAMPLE_PORTFOLIO_IMAGES.map(({ name, source }) => {
+    if (fs.existsSync(source)) {
+      fs.copyFileSync(source, path.join(uploadDir, name))
+    }
+    return `/uploads/${name}`
+  })
+}
 
 async function main() {
   console.log('🌱 Iniciando seed de la base de datos...')
 
-  // ─── Admin ─────────────────────────────────────────────────────────────────
+  // ──────────────── Admin ────────────────────────────────────────────────────────────
   const adminEmail = process.env.ADMIN_EMAIL || 'admin@studiolumiere.mx'
   const adminPassword = process.env.ADMIN_PASSWORD || 'Admin123!'
   const adminName = process.env.ADMIN_NAME || 'Miguel Ángel Lumière'
@@ -26,7 +52,7 @@ async function main() {
   })
   console.log(`✅ Admin creado: ${admin.email}`)
 
-  // ─── Cliente de prueba ──────────────────────────────────────────────────────
+  // ──────────────── Cliente de prueba ──────────────────────────────────────────────
   const clientPassword = await bcrypt.hash('Cliente123!', 12)
   const client = await prisma.user.upsert({
     where: { email: 'cliente@ejemplo.mx' },
@@ -41,7 +67,7 @@ async function main() {
   })
   console.log(`✅ Cliente de prueba creado: ${client.email}`)
 
-  // ─── Testimonios ───────────────────────────────────────────────────────────
+  // ──────────────── Testimonios ──────────────────────────────────────────────────────
   const testimonials = [
     { clientName: 'Sofía y Rodrigo', eventType: 'Boda', text: 'Miguel capturó cada momento de nuestra boda con una magia increíble. Las fotos superaron todas nuestras expectativas.', rating: 5, featured: true },
     { clientName: 'Empresa TechMex', eventType: 'Corporativo', text: 'Profesionalismo y creatividad impecables. Nuestro evento anual quedó inmortalizado de manera excepcional.', rating: 5, featured: true },
@@ -56,7 +82,7 @@ async function main() {
   }
   console.log(`✅ ${testimonials.length} testimonios creados`)
 
-  // ─── Servicios ─────────────────────────────────────────────────────────────
+  // ──────────────── Servicios ────────────────────────────────────────────────────────
   const services = [
     {
       title: 'Bodas & Celebraciones',
@@ -113,14 +139,15 @@ async function main() {
   }
   console.log(`✅ ${services.length} servicios creados`)
 
-  // ─── Portfolio de muestra ──────────────────────────────────────────────────
+  // ──────────────── Portfolio de muestra ──────────────────────────────────────────────
+  const sampleImageUrls = ensureSamplePortfolioUploads()
   const portfolioItems = [
-    { title: 'Boda en Hacienda', category: 'Bodas', imageUrl: '/uploads/sample1.jpg', description: 'Una boda mágica en las afueras de CDMX', eventDate: '2024-06-15', location: 'Hacienda San Miguel, CDMX', featured: true },
-    { title: 'Congreso Anual TechMex', category: 'Corporativo', imageUrl: '/uploads/sample2.jpg', description: 'Cobertura completa del congreso tecnológico', eventDate: '2024-03-20', location: 'Camino Real, CDMX', featured: false },
-    { title: 'XV Años Isabella', category: 'Quince Años', imageUrl: '/uploads/sample3.jpg', description: 'Una noche mágica de quinceañera', eventDate: '2024-04-28', location: 'Salón Versalles, CDMX', featured: true },
-    { title: 'Graduación UNAM 2024', category: 'Graduaciones', imageUrl: '/uploads/sample4.jpg', description: 'Generación 2024 Universidad Nacional', eventDate: '2024-07-10', location: 'UNAM, Ciudad de México', featured: false },
-    { title: 'Sesión Editorial Vogue', category: 'Social', imageUrl: '/uploads/sample5.jpg', description: 'Editorial de moda primavera-verano', eventDate: '2024-02-14', location: 'Estudio Lumière, CDMX', featured: true },
-    { title: 'Boda en Playa', category: 'Bodas', imageUrl: '/uploads/sample6.jpg', description: 'Ceremonia romántica frente al mar', eventDate: '2023-12-31', location: 'Los Cabos, BCS', featured: false },
+    { title: 'Boda en Hacienda', category: 'Bodas', imageUrl: sampleImageUrls[0], description: 'Una boda mágica en las afueras de CDMX', eventDate: '2024-06-15', location: 'Hacienda San Miguel, CDMX', featured: true },
+    { title: 'Congreso Anual TechMex', category: 'Corporativo', imageUrl: sampleImageUrls[1], description: 'Cobertura completa del congreso tecnológico', eventDate: '2024-03-20', location: 'Camino Real, CDMX', featured: false },
+    { title: 'XV Años Isabella', category: 'Quince Años', imageUrl: sampleImageUrls[2], description: 'Una noche mágica de quinceañera', eventDate: '2024-04-28', location: 'Salón Versalles, CDMX', featured: true },
+    { title: 'Graduación UNAM 2024', category: 'Graduaciones', imageUrl: sampleImageUrls[3], description: 'Generación 2024 Universidad Nacional', eventDate: '2024-07-10', location: 'UNAM, Ciudad de México', featured: false },
+    { title: 'Sesión Editorial Vogue', category: 'Social', imageUrl: sampleImageUrls[4], description: 'Editorial de moda primavera-verano', eventDate: '2024-02-14', location: 'Estudio Lumière, CDMX', featured: true },
+    { title: 'Boda en Playa', category: 'Bodas', imageUrl: sampleImageUrls[5], description: 'Ceremonia romántica frente al mar', eventDate: '2023-12-31', location: 'Los Cabos, BCS', featured: false },
   ]
 
   for (const p of portfolioItems) {
@@ -128,7 +155,7 @@ async function main() {
   }
   console.log(`✅ ${portfolioItems.length} items de portfolio creados`)
 
-  // ─── Configuración del sitio ───────────────────────────────────────────────
+  // ──────────────── Configuración del sitio ───────────────────────────────────────────
   await prisma.siteSettings.upsert({
     where: { id: 'main' },
     update: {},
@@ -145,7 +172,7 @@ async function main() {
   })
   console.log('✅ Configuración del sitio creada')
 
-  // ─── Solicitud de contacto de muestra ─────────────────────────────────────
+  // ──────────────── Solicitud de contacto de muestra ─────────────────────────────────
   await prisma.contactRequest.create({
     data: {
       name: 'Laura Martínez',

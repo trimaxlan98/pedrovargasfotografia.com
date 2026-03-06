@@ -8,6 +8,10 @@ import {
 import { useAuth } from '../../contexts/AuthContext'
 import api from '../../api/client'
 import AdminInvitations from './AdminInvitations'
+import AdminBookings from './AdminBookings'
+import AdminPortfolio from './AdminPortfolio'
+import AdminClients from './AdminClients'
+import AdminSettings from './AdminSettings'
 
 interface DashboardStats {
   totalContacts: number
@@ -110,7 +114,7 @@ export default function AdminDashboard() {
   ]
 
   return (
-    <div className="min-h-screen bg-near-black flex">
+    <div className="min-h-dvh bg-near-black flex overflow-x-clip">
       {/* Sidebar */}
       <aside className={`
         fixed inset-y-0 left-0 z-50 w-64 bg-surface border-r border-white/5 flex flex-col
@@ -165,9 +169,9 @@ export default function AdminDashboard() {
       )}
 
       {/* Main */}
-      <div className="flex-1 lg:ml-64 flex flex-col min-h-screen">
+      <div className="flex-1 lg:ml-64 flex flex-col min-h-dvh">
         {/* Header */}
-        <header className="sticky top-0 z-30 bg-near-black/90 backdrop-blur-sm border-b border-white/5 px-6 py-4 flex items-center gap-4">
+        <header className="sticky top-0 z-30 bg-near-black/90 backdrop-blur-sm border-b border-white/5 px-4 sm:px-6 py-4 flex items-center gap-4">
           <button
             className="lg:hidden text-ivory/60 hover:text-ivory"
             onClick={() => setSidebarOpen(true)}
@@ -183,7 +187,7 @@ export default function AdminDashboard() {
         </header>
 
         {/* Content */}
-        <main className="flex-1 p-6">
+        <main className="flex-1 p-4 sm:p-6">
           {isLoading && section === 'dashboard' ? (
             <div className="flex items-center justify-center h-64">
               <div className="w-8 h-8 border-2 border-gold border-t-transparent rounded-full animate-spin" />
@@ -199,9 +203,10 @@ export default function AdminDashboard() {
                 />
               )}
               {section === 'invitations' && <AdminInvitations />}
-              {['bookings', 'portfolio', 'clients', 'settings'].includes(section) && (
-                <ComingSoon section={section} />
-              )}
+              {section === 'bookings'    && <AdminBookings />}
+              {section === 'portfolio'   && <AdminPortfolio />}
+              {section === 'clients'     && <AdminClients />}
+              {section === 'settings'    && <AdminSettings />}
             </>
           )}
         </main>
@@ -299,85 +304,107 @@ function ContactsView({
 }) {
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
         <p className="text-ivory/60 text-sm font-dm">{contacts.length} solicitudes</p>
         <button onClick={onRefresh} className="text-gold hover:text-gold-light text-sm font-dm">
           Actualizar
         </button>
       </div>
 
-      <div className="glass rounded-xl border border-white/5 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-white/5">
-                {['Nombre', 'Email', 'Servicio', 'Fecha', 'Estado', 'Acción'].map(h => (
-                  <th key={h} className="px-4 py-3 text-left text-ivory/40 text-xs font-dm uppercase tracking-wider">
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-white/5">
-              {contacts.map(c => (
-                <tr key={c.id} className="hover:bg-white/3 transition-colors">
-                  <td className="px-4 py-3 text-ivory text-sm font-dm">{c.name}</td>
-                  <td className="px-4 py-3 text-ivory/60 text-sm font-dm">{c.email}</td>
-                  <td className="px-4 py-3 text-ivory/80 text-sm font-dm">{c.service}</td>
-                  <td className="px-4 py-3 text-ivory/50 text-xs font-dm">
-                    {new Date(c.createdAt).toLocaleDateString('es-MX')}
-                  </td>
-                  <td className="px-4 py-3">
-                    <StatusBadge status={c.status} />
-                  </td>
-                  <td className="px-4 py-3">
-                    <select
-                      value={c.status}
-                      onChange={e => onUpdateStatus(c.id, e.target.value)}
-                      className="bg-surface border border-white/10 rounded text-ivory/80 text-xs px-2 py-1"
-                    >
-                      <option value="PENDING">Pendiente</option>
-                      <option value="IN_PROGRESS">En proceso</option>
-                      <option value="RESPONDED">Respondido</option>
-                      <option value="CLOSED">Cerrado</option>
-                    </select>
-                  </td>
-                </tr>
-              ))}
-              {contacts.length === 0 && (
-                <tr>
-                  <td colSpan={6} className="px-4 py-12 text-center text-ivory/30 font-dm text-sm">
-                    No hay solicitudes de contacto
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+      {contacts.length === 0 ? (
+        <div className="glass rounded-xl border border-white/5 p-10 text-center text-ivory/30 font-dm text-sm">
+          No hay solicitudes de contacto
         </div>
-      </div>
+      ) : (
+        <>
+          <div className="md:hidden space-y-3">
+            {contacts.map(c => (
+              <div key={c.id} className="glass rounded-xl border border-white/5 p-4 space-y-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-ivory text-sm font-dm truncate">{c.name}</p>
+                    <p className="text-ivory/50 text-xs truncate">{c.email}</p>
+                  </div>
+                  <StatusBadge status={c.status} />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 text-xs font-dm">
+                  <div>
+                    <p className="text-ivory/35 uppercase tracking-wider mb-1">Servicio</p>
+                    <p className="text-ivory/75">{c.service}</p>
+                  </div>
+                  <div>
+                    <p className="text-ivory/35 uppercase tracking-wider mb-1">Fecha</p>
+                    <p className="text-ivory/75">{new Date(c.createdAt).toLocaleDateString('es-MX')}</p>
+                  </div>
+                </div>
+
+                <select
+                  value={c.status}
+                  onChange={e => onUpdateStatus(c.id, e.target.value)}
+                  className="w-full bg-surface border border-white/10 rounded-lg text-ivory/80 text-xs px-3 py-2"
+                >
+                  <option value="PENDING">Pendiente</option>
+                  <option value="IN_PROGRESS">En proceso</option>
+                  <option value="RESPONDED">Respondido</option>
+                  <option value="CLOSED">Cerrado</option>
+                </select>
+              </div>
+            ))}
+          </div>
+
+          <div className="hidden md:block glass rounded-xl border border-white/5 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[760px]">
+                <thead>
+                  <tr className="border-b border-white/5">
+                    {['Nombre', 'Email', 'Servicio', 'Fecha', 'Estado', 'Acción'].map(h => (
+                      <th key={h} className="px-4 py-3 text-left text-ivory/40 text-xs font-dm uppercase tracking-wider">
+                        {h}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/5">
+                  {contacts.map(c => (
+                    <tr key={c.id} className="hover:bg-white/3 transition-colors">
+                      <td className="px-4 py-3 text-ivory text-sm font-dm">{c.name}</td>
+                      <td className="px-4 py-3 text-ivory/60 text-sm font-dm">{c.email}</td>
+                      <td className="px-4 py-3 text-ivory/80 text-sm font-dm">{c.service}</td>
+                      <td className="px-4 py-3 text-ivory/50 text-xs font-dm">
+                        {new Date(c.createdAt).toLocaleDateString('es-MX')}
+                      </td>
+                      <td className="px-4 py-3">
+                        <StatusBadge status={c.status} />
+                      </td>
+                      <td className="px-4 py-3">
+                        <select
+                          value={c.status}
+                          onChange={e => onUpdateStatus(c.id, e.target.value)}
+                          className="bg-surface border border-white/10 rounded text-ivory/80 text-xs px-2 py-1"
+                        >
+                          <option value="PENDING">Pendiente</option>
+                          <option value="IN_PROGRESS">En proceso</option>
+                          <option value="RESPONDED">Respondido</option>
+                          <option value="CLOSED">Cerrado</option>
+                        </select>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   )
 }
-
 function StatusBadge({ status }: { status: string }) {
   const s = STATUS_LABELS[status] || { label: status, color: 'text-ivory/50 bg-white/5' }
   return (
     <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-dm ${s.color}`}>
       {s.label}
     </span>
-  )
-}
-
-function ComingSoon({ section }: { section: string }) {
-  return (
-    <div className="flex flex-col items-center justify-center h-64 gap-4 text-center">
-      <div className="w-16 h-16 rounded-2xl bg-gold/10 flex items-center justify-center">
-        <Settings className="text-gold" size={28} />
-      </div>
-      <div>
-        <h3 className="font-cormorant text-xl text-ivory capitalize">{section}</h3>
-        <p className="text-ivory/40 text-sm font-dm mt-1">Esta sección se habilitará próximamente</p>
-      </div>
-    </div>
   )
 }

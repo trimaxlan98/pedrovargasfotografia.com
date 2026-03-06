@@ -56,6 +56,60 @@ router.get('/settings', async (_req, res) => {
   R.success(res, settings)
 })
 
+// GET /api/public/guest/:guestToken  — invitación del invitado individual
+router.get('/guest/:guestToken', async (req, res) => {
+  const guest = await prisma.invitationGuest.findUnique({
+    where: { token: req.params.guestToken },
+    include: { invitation: true },
+  })
+  if (!guest || !guest.invitation.isPublished) {
+    R.notFound(res, 'Invitación no encontrada')
+    return
+  }
+  const { invitation } = guest
+  R.success(res, {
+    guest: {
+      id: guest.id,
+      name: guest.name,
+      token: guest.token,
+      response: guest.response,
+      respondedAt: guest.respondedAt,
+      personalizedMessage: guest.personalizedMessage,
+    },
+    invitation: { ...invitation, gallery: parseGallery(invitation.gallery) },
+  })
+})
+
+// POST /api/public/guest/:guestToken/rsvp  — respuesta RSVP
+router.post('/guest/:guestToken/rsvp', async (req, res) => {
+  const { response } = req.body
+  if (!['ACCEPTED', 'DECLINED'].includes(response)) {
+    R.badRequest(res, 'Respuesta inválida. Use ACCEPTED o DECLINED')
+    return
+  }
+
+  const guest = await prisma.invitationGuest.findUnique({
+    where: { token: req.params.guestToken },
+    include: { invitation: true },
+  })
+  if (!guest || !guest.invitation.isPublished) {
+    R.notFound(res, 'Invitación no encontrada')
+    return
+  }
+
+  // Check deadline
+  if (guest.invitation.rsvpDeadline && new Date() > new Date(guest.invitation.rsvpDeadline)) {
+    R.badRequest(res, 'El plazo para responder ha vencido')
+    return
+  }
+
+  const updated = await prisma.invitationGuest.update({
+    where: { id: guest.id },
+    data: { response, respondedAt: new Date() },
+  })
+  R.success(res, updated, response === 'ACCEPTED' ? '¡Gracias por confirmar tu asistencia!' : 'Recibimos tu respuesta, lamentamos que no puedas asistir.')
+})
+
 // GET /api/public/invitation/:token  — vista pública de invitación
 router.get('/invitation/:token', async (req, res) => {
   const invitation = await prisma.digitalInvitation.findUnique({

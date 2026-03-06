@@ -1,0 +1,18 @@
+import { Response } from 'express';
+import { AuthRequest } from '../types';
+export declare function getMyBookings(req: AuthRequest, res: Response): Promise<void>;
+export declare function getMyBooking(req: AuthRequest, res: Response): Promise<void>;
+export declare function createBooking(req: AuthRequest, res: Response): Promise<void>;
+export declare function cancelBooking(req: AuthRequest, res: Response): Promise<void>;
+export declare function getMyInvitations(req: AuthRequest, res: Response): Promise<void>;
+export declare function getMyInvitation(req: AuthRequest, res: Response): Promise<void>;
+export declare function createInvitation(req: AuthRequest, res: Response): Promise<void>;
+export declare function updateInvitation(req: AuthRequest, res: Response): Promise<void>;
+export declare function deleteInvitation(req: AuthRequest, res: Response): Promise<void>;
+export declare function toggleInvitationPublished(req: AuthRequest, res: Response): Promise<void>;
+export declare function addGuests(req: AuthRequest, res: Response): Promise<void>;
+export declare function seedGuestsForDevelopment(req: AuthRequest, res: Response): Promise<void>;
+export declare function listGuests(req: AuthRequest, res: Response): Promise<void>;
+export declare function deleteGuest(req: AuthRequest, res: Response): Promise<void>;
+export declare function addInvitationPhotos(req: AuthRequest, res: Response): Promise<void>;
+//# sourceMappingURL=clientController.d.ts.map

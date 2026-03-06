@@ -68,6 +68,11 @@ export async function apiRequest<T = unknown>(
     }
   }
 
+  // Si es 204 No Content, no intentar parsear JSON
+  if (response.status === 204) {
+    return {} as T
+  }
+
   const data = await response.json()
 
   if (!response.ok) {

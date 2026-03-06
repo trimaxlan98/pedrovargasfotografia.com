@@ -52,6 +52,9 @@ router.put('/invitations/:id', admin.updateInvitation)
 router.delete('/invitations/:id', admin.deleteInvitation)
 router.patch('/invitations/:id/toggle-published', admin.toggleInvitationPublished)
 router.post('/invitations/:id/photos', uploadImage.array('images', 8), admin.addInvitationPhotos)
+router.get('/invitations/:id/guests', admin.listGuestsByInvitation)
+router.post('/invitations/:id/guests', admin.addGuestsByInvitation)
+router.delete('/invitations/:id/guests/:gid', admin.deleteGuestByInvitation)
 
 // Configuración del sitio
 router.get('/settings', admin.getSettings)

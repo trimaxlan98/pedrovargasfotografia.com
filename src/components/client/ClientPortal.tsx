@@ -2,11 +2,12 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import {
   CalendarDays, Mail, LogOut, Plus, Eye, CheckCircle, Clock, XCircle,
-  ExternalLink, Pencil, Trash2, Copy, Check, ToggleLeft, ToggleRight,
+  ExternalLink, Pencil, Trash2, Copy, Check, ToggleLeft, ToggleRight, Users,
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import api from '../../api/client'
 import InvitationWizard from '../invitations/InvitationWizard'
+import GuestListPanel from './GuestListPanel'
 import { ApiInvitation } from '../invitations/invitationTypes'
 
 interface Booking {
@@ -45,6 +46,7 @@ export default function ClientPortal() {
   const [editInvitation, setEditInvitation] = useState<InvitationItem | null>(null)
   const [copied, setCopied] = useState<string | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
+  const [guestPanelInv, setGuestPanelInv] = useState<InvitationItem | null>(null)
 
   useEffect(() => {
     if (tab === 'bookings') loadBookings()
@@ -267,7 +269,9 @@ export default function ClientPortal() {
               </div>
             ) : (
               <div className="grid sm:grid-cols-2 gap-4">
-                {invitations.map(inv => (
+                {invitations.map(inv => {
+                  const stats = inv.guestStats ?? { total: 0, confirmed: 0, pending: 0, declined: 0 }
+                  return (
                   <motion.div
                     key={inv.id}
                     className="glass rounded-xl border border-white/5 p-5 flex flex-col gap-4"
@@ -298,10 +302,21 @@ export default function ClientPortal() {
                     </div>
 
                     {/* Stats row */}
-                    <div className="flex items-center gap-3 text-xs font-dm text-ivory/40">
-                      <span className="flex items-center gap-1">
-                        <Eye size={11} /> {inv.views} vistas
-                      </span>
+                    <div className="space-y-2 border-y border-white/5 py-3">
+                      <div className="flex items-center gap-3 text-xs font-dm text-ivory/40">
+                        <span className="flex items-center gap-1">
+                          <Eye size={11} /> {inv.views} vistas
+                        </span>
+                        <span className="ml-auto text-ivory/30">{stats.total} invitados</span>
+                      </div>
+                      <p className="text-[0.65rem] uppercase tracking-[0.2em] text-ivory/30 font-dm">
+                        Invitados confirmados y en espera
+                      </p>
+                      <div className="flex items-center gap-3 text-xs font-dm">
+                        <span className="text-green-400">Confirmados: {stats.confirmed}</span>
+                        <span className="text-ivory/45">En espera: {stats.pending}</span>
+                        <span className="text-red-400 ml-auto">No asistiran: {stats.declined}</span>
+                      </div>
                     </div>
 
                     {/* Action buttons */}
@@ -312,6 +327,15 @@ export default function ClientPortal() {
                         className="flex items-center gap-1.5 text-xs font-dm text-ivory/50 hover:text-gold transition-colors px-2 py-1.5"
                       >
                         <Pencil size={12} /> Editar
+                      </button>
+
+                      {/* Guests */}
+                      <button
+                        onClick={() => setGuestPanelInv(inv)}
+                        className="flex items-center gap-1.5 text-xs font-dm text-ivory/50 hover:text-gold transition-colors px-2 py-1.5"
+                        title="Gestionar invitados"
+                      >
+                        <Users size={12} /> Invitados
                       </button>
 
                       {/* Copy link */}
@@ -365,7 +389,8 @@ export default function ClientPortal() {
                       )}
                     </div>
                   </motion.div>
-                ))}
+                  )
+                })}
               </div>
             )}
           </div>
@@ -388,6 +413,15 @@ export default function ClientPortal() {
             ownerEmail={user?.email}
             mode="client"
             initialData={editInvitation ?? undefined}
+          />
+        )}
+
+        {/* Guest list panel */}
+        {guestPanelInv && (
+          <GuestListPanel
+            invitationId={guestPanelInv.id}
+            invitationTitle={guestPanelInv.title}
+            onClose={() => setGuestPanelInv(null)}
           />
         )}
       </div>
@@ -462,10 +496,13 @@ function BookingForm({ onClose, onSuccess }: { onClose: () => void; onSuccess: (
                   value={form[field as keyof typeof form]}
                   onChange={set(field)}
                   required={['service', 'eventType', 'eventDate'].includes(field)}
-                  className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-ivory text-sm focus:border-gold/50 focus:outline-none"
+                  className="w-full border border-white/10 rounded-lg px-4 py-2.5 text-ivory text-sm focus:border-gold/50 focus:outline-none"
+                  style={{ backgroundColor: '#111111' }}
                 >
-                  <option value="">Seleccionar...</option>
-                  {options?.map(o => <option key={o} value={o}>{o}</option>)}
+                  <option value="" style={{ backgroundColor: '#111111', color: '#F5F0E8' }}>Seleccionar...</option>
+                  {options?.map(o => (
+                    <option key={o} value={o} style={{ backgroundColor: '#111111', color: '#F5F0E8' }}>{o}</option>
+                  ))}
                 </select>
               ) : (
                 <input

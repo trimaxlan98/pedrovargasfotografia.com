@@ -314,7 +314,7 @@ export async function createInvitation(req: AuthRequest, res: Response): Promise
   const {
     clientId, eventType, title, names, eventDate, eventTime, venue, locationNote,
     message, quote, hashtag, template, primaryColor, textColor, fontStyle,
-    isDark, dressCode, rsvpLabel, rsvpValue, gallery, isPublished,
+    isDark, dressCode, rsvpLabel, rsvpValue, gallery, isPublished, rsvpDeadline,
   } = req.body
 
   const shareToken = uuidv4()
@@ -332,6 +332,7 @@ export async function createInvitation(req: AuthRequest, res: Response): Promise
       dressCode,
       rsvpLabel,
       rsvpValue,
+      rsvpDeadline: rsvpDeadline ? new Date(rsvpDeadline) : undefined,
       gallery: serializeGallery(gallery),
       shareToken,
     },
@@ -379,6 +380,50 @@ export async function addInvitationPhotos(req: AuthRequest, res: Response): Prom
     data: { gallery: JSON.stringify([...current, ...urls]) },
   })
   R.success(res, normalizeInvitation(updated))
+}
+
+export async function listGuestsByInvitation(req: AuthRequest, res: Response): Promise<void> {
+  const invitation = await prisma.digitalInvitation.findUnique({ where: { id: req.params.id } })
+  if (!invitation) { R.notFound(res, 'Invitación no encontrada'); return }
+
+  const guests = await prisma.invitationGuest.findMany({
+    where: { invitationId: invitation.id },
+    orderBy: { createdAt: 'asc' },
+  })
+  R.success(res, guests)
+}
+
+export async function addGuestsByInvitation(req: AuthRequest, res: Response): Promise<void> {
+  const invitation = await prisma.digitalInvitation.findUnique({ where: { id: req.params.id } })
+  if (!invitation) { R.notFound(res, 'Invitación no encontrada'); return }
+
+  const { names } = req.body
+  if (!Array.isArray(names) || names.length === 0) {
+    R.badRequest(res, 'Se requiere un array de nombres')
+    return
+  }
+
+  const guests = await Promise.all(
+    (names as string[])
+      .map((n) => n.trim())
+      .filter(Boolean)
+      .map((name) => prisma.invitationGuest.create({ data: { invitationId: invitation.id, name } }))
+  )
+
+  R.created(res, guests, 'Invitados agregados')
+}
+
+export async function deleteGuestByInvitation(req: AuthRequest, res: Response): Promise<void> {
+  const invitation = await prisma.digitalInvitation.findUnique({ where: { id: req.params.id } })
+  if (!invitation) { R.notFound(res, 'Invitación no encontrada'); return }
+
+  const guest = await prisma.invitationGuest.findFirst({
+    where: { id: req.params.gid, invitationId: invitation.id },
+  })
+  if (!guest) { R.notFound(res, 'Invitado no encontrado'); return }
+
+  await prisma.invitationGuest.delete({ where: { id: guest.id } })
+  R.noContent(res)
 }
 
 export async function getSettings(_req: AuthRequest, res: Response): Promise<void> {

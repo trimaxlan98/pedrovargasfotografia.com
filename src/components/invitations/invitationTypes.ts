@@ -20,6 +20,13 @@ import eventXvPreparativos from '../../assets/photos-web/evento-xv-preparativos.
 
 export type InvitationTemplate = 'warm' | 'floral' | 'rustic' | 'moderno'
 
+export interface ApiInvitationGuestStats {
+  total: number
+  confirmed: number
+  pending: number
+  declined: number
+}
+
 export interface ApiInvitation {
   id: string
   clientId?: string
@@ -46,8 +53,23 @@ export interface ApiInvitation {
   shareToken: string
   views: number
   isPublished: boolean
+  guestGreeting?: string
+  defaultGuestName?: string
+  guestStats?: ApiInvitationGuestStats
+  rsvpDeadline?: string | null
   createdAt: string
   client?: { id: string; name: string; email: string }
+}
+
+export interface ApiInvitationGuest {
+  id: string
+  invitationId: string
+  name: string
+  token: string
+  response: 'PENDING' | 'ACCEPTED' | 'DECLINED'
+  personalizedMessage?: string
+  respondedAt?: string | null
+  createdAt: string
 }
 
 export const DEMO_GALLERY_BY_TEMPLATE: Record<InvitationTemplate, string[]> = {
@@ -122,4 +144,3 @@ export const demoInvitation: ApiInvitation = {
   isPublished: true,
   createdAt: new Date().toISOString(),
 }
-

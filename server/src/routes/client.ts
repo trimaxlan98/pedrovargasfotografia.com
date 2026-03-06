@@ -37,5 +37,9 @@ router.put('/invitations/:id', client.updateInvitation)
 router.delete('/invitations/:id', client.deleteInvitation)
 router.patch('/invitations/:id/toggle-published', client.toggleInvitationPublished)
 router.post('/invitations/:id/photos', uploadImage.array('images', 8), client.addInvitationPhotos)
+router.get('/invitations/:id/guests', client.listGuests)
+router.post('/invitations/:id/guests', client.addGuests)
+router.post('/invitations/:id/guests/dev-seed', client.seedGuestsForDevelopment)
+router.delete('/invitations/:id/guests/:gid', client.deleteGuest)
 
 export default router

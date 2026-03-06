@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Eye, EyeOff, LogIn, UserPlus } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
+import { useNavigate } from 'react-router-dom'
 
 interface LoginModalProps {
   isOpen: boolean
@@ -11,6 +12,7 @@ interface LoginModalProps {
 
 export default function LoginModal({ isOpen, onClose, onSuccess }: LoginModalProps) {
   const { login, register } = useAuth()
+  const navigate = useNavigate()
   const [mode, setMode] = useState<'login' | 'register'>('login')
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -34,14 +36,19 @@ export default function LoginModal({ isOpen, onClose, onSuccess }: LoginModalPro
     setError('')
 
     try {
-      if (mode === 'login') {
-        await login(form.email, form.password)
-      } else {
-        if (!form.name.trim()) { setError('El nombre es requerido'); setIsLoading(false); return }
-        await register(form.name, form.email, form.password, form.phone)
+      if (mode === 'register' && !form.name.trim()) {
+        setError('El nombre es requerido')
+        setIsLoading(false)
+        return
       }
+
+      const authUser = mode === 'login'
+        ? await login(form.email, form.password)
+        : await register(form.name, form.email, form.password, form.phone)
+
       onSuccess?.()
       onClose()
+      navigate(authUser.role === 'ADMIN' ? '/admin' : '/cliente', { replace: true })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error de conexión')
     } finally {

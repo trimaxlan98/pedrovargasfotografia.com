@@ -30,6 +30,43 @@ function serializeGallery(input: unknown): string | undefined {
   return undefined
 }
 
+interface GuestStats {
+  total: number
+  confirmed: number
+  pending: number
+  declined: number
+}
+
+function emptyGuestStats(): GuestStats {
+  return { total: 0, confirmed: 0, pending: 0, declined: 0 }
+}
+
+async function appendGuestStats<T extends { id: string }>(invitations: T[]): Promise<Array<T & { guestStats: GuestStats }>> {
+  if (invitations.length === 0) return []
+
+  const grouped = await prisma.invitationGuest.groupBy({
+    by: ['invitationId', 'response'],
+    where: { invitationId: { in: invitations.map(i => i.id) } },
+    _count: { _all: true },
+  })
+
+  const byInvitation = new Map<string, GuestStats>()
+  for (const row of grouped) {
+    const stats = byInvitation.get(row.invitationId) ?? emptyGuestStats()
+    const count = row._count._all
+    stats.total += count
+    if (row.response === 'ACCEPTED') stats.confirmed += count
+    if (row.response === 'PENDING') stats.pending += count
+    if (row.response === 'DECLINED') stats.declined += count
+    byInvitation.set(row.invitationId, stats)
+  }
+
+  return invitations.map(inv => ({
+    ...inv,
+    guestStats: byInvitation.get(inv.id) ?? emptyGuestStats(),
+  }))
+}
+
 // ─── RESERVAS DEL CLIENTE ──────────────────────────────────────────────────────
 
 export async function getMyBookings(req: AuthRequest, res: Response): Promise<void> {
@@ -108,7 +145,9 @@ export async function getMyInvitations(req: AuthRequest, res: Response): Promise
     where: { clientId: req.user!.userId },
     orderBy: { createdAt: 'desc' },
   })
-  R.success(res, invitations.map(normalizeInvitation))
+  const normalized = invitations.map(normalizeInvitation)
+  const withStats = await appendGuestStats(normalized)
+  R.success(res, withStats)
 }
 
 export async function getMyInvitation(req: AuthRequest, res: Response): Promise<void> {
@@ -116,7 +155,8 @@ export async function getMyInvitation(req: AuthRequest, res: Response): Promise<
     where: { id: req.params.id, clientId: req.user!.userId },
   })
   if (!invitation) { R.notFound(res, 'Invitación no encontrada'); return }
-  R.success(res, normalizeInvitation(invitation))
+  const [withStats] = await appendGuestStats([normalizeInvitation(invitation)])
+  R.success(res, withStats)
 }
 
 export async function createInvitation(req: AuthRequest, res: Response): Promise<void> {
@@ -129,7 +169,8 @@ export async function createInvitation(req: AuthRequest, res: Response): Promise
   const {
     eventType, title, names, eventDate, eventTime, venue, locationNote,
     message, quote, hashtag, template, primaryColor, textColor, fontStyle,
-    isDark, dressCode, rsvpLabel, rsvpValue, rsvpContact, gallery, isPublished,
+    isDark, dressCode, rsvpLabel, rsvpValue, rsvpContact, gallery, isPublished, rsvpDeadline,
+    guestGreeting, defaultGuestName,
   } = req.body
 
   const shareToken = uuidv4()
@@ -149,8 +190,11 @@ export async function createInvitation(req: AuthRequest, res: Response): Promise
       dressCode,
       rsvpLabel,
       rsvpValue: resolvedRsvp,
+      rsvpDeadline: rsvpDeadline ? new Date(rsvpDeadline) : undefined,
       gallery: serializeGallery(gallery),
       shareToken,
+      guestGreeting,
+      defaultGuestName,
     },
   })
   R.created(res, normalizeInvitation(invitation), 'Invitación creada exitosamente')
@@ -162,13 +206,32 @@ export async function updateInvitation(req: AuthRequest, res: Response): Promise
   })
   if (!existing) { R.notFound(res, 'Invitación no encontrada'); return }
 
-  const payload = { ...req.body }
-  if (payload.gallery) {
-    payload.gallery = serializeGallery(payload.gallery)
+  const {
+    eventType, title, names, eventDate, eventTime, venue, locationNote,
+    message, quote, hashtag, template, primaryColor, textColor, fontStyle,
+    isDark, dressCode, rsvpLabel, rsvpValue, rsvpContact, gallery, isPublished, rsvpDeadline,
+    guestGreeting, defaultGuestName,
+  } = req.body
+
+  const payload: any = {
+    eventType, title, names, eventDate, eventTime, venue, locationNote,
+    message, quote, hashtag, template, primaryColor, textColor, fontStyle,
+    isDark, dressCode, rsvpLabel, rsvpValue, rsvpContact, isPublished,
+    guestGreeting, defaultGuestName,
   }
-  if (payload.rsvpContact && !payload.rsvpValue) {
-    payload.rsvpValue = payload.rsvpContact
+
+  if (gallery !== undefined) {
+    payload.gallery = serializeGallery(gallery)
   }
+  if (rsvpContact && !rsvpValue) {
+    payload.rsvpValue = rsvpContact
+  }
+  if (rsvpDeadline !== undefined) {
+    payload.rsvpDeadline = rsvpDeadline ? new Date(rsvpDeadline) : null
+  }
+
+  // Limpiar campos undefined para evitar errores de Prisma
+  Object.keys(payload).forEach(key => payload[key] === undefined && delete payload[key])
 
   const invitation = await prisma.digitalInvitation.update({
     where: { id: req.params.id },
@@ -199,6 +262,112 @@ export async function toggleInvitationPublished(req: AuthRequest, res: Response)
   })
   R.success(res, normalizeInvitation(updated), `Invitación ${updated.isPublished ? 'publicada' : 'despublicada'}`)
 }
+
+// ─── INVITADOS (GUESTS) ────────────────────────────────────────────────────────
+
+export async function addGuests(req: AuthRequest, res: Response): Promise<void> {
+  const invitation = await prisma.digitalInvitation.findFirst({
+    where: { id: req.params.id, clientId: req.user!.userId },
+  })
+  if (!invitation) { R.notFound(res, 'Invitación no encontrada'); return }
+
+  const { names, guests: guestsInput } = req.body
+  
+  if (guestsInput && Array.isArray(guestsInput)) {
+    // Nuevo formato: array de objetos { name, personalizedMessage }
+    const created = await Promise.all(
+      guestsInput.map(g => 
+        prisma.invitationGuest.create({ 
+          data: { 
+            invitationId: invitation.id, 
+            name: g.name.trim(),
+            personalizedMessage: g.personalizedMessage
+          } 
+        })
+      )
+    )
+    R.created(res, created, 'Invitados agregados')
+    return
+  }
+
+  if (!Array.isArray(names) || names.length === 0) {
+    R.badRequest(res, 'Se requiere un array de nombres o invitados'); return
+  }
+
+  const guests = await Promise.all(
+    (names as string[])
+      .map(n => n.trim())
+      .filter(Boolean)
+      .map(name => prisma.invitationGuest.create({ data: { invitationId: invitation.id, name } }))
+  )
+  R.created(res, guests, 'Invitados agregados')
+}
+
+export async function seedGuestsForDevelopment(req: AuthRequest, res: Response): Promise<void> {
+  if (process.env.NODE_ENV === 'production') {
+    R.forbidden(res, 'Accion no disponible en produccion')
+    return
+  }
+
+  const invitation = await prisma.digitalInvitation.findFirst({
+    where: { id: req.params.id, clientId: req.user!.userId },
+  })
+  if (!invitation) { R.notFound(res, 'Invitacion no encontrada'); return }
+
+  const now = new Date()
+  const testGuests: Array<{ name: string; response: 'PENDING' | 'ACCEPTED' | 'DECLINED'; respondedAt?: Date }> = [
+    { name: 'Invitado de prueba 1', response: 'ACCEPTED', respondedAt: now },
+    { name: 'Invitado de prueba 2', response: 'ACCEPTED', respondedAt: new Date(now.getTime() - 86400000) },
+    { name: 'Invitado de prueba 3', response: 'PENDING' },
+    { name: 'Invitado de prueba 4', response: 'PENDING' },
+    { name: 'Invitado de prueba 5', response: 'DECLINED', respondedAt: new Date(now.getTime() - 172800000) },
+  ]
+
+  const created = await prisma.$transaction(
+    testGuests.map(guest =>
+      prisma.invitationGuest.create({
+        data: {
+          invitationId: invitation.id,
+          name: guest.name,
+          response: guest.response,
+          respondedAt: guest.respondedAt,
+        },
+      })
+    )
+  )
+
+  R.created(res, created, 'Se crearon 5 invitados de prueba')
+}
+
+export async function listGuests(req: AuthRequest, res: Response): Promise<void> {
+  const invitation = await prisma.digitalInvitation.findFirst({
+    where: { id: req.params.id, clientId: req.user!.userId },
+  })
+  if (!invitation) { R.notFound(res, 'Invitación no encontrada'); return }
+
+  const guests = await prisma.invitationGuest.findMany({
+    where: { invitationId: invitation.id },
+    orderBy: { createdAt: 'asc' },
+  })
+  R.success(res, guests)
+}
+
+export async function deleteGuest(req: AuthRequest, res: Response): Promise<void> {
+  const invitation = await prisma.digitalInvitation.findFirst({
+    where: { id: req.params.id, clientId: req.user!.userId },
+  })
+  if (!invitation) { R.notFound(res, 'Invitación no encontrada'); return }
+
+  const guest = await prisma.invitationGuest.findFirst({
+    where: { id: req.params.gid, invitationId: invitation.id },
+  })
+  if (!guest) { R.notFound(res, 'Invitado no encontrado'); return }
+
+  await prisma.invitationGuest.delete({ where: { id: guest.id } })
+  R.noContent(res)
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
 
 export async function addInvitationPhotos(req: AuthRequest, res: Response): Promise<void> {
   const existing = await prisma.digitalInvitation.findFirst({

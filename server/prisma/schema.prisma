@@ -161,12 +161,37 @@ model DigitalInvitation {
   shareToken   String   @unique @default(cuid())
   views        Int      @default(0)
   isPublished  Boolean  @default(true)
+  rsvpDeadline DateTime?
+  
+  // Nuevos campos para personalización por defecto
+  guestGreeting    String?  @default("Hola")
+  defaultGuestName String?  @default("Familia y Amigos")
+  
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  client User @relation(fields: [clientId], references: [id])
+  client User               @relation(fields: [clientId], references: [id])
+  guests InvitationGuest[]
 
   @@map("digital_invitations")
+}
+
+model InvitationGuest {
+  id           String    @id @default(cuid())
+  invitationId String
+  name         String
+  token        String    @unique @default(cuid())
+  response     String    @default("PENDING") // PENDING | ACCEPTED | DECLINED
+  
+  // Nuevo campo para mensaje personalizado por invitado
+  personalizedMessage String? 
+  
+  respondedAt  DateTime?
+  createdAt    DateTime  @default(now())
+
+  invitation DigitalInvitation @relation(fields: [invitationId], references: [id], onDelete: Cascade)
+
+  @@map("invitation_guests")
 }
 
 // ─── CONFIGURACIÓN DEL SITIO ───────────────────────────────────────────────────

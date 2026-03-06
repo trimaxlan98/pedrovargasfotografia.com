@@ -24,8 +24,8 @@ interface AuthContextType {
   isLoading: boolean
   isAuthenticated: boolean
   isAdmin: boolean
-  login: (email: string, password: string) => Promise<void>
-  register: (name: string, email: string, password: string, phone?: string) => Promise<void>
+  login: (email: string, password: string) => Promise<User>
+  register: (name: string, email: string, password: string, phone?: string) => Promise<User>
   logout: () => Promise<void>
   refreshUser: () => Promise<void>
 }
@@ -61,6 +61,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('accessToken', res.data.accessToken)
     localStorage.setItem('refreshToken', res.data.refreshToken)
     setUser(res.data.user)
+    return res.data.user
   }
 
   const register = async (name: string, email: string, password: string, phone?: string) => {
@@ -68,6 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('accessToken', res.data.accessToken)
     localStorage.setItem('refreshToken', res.data.refreshToken)
     setUser(res.data.user)
+    return res.data.user
   }
 
   const logout = async () => {

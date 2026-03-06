@@ -79,6 +79,16 @@ export default function InvitationPage() {
             )
           })()}
         </div>
+
+        {/* Greeting block (like in guest page) */}
+        <div className="max-w-[520px] mx-auto px-6 pt-10 pb-4 text-center">
+          <p className="font-cormorant text-2xl text-ivory">
+            {invitation.guestGreeting || 'Hola'}, <span className="text-gold">{invitation.defaultGuestName || 'Familia y Amigos'}</span>
+          </p>
+          <p className="text-ivory/50 text-sm font-dm mt-1">
+            tienen una invitación especial
+          </p>
+        </div>
       </main>
     </div>
   )

@@ -55,7 +55,7 @@ export default function AdminInvitations() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
         <p className="text-ivory/50 text-sm font-dm">
           {invitations.length} invitación{invitations.length !== 1 ? 'es' : ''}
         </p>
@@ -84,124 +84,217 @@ export default function AdminInvitations() {
           </button>
         </div>
       ) : (
-        <div className="glass rounded-xl border border-white/5 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-white/5">
-                  {['Título', 'Cliente', 'Evento', 'Fecha', 'Vistas', 'Estado', 'Acciones'].map(h => (
-                    <th
-                      key={h}
-                      className="px-4 py-3 text-left text-ivory/40 text-xs font-dm uppercase tracking-wider"
+        <>
+          <div className="md:hidden space-y-3">
+            {invitations.map(inv => (
+              <div key={inv.id} className="glass rounded-xl border border-white/5 p-4 space-y-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-ivory text-sm font-dm truncate">{inv.title}</p>
+                    <p className="text-ivory/45 text-xs truncate">
+                      {inv.client?.name || inv.client?.email || 'Sin cliente'}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => togglePublished(inv)}
+                    className={`flex items-center gap-1 text-xs font-dm px-2 py-1 rounded-full transition-colors ${
+                      inv.isPublished
+                        ? 'bg-green-400/10 text-green-400 hover:bg-green-400/20'
+                        : 'bg-gray-400/10 text-gray-400 hover:bg-gray-400/20'
+                    }`}
+                    title="Cambiar estado"
+                  >
+                    {inv.isPublished ? <ToggleRight size={12} /> : <ToggleLeft size={12} />}
+                    {inv.isPublished ? 'Publicada' : 'Borrador'}
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2 text-xs font-dm">
+                  <div>
+                    <p className="text-ivory/35 uppercase tracking-wider mb-1">Evento</p>
+                    <p className="text-ivory/70 truncate">{inv.eventType}</p>
+                  </div>
+                  <div>
+                    <p className="text-ivory/35 uppercase tracking-wider mb-1">Fecha</p>
+                    <p className="text-ivory/70 truncate">{inv.eventDate}</p>
+                  </div>
+                  <div>
+                    <p className="text-ivory/35 uppercase tracking-wider mb-1">Vistas</p>
+                    <p className="text-ivory/70 inline-flex items-center gap-1"><Eye size={11} /> {inv.views}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between gap-2">
+                  <button
+                    onClick={() => openEdit(inv)}
+                    className="flex-1 inline-flex items-center justify-center gap-1.5 text-ivory/70 border border-white/10 rounded-lg px-2 py-2 text-xs"
+                    title="Editar invitación"
+                  >
+                    <Pencil size={13} /> Editar
+                  </button>
+                  <button
+                    onClick={() => copyLink(inv.shareToken)}
+                    className={`flex-1 inline-flex items-center justify-center gap-1.5 border border-white/10 rounded-lg px-2 py-2 text-xs ${
+                      copied === inv.shareToken ? 'text-green-400' : 'text-ivory/70'
+                    }`}
+                    title="Copiar enlace"
+                  >
+                    {copied === inv.shareToken ? <Check size={13} /> : <Copy size={13} />} Copiar
+                  </button>
+                  <a
+                    href={`/invitacion/${inv.shareToken}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 inline-flex items-center justify-center gap-1.5 text-ivory/70 border border-white/10 rounded-lg px-2 py-2 text-xs"
+                    title="Ver invitación"
+                  >
+                    <ExternalLink size={13} /> Ver
+                  </a>
+                </div>
+
+                {deleteConfirm === inv.id ? (
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => deleteInvitation(inv.id)}
+                      className="flex-1 text-red-300 bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-2 text-xs"
                     >
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/5">
-                {invitations.map(inv => (
-                  <tr key={inv.id} className="hover:bg-white/3 transition-colors group">
-                    <td className="px-4 py-3 text-ivory text-sm font-dm max-w-[160px] truncate">
-                      {inv.title}
-                    </td>
-                    <td className="px-4 py-3 text-ivory/60 text-sm font-dm">
-                      {inv.client?.name || inv.client?.email || (
-                        <span className="text-ivory/30 italic">Sin cliente</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-ivory/60 text-sm font-dm">{inv.eventType}</td>
-                    <td className="px-4 py-3 text-ivory/50 text-xs font-dm">{inv.eventDate}</td>
-                    <td className="px-4 py-3 text-ivory/50 text-xs font-dm">
-                      <span className="flex items-center gap-1">
-                        <Eye size={11} /> {inv.views}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <button
-                        onClick={() => togglePublished(inv)}
-                        className={`flex items-center gap-1 text-xs font-dm px-2 py-1 rounded-full transition-colors ${
-                          inv.isPublished
-                            ? 'bg-green-400/10 text-green-400 hover:bg-green-400/20'
-                            : 'bg-gray-400/10 text-gray-400 hover:bg-gray-400/20'
-                        }`}
-                        title="Clic para cambiar estado"
-                      >
-                        {inv.isPublished
-                          ? <ToggleRight size={12} />
-                          : <ToggleLeft size={12} />
-                        }
-                        {inv.isPublished ? 'Publicada' : 'Borrador'}
-                      </button>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-3">
-                        {/* Edit */}
-                        <button
-                          onClick={() => openEdit(inv)}
-                          className="text-ivory/40 hover:text-gold transition-colors"
-                          title="Editar invitación"
-                        >
-                          <Pencil size={14} />
-                        </button>
-
-                        {/* Copy link */}
-                        <button
-                          onClick={() => copyLink(inv.shareToken)}
-                          className={`transition-colors ${
-                            copied === inv.shareToken
-                              ? 'text-green-400'
-                              : 'text-ivory/40 hover:text-ivory'
-                          }`}
-                          title="Copiar enlace"
-                        >
-                          {copied === inv.shareToken ? <Check size={14} /> : <Copy size={14} />}
-                        </button>
-
-                        {/* View */}
-                        <a
-                          href={`/invitacion/${inv.shareToken}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-ivory/40 hover:text-gold transition-colors"
-                          title="Ver invitación"
-                        >
-                          <ExternalLink size={14} />
-                        </a>
-
-                        {/* Delete with confirm */}
-                        {deleteConfirm === inv.id ? (
-                          <div className="flex items-center gap-1">
-                            <button
-                              onClick={() => deleteInvitation(inv.id)}
-                              className="text-red-400 text-xs font-dm hover:text-red-300"
-                            >
-                              Confirmar
-                            </button>
-                            <button
-                              onClick={() => setDeleteConfirm(null)}
-                              className="text-ivory/30 text-xs font-dm hover:text-ivory"
-                            >
-                              ✕
-                            </button>
-                          </div>
-                        ) : (
-                          <button
-                            onClick={() => setDeleteConfirm(inv.id)}
-                            className="text-ivory/30 hover:text-danger transition-colors"
-                            title="Eliminar"
-                          >
-                            <Trash2 size={14} />
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                      Confirmar eliminación
+                    </button>
+                    <button
+                      onClick={() => setDeleteConfirm(null)}
+                      className="text-ivory/40 border border-white/10 rounded-lg px-3 py-2 text-xs"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setDeleteConfirm(inv.id)}
+                    className="w-full inline-flex items-center justify-center gap-1.5 text-ivory/50 border border-white/10 rounded-lg px-3 py-2 text-xs hover:text-danger"
+                    title="Eliminar"
+                  >
+                    <Trash2 size={13} /> Eliminar
+                  </button>
+                )}
+              </div>
+            ))}
           </div>
-        </div>
+
+          <div className="hidden md:block glass rounded-xl border border-white/5 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[960px]">
+                <thead>
+                  <tr className="border-b border-white/5">
+                    {['Título', 'Cliente', 'Evento', 'Fecha', 'Vistas', 'Estado', 'Acciones'].map(h => (
+                      <th
+                        key={h}
+                        className="px-4 py-3 text-left text-ivory/40 text-xs font-dm uppercase tracking-wider"
+                      >
+                        {h}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/5">
+                  {invitations.map(inv => (
+                    <tr key={inv.id} className="hover:bg-white/3 transition-colors group">
+                      <td className="px-4 py-3 text-ivory text-sm font-dm max-w-[160px] truncate">
+                        {inv.title}
+                      </td>
+                      <td className="px-4 py-3 text-ivory/60 text-sm font-dm">
+                        {inv.client?.name || inv.client?.email || (
+                          <span className="text-ivory/30 italic">Sin cliente</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-ivory/60 text-sm font-dm">{inv.eventType}</td>
+                      <td className="px-4 py-3 text-ivory/50 text-xs font-dm">{inv.eventDate}</td>
+                      <td className="px-4 py-3 text-ivory/50 text-xs font-dm">
+                        <span className="flex items-center gap-1">
+                          <Eye size={11} /> {inv.views}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <button
+                          onClick={() => togglePublished(inv)}
+                          className={`flex items-center gap-1 text-xs font-dm px-2 py-1 rounded-full transition-colors ${
+                            inv.isPublished
+                              ? 'bg-green-400/10 text-green-400 hover:bg-green-400/20'
+                              : 'bg-gray-400/10 text-gray-400 hover:bg-gray-400/20'
+                          }`}
+                          title="Clic para cambiar estado"
+                        >
+                          {inv.isPublished
+                            ? <ToggleRight size={12} />
+                            : <ToggleLeft size={12} />
+                          }
+                          {inv.isPublished ? 'Publicada' : 'Borrador'}
+                        </button>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-3">
+                          <button
+                            onClick={() => openEdit(inv)}
+                            className="text-ivory/40 hover:text-gold transition-colors"
+                            title="Editar invitación"
+                          >
+                            <Pencil size={14} />
+                          </button>
+
+                          <button
+                            onClick={() => copyLink(inv.shareToken)}
+                            className={`transition-colors ${
+                              copied === inv.shareToken
+                                ? 'text-green-400'
+                                : 'text-ivory/40 hover:text-ivory'
+                            }`}
+                            title="Copiar enlace"
+                          >
+                            {copied === inv.shareToken ? <Check size={14} /> : <Copy size={14} />}
+                          </button>
+
+                          <a
+                            href={`/invitacion/${inv.shareToken}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-ivory/40 hover:text-gold transition-colors"
+                            title="Ver invitación"
+                          >
+                            <ExternalLink size={14} />
+                          </a>
+
+                          {deleteConfirm === inv.id ? (
+                            <div className="flex items-center gap-1">
+                              <button
+                                onClick={() => deleteInvitation(inv.id)}
+                                className="text-red-400 text-xs font-dm hover:text-red-300"
+                              >
+                                Confirmar
+                              </button>
+                              <button
+                                onClick={() => setDeleteConfirm(null)}
+                                className="text-ivory/30 text-xs font-dm hover:text-ivory"
+                              >
+                                x
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => setDeleteConfirm(inv.id)}
+                              className="text-ivory/30 hover:text-danger transition-colors"
+                              title="Eliminar"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
       )}
 
       {showWizard && (
