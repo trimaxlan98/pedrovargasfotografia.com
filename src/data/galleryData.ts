@@ -1,4 +1,3 @@
-import heroPedro from '../assets/photos-web/hero-pedro.jpg'
 import heroBoda from '../assets/photos-web/hero-boda.jpg'
 import aboutPedro from '../assets/photos-web/about-pedro.jpg'
 

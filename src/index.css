@@ -2,6 +2,23 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── CSS Variables (light / dark) ────────────────────────── */
+:root {
+  --hero-bg: #F7F4EE;
+  --hero-text: #0A0A0A;
+  --hero-text-muted: rgba(10, 10, 10, 0.45);
+  --hero-text-faint: rgba(10, 10, 10, 0.28);
+  --hero-border: rgba(0, 0, 0, 0.1);
+}
+
+html.dark {
+  --hero-bg: #0A0A0A;
+  --hero-text: #F5F0E8;
+  --hero-text-muted: rgba(245, 240, 232, 0.5);
+  --hero-text-faint: rgba(245, 240, 232, 0.28);
+  --hero-border: rgba(255, 255, 255, 0.08);
+}
+
 /* ── Global Reset & Base ─────────────────────────────────── */
 *, *::before, *::after {
   box-sizing: border-box;
@@ -333,4 +350,165 @@ input[type="date"] {
 select option {
   background-color: #F1ECE2 !important;
   color: #1F1C17 !important;
+}
+
+/* ── Hero CSS-variable helpers ──────────────────────────── */
+.hero-text        { color: var(--hero-text); }
+.hero-text-muted  { color: var(--hero-text-muted); }
+.hero-text-faint  { color: var(--hero-text-faint); }
+.hero-stats-border { border-color: var(--hero-border); }
+.hero-chevron     { color: var(--hero-text-faint); }
+
+/* ═══════════════════════════════════════════════════════════
+   DARK MODE  — restores original v1.1.2 dark design
+═══════════════════════════════════════════════════════════ */
+
+/* Base */
+html.dark body {
+  background-color: #0A0A0A;
+  color: #F5F0E8;
+}
+
+/* Scrollbar */
+html.dark ::-webkit-scrollbar-track { background: #111111; }
+
+/* Glass */
+html.dark .glass {
+  background: rgba(0, 0, 0, 0.45);
+  border-color: rgba(245, 240, 232, 0.08);
+}
+html.dark .glass-nav {
+  background: rgba(10, 10, 10, 0.88);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-bottom-color: rgba(245, 240, 232, 0.08);
+}
+
+/* Nav links */
+html.dark .nav-link {
+  color: rgba(245, 240, 232, 0.65);
+}
+html.dark .nav-link:hover,
+html.dark .nav-link.active {
+  color: #F5F0E8;
+}
+
+/* Ivory text → light ivory in dark mode */
+html.dark .text-ivory   { color: #F5F0E8 !important; }
+html.dark .text-ivory\/70 { color: rgba(245, 240, 232, 0.70) !important; }
+html.dark .text-ivory\/60 { color: rgba(245, 240, 232, 0.60) !important; }
+html.dark .text-ivory\/50 { color: rgba(245, 240, 232, 0.50) !important; }
+html.dark .text-ivory\/40 { color: rgba(245, 240, 232, 0.40) !important; }
+html.dark .text-ivory\/30 { color: rgba(245, 240, 232, 0.30) !important; }
+
+/* bg-ivory lines (hamburger bars) → light */
+html.dark .bg-ivory { background-color: #F5F0E8 !important; }
+
+/* Restore dark section backgrounds (overridden to light in light mode) */
+html.dark .bg-\[\#0A0A0A\]  { background-color: #0A0A0A  !important; }
+html.dark .bg-\[\#111111\]  { background-color: #111111  !important; }
+html.dark .bg-\[\#1A1A1A\]  { background-color: #1A1A1A  !important; }
+html.dark .bg-\[\#0f0b08\]  { background-color: #0f0b08  !important; }
+html.dark .bg-\[\#1a120d\]  { background-color: #1a120d  !important; }
+html.dark .bg-black         { background-color: #0A0A0A  !important; }
+
+/* Semi-transparent dark overlays — restore */
+html.dark .bg-black\/95  { background-color: rgba(0,0,0,0.95) !important; }
+html.dark .bg-black\/90  { background-color: rgba(0,0,0,0.90) !important; }
+html.dark .bg-black\/80  { background-color: rgba(0,0,0,0.80) !important; }
+html.dark .bg-black\/70  { background-color: rgba(0,0,0,0.70) !important; }
+html.dark .bg-black\/60  { background-color: rgba(0,0,0,0.60) !important; }
+html.dark .bg-black\/50  { background-color: rgba(0,0,0,0.50) !important; }
+html.dark .bg-black\/40  { background-color: rgba(0,0,0,0.40) !important; }
+html.dark .bg-black\/20  { background-color: rgba(0,0,0,0.20) !important; }
+html.dark .bg-\[\#0A0A0A\]\/95 { background-color: rgba(10,10,10,0.95) !important; }
+html.dark .bg-\[\#0A0A0A\]\/90 { background-color: rgba(10,10,10,0.90) !important; }
+html.dark .bg-\[\#1a120d\]\/90 { background-color: rgba(26,18,13,0.90) !important; }
+
+/* Restore gradient from-stops */
+html.dark .from-black {
+  --tw-gradient-from: #000000 var(--tw-gradient-from-position) !important;
+  --tw-gradient-to: rgb(0 0 0 / 0) var(--tw-gradient-to-position) !important;
+}
+html.dark .from-black\/80 {
+  --tw-gradient-from: rgb(0 0 0 / 0.8) var(--tw-gradient-from-position) !important;
+  --tw-gradient-to: rgb(0 0 0 / 0) var(--tw-gradient-to-position) !important;
+}
+html.dark .from-black\/60 {
+  --tw-gradient-from: rgb(0 0 0 / 0.6) var(--tw-gradient-from-position) !important;
+  --tw-gradient-to: rgb(0 0 0 / 0) var(--tw-gradient-to-position) !important;
+}
+html.dark .from-black\/50 {
+  --tw-gradient-from: rgb(0 0 0 / 0.5) var(--tw-gradient-from-position) !important;
+  --tw-gradient-to: rgb(0 0 0 / 0) var(--tw-gradient-to-position) !important;
+}
+html.dark .from-\[\#0A0A0A\] {
+  --tw-gradient-from: #0A0A0A var(--tw-gradient-from-position) !important;
+  --tw-gradient-to: rgb(10 10 10 / 0) var(--tw-gradient-to-position) !important;
+}
+html.dark .from-\[\#0A0A0A\]\/60 {
+  --tw-gradient-from: rgb(10 10 10 / 0.6) var(--tw-gradient-from-position) !important;
+  --tw-gradient-to: rgb(10 10 10 / 0) var(--tw-gradient-to-position) !important;
+}
+
+/* Restore gradient to-stops */
+html.dark .to-black        { --tw-gradient-to: #000000 var(--tw-gradient-to-position) !important; }
+html.dark .to-black\/20    { --tw-gradient-to: rgb(0 0 0 / 0.2) var(--tw-gradient-to-position) !important; }
+html.dark .to-\[\#0A0A0A\] { --tw-gradient-to: #0A0A0A var(--tw-gradient-to-position) !important; }
+html.dark .to-\[\#0A0A0A\]\/50 { --tw-gradient-to: rgb(10 10 10 / 0.5) var(--tw-gradient-to-position) !important; }
+
+/* Restore via-stops */
+html.dark .via-black {
+  --tw-gradient-stops: var(--tw-gradient-from), #000000 var(--tw-gradient-via-position), var(--tw-gradient-to) !important;
+}
+html.dark .via-black\/20 {
+  --tw-gradient-stops: var(--tw-gradient-from), rgb(0 0 0 / 0.2) var(--tw-gradient-via-position), var(--tw-gradient-to) !important;
+}
+
+/* Lightbox */
+html.dark .lightbox-overlay {
+  background: rgba(10, 10, 10, 0.96);
+}
+
+/* Buttons */
+html.dark .btn-primary {
+  background: #F5F0E8;
+  color: #0A0A0A;
+  border-color: #F5F0E8;
+}
+html.dark .btn-primary:hover {
+  background: #C9A96E;
+  border-color: #C9A96E;
+  color: #0A0A0A;
+}
+html.dark .btn-outline {
+  color: #F5F0E8;
+  border-color: rgba(245, 240, 232, 0.35);
+}
+html.dark .btn-outline:hover {
+  border-color: #C9A96E;
+  color: #C9A96E;
+}
+
+/* Placeholders — dark equivalents */
+html.dark .photo-placeholder-warm    { background: linear-gradient(135deg, #1a1209 0%, #2d1f0a 30%, #1a1510 60%, #0d0b08 100%); }
+html.dark .photo-placeholder-cool    { background: linear-gradient(135deg, #0a0d1a 0%, #0f1520 40%, #0d1018 70%, #08090d 100%); }
+html.dark .photo-placeholder-neutral { background: linear-gradient(135deg, #111111 0%, #1a1a18 40%, #141412 70%, #0a0a09 100%); }
+html.dark .photo-placeholder-amber   { background: linear-gradient(135deg, #180f04 0%, #2a1a08 35%, #1a1108 65%, #0d0906 100%); }
+html.dark .photo-placeholder-rose    { background: linear-gradient(135deg, #180812 0%, #251020 40%, #1a0d15 70%, #0d080a 100%); }
+
+/* Form inputs */
+html.dark select,
+html.dark textarea,
+html.dark input[type="date"],
+html.dark input[type="text"],
+html.dark input[type="email"],
+html.dark input[type="tel"] {
+  background-color: #1A1A18 !important;
+  color: #F5F0E8 !important;
+  border-color: rgba(245, 240, 232, 0.15) !important;
+}
+html.dark select option {
+  background-color: #1A1A18 !important;
+  color: #F5F0E8 !important;
 }

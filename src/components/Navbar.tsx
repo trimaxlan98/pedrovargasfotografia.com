@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { User, LayoutDashboard, LogOut } from 'lucide-react'
+import { User, LayoutDashboard, LogOut, Moon, Sun } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import LoginModal from './LoginModal'
 
@@ -20,6 +20,21 @@ export default function Navbar() {
   const [active, setActive] = useState('#inicio')
   const [showLogin, setShowLogin] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
+  const [dark, setDark] = useState(() => {
+    if (typeof window === 'undefined') return false
+    return localStorage.getItem('theme') === 'dark'
+  })
+
+  useEffect(() => {
+    const root = document.documentElement
+    if (dark) {
+      root.classList.add('dark')
+      localStorage.setItem('theme', 'dark')
+    } else {
+      root.classList.remove('dark')
+      localStorage.setItem('theme', 'light')
+    }
+  }, [dark])
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 60)
@@ -84,6 +99,15 @@ export default function Navbar() {
 
           {/* Desktop CTA + Auth */}
           <div className="hidden lg:flex items-center gap-3">
+            {/* Dark mode toggle */}
+            <button
+              onClick={() => setDark(d => !d)}
+              aria-label="Cambiar modo"
+              className="w-9 h-9 flex items-center justify-center rounded-full text-ivory/60 hover:text-gold transition-colors hover:bg-white/5"
+            >
+              {dark ? <Sun size={17} /> : <Moon size={17} />}
+            </button>
+
             {isAuthenticated ? (
               <div className="relative">
                 <button
@@ -194,6 +218,19 @@ export default function Navbar() {
                 className="btn-outline mt-4"
               >
                 Reservar Sesión
+              </motion.button>
+
+              <motion.button
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                transition={{ delay: navLinks.length * 0.07 + 0.15 }}
+                onClick={() => setDark(d => !d)}
+                aria-label="Cambiar modo"
+                className="flex items-center gap-2 text-ivory/50 hover:text-gold font-dm text-sm mt-1 transition-colors"
+              >
+                {dark ? <Sun size={16} /> : <Moon size={16} />}
+                {dark ? 'Modo claro' : 'Modo oscuro'}
               </motion.button>
               {!isAuthenticated && (
                 <motion.button
