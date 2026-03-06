@@ -377,6 +377,15 @@ select option {
   color: #1F1C17 !important;
 }
 
+/* Invitation wizard fields: improve placeholder legibility in light mode */
+.inv-wizard-field {
+  color: #1F1C17 !important;
+}
+.inv-wizard-field::placeholder {
+  color: rgba(31, 28, 23, 0.58) !important;
+  opacity: 1;
+}
+
 /* ── Hero CSS-variable helpers ──────────────────────────── */
 .hero-text        { color: var(--hero-text); }
 .hero-text-muted  { color: var(--hero-text-muted); }
@@ -569,6 +578,15 @@ html.dark input[type="tel"] {
 html.dark select option {
   background-color: #1A1A18 !important;
   color: #F5F0E8 !important;
+}
+
+/* Invitation wizard fields: improve placeholder legibility in dark mode */
+html.dark .inv-wizard-field {
+  color: #F5F0E8 !important;
+}
+html.dark .inv-wizard-field::placeholder {
+  color: rgba(245, 240, 232, 0.62) !important;
+  opacity: 1;
 }
 
 /* ── Invitation relief / foil animation ─────────────────── */

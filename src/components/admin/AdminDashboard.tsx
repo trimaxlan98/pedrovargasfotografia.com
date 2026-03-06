@@ -3,7 +3,7 @@ import { motion } from 'framer-motion'
 import {
   LayoutDashboard, MessageSquare, CalendarDays, Image,
   Users, Settings, LogOut, Clock, CheckCircle, Shield,
-  TrendingUp, Menu, Mail, Home
+  TrendingUp, Menu, Mail, Home, Moon, Sun
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import api from '../../api/client'
@@ -65,10 +65,25 @@ export default function AdminDashboard() {
   const [contacts, setContacts] = useState<ContactRequest[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [dark, setDark] = useState(() => {
+    if (typeof window === 'undefined') return false
+    return localStorage.getItem('theme') === 'dark'
+  })
 
   useEffect(() => {
     loadDashboard()
   }, [])
+
+  useEffect(() => {
+    const root = document.documentElement
+    if (dark) {
+      root.classList.add('dark')
+      localStorage.setItem('theme', 'dark')
+    } else {
+      root.classList.remove('dark')
+      localStorage.setItem('theme', 'light')
+    }
+  }, [dark])
 
   useEffect(() => {
     if (section === 'contacts') loadContacts()
@@ -187,12 +202,19 @@ export default function AdminDashboard() {
           >
             <Menu size={22} />
           </button>
-          <div>
+          <div className="min-w-0">
             <h2 className="font-cormorant text-lg text-ivory capitalize">
               {navItems.find(n => n.id === section)?.label}
             </h2>
             <p className="text-ivory/40 text-xs font-dm">Bienvenido, {user?.name}</p>
           </div>
+          <button
+            onClick={() => setDark(d => !d)}
+            aria-label="Cambiar modo"
+            className="ml-auto w-9 h-9 flex items-center justify-center rounded-full text-ivory/60 hover:text-gold transition-colors hover:bg-white/5"
+          >
+            {dark ? <Sun size={17} /> : <Moon size={17} />}
+          </button>
         </header>
 
         {/* Content */}

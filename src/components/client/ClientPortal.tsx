@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import {
   CalendarDays, Mail, LogOut, Plus, Eye, CheckCircle, Clock, XCircle,
-  ExternalLink, Pencil, Trash2, Copy, Check, ToggleLeft, ToggleRight, Users, Home,
+  ExternalLink, Pencil, Trash2, Copy, Check, ToggleLeft, ToggleRight, Users, Home, Moon, Sun,
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import api from '../../api/client'
@@ -47,11 +47,26 @@ export default function ClientPortal() {
   const [copied, setCopied] = useState<string | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
   const [guestPanelInv, setGuestPanelInv] = useState<InvitationItem | null>(null)
+  const [dark, setDark] = useState(() => {
+    if (typeof window === 'undefined') return false
+    return localStorage.getItem('theme') === 'dark'
+  })
 
   useEffect(() => {
     if (tab === 'bookings') loadBookings()
     if (tab === 'invitations') loadInvitations()
   }, [tab])
+
+  useEffect(() => {
+    const root = document.documentElement
+    if (dark) {
+      root.classList.add('dark')
+      localStorage.setItem('theme', 'dark')
+    } else {
+      root.classList.remove('dark')
+      localStorage.setItem('theme', 'light')
+    }
+  }, [dark])
 
   async function loadBookings() {
     setIsLoading(true)
@@ -124,6 +139,13 @@ export default function ClientPortal() {
             <p className="text-ivory/40 text-xs font-dm">{user?.email}</p>
           </div>
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => setDark(d => !d)}
+              aria-label="Cambiar modo"
+              className="w-9 h-9 flex items-center justify-center rounded-full text-ivory/60 hover:text-gold transition-colors hover:bg-white/5"
+            >
+              {dark ? <Sun size={17} /> : <Moon size={17} />}
+            </button>
             <a
               href="/"
               className="flex items-center gap-2 text-ivory/50 hover:text-gold text-sm font-dm transition-colors px-3 py-1.5 rounded-lg hover:bg-gold/8"

@@ -184,7 +184,7 @@ export default function InvitationWizard({
 
   const guestStep = 1
   const publishStep = STEPS.length - 1
-  const ic = 'w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-ivory text-sm placeholder-ivory/20 focus:border-gold/50 focus:outline-none'
+  const ic = 'inv-wizard-field w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-ivory text-sm focus:border-gold/50 focus:outline-none'
 
   useEffect(() => {
     if (mode !== 'admin') return
@@ -678,7 +678,7 @@ export default function InvitationWizard({
                     rows={span ? 3 : 2}
                     value={draft.data[field as keyof typeof draft.data]}
                     onChange={e => setData(field)(e.target.value)}
-                    className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-ivory text-sm placeholder-ivory/20 focus:border-gold/50 focus:outline-none resize-none"
+                    className="inv-wizard-field w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-ivory text-sm focus:border-gold/50 focus:outline-none resize-none"
                     placeholder={label}
                   />
                 </div>
