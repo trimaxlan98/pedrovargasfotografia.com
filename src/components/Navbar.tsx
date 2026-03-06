@@ -125,7 +125,7 @@ export default function Navbar() {
                       initial={{ opacity: 0, y: 6 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: 6 }}
-                      className="absolute right-0 mt-2 w-44 glass-nav rounded-xl border border-white/10 overflow-hidden shadow-xl"
+                      className="user-dropdown absolute right-0 mt-2 w-44 glass-nav rounded-xl border border-white/10 overflow-hidden shadow-xl"
                       onMouseLeave={() => setUserMenuOpen(false)}
                     >
                       <a
