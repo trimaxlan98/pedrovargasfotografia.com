@@ -96,7 +96,7 @@ router.get('/guest/:guestToken', async (req, res) => {
         where: { token: req.params.guestToken },
         include: { invitation: true },
     });
-    if (!guest || !guest.invitation.isPublished) {
+    if (!guest || !guest.invitation.isPublished || guest.invitation.archivedAt) {
         R.notFound(res, 'Invitación no encontrada');
         return;
     }
@@ -124,7 +124,7 @@ router.post('/guest/:guestToken/rsvp', async (req, res) => {
         where: { token: req.params.guestToken },
         include: { invitation: true },
     });
-    if (!guest || !guest.invitation.isPublished) {
+    if (!guest || !guest.invitation.isPublished || guest.invitation.archivedAt) {
         R.notFound(res, 'Invitación no encontrada');
         return;
     }
@@ -141,8 +141,11 @@ router.post('/guest/:guestToken/rsvp', async (req, res) => {
 });
 // GET /api/public/invitation/:token  — vista pública de invitación
 router.get('/invitation/:token', async (req, res) => {
-    const invitation = await prisma_1.default.digitalInvitation.findUnique({
-        where: { shareToken: req.params.token },
+    const invitation = await prisma_1.default.digitalInvitation.findFirst({
+        where: {
+            shareToken: req.params.token,
+            archivedAt: null,
+        },
     });
     if (!invitation || !invitation.isPublished) {
         R.notFound(res, 'Invitación no encontrada');

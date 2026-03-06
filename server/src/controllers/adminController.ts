@@ -29,6 +29,8 @@ function serializeGallery(input: unknown): string | undefined {
   return undefined
 }
 
+const MANUAL_ARCHIVE_REASON = 'MANUAL_DELETE'
+
 // ─── DASHBOARD ─────────────────────────────────────────────────────────────────
 
 export async function getDashboard(_req: AuthRequest, res: Response): Promise<void> {
@@ -45,9 +47,9 @@ export async function getDashboard(_req: AuthRequest, res: Response): Promise<vo
   ] = await Promise.all([
     prisma.contactRequest.count(),
     prisma.contactRequest.count({ where: { status: 'PENDING' } }),
-    prisma.booking.count(),
-    prisma.booking.count({ where: { status: 'PENDING' } }),
-    prisma.booking.count({ where: { status: 'CONFIRMED' } }),
+    prisma.booking.count({ where: { archivedAt: null } }),
+    prisma.booking.count({ where: { status: 'PENDING', archivedAt: null } }),
+    prisma.booking.count({ where: { status: 'CONFIRMED', archivedAt: null } }),
     prisma.user.count({ where: { role: 'CLIENT' } }),
     prisma.portfolioItem.count(),
     prisma.contactRequest.findMany({
@@ -56,6 +58,7 @@ export async function getDashboard(_req: AuthRequest, res: Response): Promise<vo
     }),
     prisma.booking.findMany({
       take: 5,
+      where: { archivedAt: null },
       orderBy: { createdAt: 'desc' },
       include: { client: { select: { name: true, email: true } } },
     }),
@@ -112,7 +115,7 @@ export async function listBookings(req: AuthRequest, res: Response): Promise<voi
   const limit = Math.min(50, Number(req.query.limit) || 10)
   const skip = (page - 1) * limit
   const status = req.query.status as string | undefined
-  const where: Record<string, unknown> = {}
+  const where: Record<string, unknown> = { archivedAt: null }
   if (status) where.status = status
 
   const [bookings, total] = await Promise.all([
@@ -128,9 +131,30 @@ export async function listBookings(req: AuthRequest, res: Response): Promise<voi
   R.paginate(res, bookings, total, page, limit)
 }
 
+export async function listBookingHistory(req: AuthRequest, res: Response): Promise<void> {
+  const page = Math.max(1, Number(req.query.page) || 1)
+  const limit = Math.min(50, Number(req.query.limit) || 10)
+  const skip = (page - 1) * limit
+  const status = req.query.status as string | undefined
+  const where: Record<string, unknown> = { archivedAt: { not: null } }
+  if (status) where.status = status
+
+  const [bookings, total] = await Promise.all([
+    prisma.booking.findMany({
+      where,
+      skip,
+      take: limit,
+      orderBy: { archivedAt: 'desc' },
+      include: { client: { select: { id: true, name: true, email: true, phone: true } } },
+    }),
+    prisma.booking.count({ where }),
+  ])
+  R.paginate(res, bookings, total, page, limit)
+}
+
 export async function getBooking(req: AuthRequest, res: Response): Promise<void> {
-  const booking = await prisma.booking.findUnique({
-    where: { id: req.params.id },
+  const booking = await prisma.booking.findFirst({
+    where: { id: req.params.id, archivedAt: null },
     include: { client: { select: { id: true, name: true, email: true, phone: true } } },
   })
   if (!booking) { R.notFound(res); return }
@@ -139,8 +163,14 @@ export async function getBooking(req: AuthRequest, res: Response): Promise<void>
 
 export async function updateBooking(req: AuthRequest, res: Response): Promise<void> {
   const { status, adminNotes, totalPrice, depositPaid } = req.body
+  const existing = await prisma.booking.findFirst({
+    where: { id: req.params.id, archivedAt: null },
+    select: { id: true },
+  })
+  if (!existing) { R.notFound(res, 'Reserva no encontrada'); return }
+
   const booking = await prisma.booking.update({
-    where: { id: req.params.id },
+    where: { id: existing.id },
     data: { status, adminNotes, totalPrice, depositPaid },
   })
   R.success(res, booking, 'Reserva actualizada')
@@ -405,19 +435,38 @@ export async function listInvitations(req: AuthRequest, res: Response): Promise<
 
   const [items, total] = await Promise.all([
     prisma.digitalInvitation.findMany({
+      where: { archivedAt: null },
       skip,
       take: limit,
       orderBy: { createdAt: 'desc' },
       include: { client: { select: { id: true, name: true, email: true } } },
     }),
-    prisma.digitalInvitation.count(),
+    prisma.digitalInvitation.count({ where: { archivedAt: null } }),
+  ])
+  R.paginate(res, items.map(normalizeInvitation), total, page, limit)
+}
+
+export async function listInvitationHistory(req: AuthRequest, res: Response): Promise<void> {
+  const page = Math.max(1, Number(req.query.page) || 1)
+  const limit = Math.min(50, Number(req.query.limit) || 10)
+  const skip = (page - 1) * limit
+
+  const [items, total] = await Promise.all([
+    prisma.digitalInvitation.findMany({
+      where: { archivedAt: { not: null } },
+      skip,
+      take: limit,
+      orderBy: { archivedAt: 'desc' },
+      include: { client: { select: { id: true, name: true, email: true } } },
+    }),
+    prisma.digitalInvitation.count({ where: { archivedAt: { not: null } } }),
   ])
   R.paginate(res, items.map(normalizeInvitation), total, page, limit)
 }
 
 export async function getInvitation(req: AuthRequest, res: Response): Promise<void> {
-  const item = await prisma.digitalInvitation.findUnique({
-    where: { id: req.params.id },
+  const item = await prisma.digitalInvitation.findFirst({
+    where: { id: req.params.id, archivedAt: null },
     include: { client: { select: { id: true, name: true, email: true } } },
   })
   if (!item) { R.notFound(res); return }
@@ -458,35 +507,58 @@ export async function createInvitation(req: AuthRequest, res: Response): Promise
 }
 
 export async function updateInvitation(req: AuthRequest, res: Response): Promise<void> {
+  const existing = await prisma.digitalInvitation.findFirst({
+    where: { id: req.params.id, archivedAt: null },
+    select: { id: true },
+  })
+  if (!existing) { R.notFound(res, 'Invitación no encontrada'); return }
+
   const payload = { ...req.body }
   if (payload.gallery) {
     payload.gallery = serializeGallery(payload.gallery)
   }
 
   const invitation = await prisma.digitalInvitation.update({
-    where: { id: req.params.id },
+    where: { id: existing.id },
     data: payload,
   })
   R.success(res, normalizeInvitation(invitation))
 }
 
 export async function deleteInvitation(req: AuthRequest, res: Response): Promise<void> {
-  await prisma.digitalInvitation.delete({ where: { id: req.params.id } })
+  const existing = await prisma.digitalInvitation.findFirst({
+    where: { id: req.params.id, archivedAt: null },
+    select: { id: true },
+  })
+  if (!existing) { R.notFound(res, 'Invitación no encontrada'); return }
+
+  await prisma.digitalInvitation.update({
+    where: { id: existing.id },
+    data: {
+      archivedAt: new Date(),
+      archiveReason: MANUAL_ARCHIVE_REASON,
+      isPublished: false,
+    },
+  })
   R.noContent(res)
 }
 
 export async function toggleInvitationPublished(req: AuthRequest, res: Response): Promise<void> {
-  const existing = await prisma.digitalInvitation.findUnique({ where: { id: req.params.id } })
+  const existing = await prisma.digitalInvitation.findFirst({
+    where: { id: req.params.id, archivedAt: null },
+  })
   if (!existing) { R.notFound(res); return }
   const updated = await prisma.digitalInvitation.update({
-    where: { id: req.params.id },
+    where: { id: existing.id },
     data: { isPublished: !existing.isPublished },
   })
   R.success(res, normalizeInvitation(updated))
 }
 
 export async function addInvitationPhotos(req: AuthRequest, res: Response): Promise<void> {
-  const existing = await prisma.digitalInvitation.findUnique({ where: { id: req.params.id } })
+  const existing = await prisma.digitalInvitation.findFirst({
+    where: { id: req.params.id, archivedAt: null },
+  })
   if (!existing) { R.notFound(res); return }
 
   const files = (req.files || []) as Express.Multer.File[]
@@ -500,7 +572,9 @@ export async function addInvitationPhotos(req: AuthRequest, res: Response): Prom
 }
 
 export async function listGuestsByInvitation(req: AuthRequest, res: Response): Promise<void> {
-  const invitation = await prisma.digitalInvitation.findUnique({ where: { id: req.params.id } })
+  const invitation = await prisma.digitalInvitation.findFirst({
+    where: { id: req.params.id, archivedAt: null },
+  })
   if (!invitation) { R.notFound(res, 'Invitación no encontrada'); return }
 
   const guests = await prisma.invitationGuest.findMany({
@@ -511,7 +585,9 @@ export async function listGuestsByInvitation(req: AuthRequest, res: Response): P
 }
 
 export async function addGuestsByInvitation(req: AuthRequest, res: Response): Promise<void> {
-  const invitation = await prisma.digitalInvitation.findUnique({ where: { id: req.params.id } })
+  const invitation = await prisma.digitalInvitation.findFirst({
+    where: { id: req.params.id, archivedAt: null },
+  })
   if (!invitation) { R.notFound(res, 'Invitación no encontrada'); return }
 
   const { names } = req.body
@@ -531,7 +607,9 @@ export async function addGuestsByInvitation(req: AuthRequest, res: Response): Pr
 }
 
 export async function deleteGuestByInvitation(req: AuthRequest, res: Response): Promise<void> {
-  const invitation = await prisma.digitalInvitation.findUnique({ where: { id: req.params.id } })
+  const invitation = await prisma.digitalInvitation.findFirst({
+    where: { id: req.params.id, archivedAt: null },
+  })
   if (!invitation) { R.notFound(res, 'Invitación no encontrada'); return }
 
   const guest = await prisma.invitationGuest.findFirst({
@@ -560,3 +638,4 @@ export async function updateSettings(req: AuthRequest, res: Response): Promise<v
   })
   R.success(res, settings, 'Configuración actualizada')
 }
+

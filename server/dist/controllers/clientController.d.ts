@@ -1,10 +1,12 @@
 import { Response } from 'express';
 import { AuthRequest } from '../types';
 export declare function getMyBookings(req: AuthRequest, res: Response): Promise<void>;
+export declare function getMyBookingHistory(req: AuthRequest, res: Response): Promise<void>;
 export declare function getMyBooking(req: AuthRequest, res: Response): Promise<void>;
 export declare function createBooking(req: AuthRequest, res: Response): Promise<void>;
 export declare function cancelBooking(req: AuthRequest, res: Response): Promise<void>;
 export declare function getMyInvitations(req: AuthRequest, res: Response): Promise<void>;
+export declare function getMyInvitationHistory(req: AuthRequest, res: Response): Promise<void>;
 export declare function getMyInvitation(req: AuthRequest, res: Response): Promise<void>;
 export declare function createInvitation(req: AuthRequest, res: Response): Promise<void>;
 export declare function updateInvitation(req: AuthRequest, res: Response): Promise<void>;

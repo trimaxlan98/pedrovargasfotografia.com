@@ -4,7 +4,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const app_1 = __importDefault(require("./app"));
+const archivalService_1 = require("./services/archivalService");
 const PORT = Number(process.env.PORT) || 3001;
+const stopArchivalWorkflow = (0, archivalService_1.startArchivalWorkflow)();
 const server = app_1.default.listen(PORT, () => {
     console.log(`\n🎯 Pedro Vargas Fotografía API`);
     console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
@@ -14,6 +16,7 @@ const server = app_1.default.listen(PORT, () => {
 });
 process.on('SIGTERM', () => {
     console.log('SIGTERM recibido. Cerrando servidor...');
+    stopArchivalWorkflow();
     server.close(() => {
         console.log('Servidor cerrado.');
         process.exit(0);

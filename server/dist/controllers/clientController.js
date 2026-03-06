@@ -37,10 +37,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getMyBookings = getMyBookings;
+exports.getMyBookingHistory = getMyBookingHistory;
 exports.getMyBooking = getMyBooking;
 exports.createBooking = createBooking;
 exports.cancelBooking = cancelBooking;
 exports.getMyInvitations = getMyInvitations;
+exports.getMyInvitationHistory = getMyInvitationHistory;
 exports.getMyInvitation = getMyInvitation;
 exports.createInvitation = createInvitation;
 exports.updateInvitation = updateInvitation;
@@ -82,6 +84,7 @@ function serializeGallery(input) {
         return input;
     return undefined;
 }
+const MANUAL_ARCHIVE_REASON = 'MANUAL_DELETE';
 function emptyGuestStats() {
     return { total: 0, confirmed: 0, pending: 0, declined: 0 };
 }
@@ -114,14 +117,21 @@ async function appendGuestStats(invitations) {
 // ─── RESERVAS DEL CLIENTE ──────────────────────────────────────────────────────
 async function getMyBookings(req, res) {
     const bookings = await prisma_1.default.booking.findMany({
-        where: { clientId: req.user.userId },
+        where: { clientId: req.user.userId, archivedAt: null },
         orderBy: { createdAt: 'desc' },
+    });
+    R.success(res, bookings);
+}
+async function getMyBookingHistory(req, res) {
+    const bookings = await prisma_1.default.booking.findMany({
+        where: { clientId: req.user.userId, archivedAt: { not: null } },
+        orderBy: { archivedAt: 'desc' },
     });
     R.success(res, bookings);
 }
 async function getMyBooking(req, res) {
     const booking = await prisma_1.default.booking.findFirst({
-        where: { id: req.params.id, clientId: req.user.userId },
+        where: { id: req.params.id, clientId: req.user.userId, archivedAt: null },
     });
     if (!booking) {
         R.notFound(res, 'Reserva no encontrada');
@@ -163,7 +173,7 @@ async function createBooking(req, res) {
 }
 async function cancelBooking(req, res) {
     const booking = await prisma_1.default.booking.findFirst({
-        where: { id: req.params.id, clientId: req.user.userId },
+        where: { id: req.params.id, clientId: req.user.userId, archivedAt: null },
     });
     if (!booking) {
         R.notFound(res, 'Reserva no encontrada');
@@ -174,7 +184,7 @@ async function cancelBooking(req, res) {
         return;
     }
     const updated = await prisma_1.default.booking.update({
-        where: { id: req.params.id },
+        where: { id: booking.id },
         data: { status: 'CANCELLED' },
     });
     R.success(res, updated, 'Reserva cancelada');
@@ -182,8 +192,17 @@ async function cancelBooking(req, res) {
 // ─── INVITACIONES DIGITALES DEL CLIENTE ───────────────────────────────────────
 async function getMyInvitations(req, res) {
     const invitations = await prisma_1.default.digitalInvitation.findMany({
-        where: { clientId: req.user.userId },
+        where: { clientId: req.user.userId, archivedAt: null },
         orderBy: { createdAt: 'desc' },
+    });
+    const normalized = invitations.map(normalizeInvitation);
+    const withStats = await appendGuestStats(normalized);
+    R.success(res, withStats);
+}
+async function getMyInvitationHistory(req, res) {
+    const invitations = await prisma_1.default.digitalInvitation.findMany({
+        where: { clientId: req.user.userId, archivedAt: { not: null } },
+        orderBy: { archivedAt: 'desc' },
     });
     const normalized = invitations.map(normalizeInvitation);
     const withStats = await appendGuestStats(normalized);
@@ -191,7 +210,7 @@ async function getMyInvitations(req, res) {
 }
 async function getMyInvitation(req, res) {
     const invitation = await prisma_1.default.digitalInvitation.findFirst({
-        where: { id: req.params.id, clientId: req.user.userId },
+        where: { id: req.params.id, clientId: req.user.userId, archivedAt: null },
     });
     if (!invitation) {
         R.notFound(res, 'Invitación no encontrada');
@@ -234,7 +253,7 @@ async function createInvitation(req, res) {
 }
 async function updateInvitation(req, res) {
     const existing = await prisma_1.default.digitalInvitation.findFirst({
-        where: { id: req.params.id, clientId: req.user.userId },
+        where: { id: req.params.id, clientId: req.user.userId, archivedAt: null },
     });
     if (!existing) {
         R.notFound(res, 'Invitación no encontrada');
@@ -258,32 +277,39 @@ async function updateInvitation(req, res) {
     // Limpiar campos undefined para evitar errores de Prisma
     Object.keys(payload).forEach(key => payload[key] === undefined && delete payload[key]);
     const invitation = await prisma_1.default.digitalInvitation.update({
-        where: { id: req.params.id },
+        where: { id: existing.id },
         data: payload,
     });
     R.success(res, normalizeInvitation(invitation), 'Invitación actualizada');
 }
 async function deleteInvitation(req, res) {
     const existing = await prisma_1.default.digitalInvitation.findFirst({
-        where: { id: req.params.id, clientId: req.user.userId },
+        where: { id: req.params.id, clientId: req.user.userId, archivedAt: null },
     });
     if (!existing) {
         R.notFound(res, 'Invitación no encontrada');
         return;
     }
-    await prisma_1.default.digitalInvitation.delete({ where: { id: req.params.id } });
+    await prisma_1.default.digitalInvitation.update({
+        where: { id: existing.id },
+        data: {
+            archivedAt: new Date(),
+            archiveReason: MANUAL_ARCHIVE_REASON,
+            isPublished: false,
+        },
+    });
     R.noContent(res);
 }
 async function toggleInvitationPublished(req, res) {
     const existing = await prisma_1.default.digitalInvitation.findFirst({
-        where: { id: req.params.id, clientId: req.user.userId },
+        where: { id: req.params.id, clientId: req.user.userId, archivedAt: null },
     });
     if (!existing) {
         R.notFound(res, 'Invitación no encontrada');
         return;
     }
     const updated = await prisma_1.default.digitalInvitation.update({
-        where: { id: req.params.id },
+        where: { id: existing.id },
         data: { isPublished: !existing.isPublished },
     });
     R.success(res, normalizeInvitation(updated), `Invitación ${updated.isPublished ? 'publicada' : 'despublicada'}`);
@@ -291,7 +317,7 @@ async function toggleInvitationPublished(req, res) {
 // ─── INVITADOS (GUESTS) ────────────────────────────────────────────────────────
 async function addGuests(req, res) {
     const invitation = await prisma_1.default.digitalInvitation.findFirst({
-        where: { id: req.params.id, clientId: req.user.userId },
+        where: { id: req.params.id, clientId: req.user.userId, archivedAt: null },
     });
     if (!invitation) {
         R.notFound(res, 'Invitación no encontrada');
@@ -326,7 +352,7 @@ async function seedGuestsForDevelopment(req, res) {
         return;
     }
     const invitation = await prisma_1.default.digitalInvitation.findFirst({
-        where: { id: req.params.id, clientId: req.user.userId },
+        where: { id: req.params.id, clientId: req.user.userId, archivedAt: null },
     });
     if (!invitation) {
         R.notFound(res, 'Invitacion no encontrada');
@@ -352,7 +378,7 @@ async function seedGuestsForDevelopment(req, res) {
 }
 async function listGuests(req, res) {
     const invitation = await prisma_1.default.digitalInvitation.findFirst({
-        where: { id: req.params.id, clientId: req.user.userId },
+        where: { id: req.params.id, clientId: req.user.userId, archivedAt: null },
     });
     if (!invitation) {
         R.notFound(res, 'Invitación no encontrada');
@@ -366,7 +392,7 @@ async function listGuests(req, res) {
 }
 async function deleteGuest(req, res) {
     const invitation = await prisma_1.default.digitalInvitation.findFirst({
-        where: { id: req.params.id, clientId: req.user.userId },
+        where: { id: req.params.id, clientId: req.user.userId, archivedAt: null },
     });
     if (!invitation) {
         R.notFound(res, 'Invitación no encontrada');
@@ -385,7 +411,7 @@ async function deleteGuest(req, res) {
 // ──────────────────────────────────────────────────────────────────────────────
 async function addInvitationPhotos(req, res) {
     const existing = await prisma_1.default.digitalInvitation.findFirst({
-        where: { id: req.params.id, clientId: req.user.userId },
+        where: { id: req.params.id, clientId: req.user.userId, archivedAt: null },
     });
     if (!existing) {
         R.notFound(res, 'Invitación no encontrada');

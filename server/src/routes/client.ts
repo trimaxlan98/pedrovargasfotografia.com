@@ -25,12 +25,14 @@ const invitationValidation = [
 
 // Reservas
 router.get('/bookings', client.getMyBookings)
+router.get('/history/bookings', client.getMyBookingHistory)
 router.get('/bookings/:id', client.getMyBooking)
 router.post('/bookings', bookingValidation, client.createBooking)
 router.patch('/bookings/:id/cancel', client.cancelBooking)
 
 // Invitaciones digitales
 router.get('/invitations', client.getMyInvitations)
+router.get('/history/invitations', client.getMyInvitationHistory)
 router.get('/invitations/:id', client.getMyInvitation)
 router.post('/invitations', invitationValidation, client.createInvitation)
 router.put('/invitations/:id', client.updateInvitation)

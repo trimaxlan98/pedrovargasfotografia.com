@@ -455,7 +455,9 @@ html.dark .text-ivory\/70 { color: rgba(245, 240, 232, 0.70) !important; }
 html.dark .text-ivory\/60 { color: rgba(245, 240, 232, 0.60) !important; }
 html.dark .text-ivory\/50 { color: rgba(245, 240, 232, 0.50) !important; }
 html.dark .text-ivory\/40 { color: rgba(245, 240, 232, 0.40) !important; }
+html.dark .text-ivory\/35 { color: rgba(245, 240, 232, 0.35) !important; }
 html.dark .text-ivory\/30 { color: rgba(245, 240, 232, 0.30) !important; }
+html.dark .text-ivory\/55 { color: rgba(245, 240, 232, 0.55) !important; }
 
 /* bg-ivory lines (hamburger bars) → light */
 html.dark .bg-ivory { background-color: #F5F0E8 !important; }

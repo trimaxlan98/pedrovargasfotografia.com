@@ -74,11 +74,14 @@ model Booking {
   adminNotes  String?
   totalPrice  Float?
   depositPaid Boolean  @default(false)
+  archivedAt  DateTime?
+  archiveReason String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   client User @relation(fields: [clientId], references: [id])
 
+  @@index([archivedAt])
   @@map("bookings")
 }
 
@@ -162,6 +165,8 @@ model DigitalInvitation {
   views        Int      @default(0)
   isPublished  Boolean  @default(true)
   rsvpDeadline DateTime?
+  archivedAt   DateTime?
+  archiveReason String?
   
   // Nuevos campos para personalización por defecto
   guestGreeting    String?  @default("Hola")
@@ -173,6 +178,7 @@ model DigitalInvitation {
   client User               @relation(fields: [clientId], references: [id])
   guests InvitationGuest[]
 
+  @@index([archivedAt])
   @@map("digital_invitations")
 }
 

@@ -19,6 +19,8 @@ interface Booking {
   status: string
   notes?: string
   totalPrice?: number
+  archivedAt?: string | null
+  archiveReason?: string | null
   createdAt: string
 }
 
@@ -33,13 +35,15 @@ const STATUS_CONFIG: Record<string, { label: string; icon: React.ElementType; co
   CANCELLED:    { label: 'Cancelado',       icon: XCircle,      color: 'text-red-400' },
 }
 
-type Tab = 'bookings' | 'invitations'
+type Tab = 'bookings' | 'invitations' | 'history'
 
 export default function ClientPortal() {
   const { user, logout } = useAuth()
   const [tab, setTab] = useState<Tab>('bookings')
   const [bookings, setBookings] = useState<Booking[]>([])
   const [invitations, setInvitations] = useState<InvitationItem[]>([])
+  const [historyBookings, setHistoryBookings] = useState<Booking[]>([])
+  const [historyInvitations, setHistoryInvitations] = useState<InvitationItem[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [showBookingForm, setShowBookingForm] = useState(false)
   const [showInvitationWizard, setShowInvitationWizard] = useState(false)
@@ -55,6 +59,7 @@ export default function ClientPortal() {
   useEffect(() => {
     if (tab === 'bookings') loadBookings()
     if (tab === 'invitations') loadInvitations()
+    if (tab === 'history') loadHistory()
   }, [tab])
 
   useEffect(() => {
@@ -81,6 +86,18 @@ export default function ClientPortal() {
     try {
       const res = await api.get<{ data: InvitationItem[] }>('/client/invitations')
       setInvitations(res.data)
+    } finally { setIsLoading(false) }
+  }
+
+  async function loadHistory() {
+    setIsLoading(true)
+    try {
+      const [bookingRes, invitationRes] = await Promise.all([
+        api.get<{ data: Booking[] }>('/client/history/bookings'),
+        api.get<{ data: InvitationItem[] }>('/client/history/invitations'),
+      ])
+      setHistoryBookings(bookingRes.data)
+      setHistoryInvitations(invitationRes.data)
     } finally { setIsLoading(false) }
   }
 
@@ -170,6 +187,7 @@ export default function ClientPortal() {
           {([
             { id: 'bookings', label: 'Mis Reservas', icon: CalendarDays },
             { id: 'invitations', label: 'Mis Invitaciones', icon: Mail },
+            { id: 'history', label: 'Historial', icon: Eye },
           ] as const).map(({ id, label, icon: Icon }) => (
             <button
               key={id}
@@ -260,6 +278,62 @@ export default function ClientPortal() {
                   )
                 })}
               </div>
+            )}
+          </div>
+        )}
+
+        {tab === 'history' && (
+          <div className="space-y-6">
+            {isLoading ? (
+              <div className="flex justify-center py-12">
+                <div className="w-6 h-6 border-2 border-gold border-t-transparent rounded-full animate-spin" />
+              </div>
+            ) : (
+              <>
+                <div className="glass rounded-xl border border-white/5 p-5">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-ivory font-dm">Reservas archivadas</h3>
+                    <span className="text-ivory/40 text-xs font-dm">{historyBookings.length}</span>
+                  </div>
+                  {historyBookings.length === 0 ? (
+                    <p className="text-ivory/35 text-sm font-dm">Sin reservas históricas.</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {historyBookings.map(b => (
+                        <div key={b.id} className="border border-white/10 rounded-lg px-4 py-3 bg-white/3">
+                          <p className="text-ivory text-sm font-dm">{b.service}</p>
+                          <p className="text-ivory/50 text-xs font-dm mt-0.5">{b.eventType} · {new Date(b.eventDate).toLocaleDateString('es-MX', { dateStyle: 'long' })}</p>
+                          <p className="text-ivory/35 text-xs font-dm mt-1">
+                            Archivada: {b.archivedAt ? new Date(b.archivedAt).toLocaleDateString('es-MX', { dateStyle: 'long' }) : 'N/A'}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="glass rounded-xl border border-white/5 p-5">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-ivory font-dm">Invitaciones archivadas</h3>
+                    <span className="text-ivory/40 text-xs font-dm">{historyInvitations.length}</span>
+                  </div>
+                  {historyInvitations.length === 0 ? (
+                    <p className="text-ivory/35 text-sm font-dm">Sin invitaciones históricas.</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {historyInvitations.map(inv => (
+                        <div key={inv.id} className="border border-white/10 rounded-lg px-4 py-3 bg-white/3">
+                          <p className="text-ivory text-sm font-dm">{inv.title}</p>
+                          <p className="text-ivory/50 text-xs font-dm mt-0.5">{inv.eventType} · {inv.eventDate}</p>
+                          <p className="text-ivory/35 text-xs font-dm mt-1">
+                            Archivada: {inv.archivedAt ? new Date(inv.archivedAt).toLocaleDateString('es-MX', { dateStyle: 'long' }) : 'N/A'}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </>
             )}
           </div>
         )}

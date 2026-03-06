@@ -6,6 +6,7 @@ export declare function getContact(req: AuthRequest, res: Response): Promise<voi
 export declare function updateContact(req: AuthRequest, res: Response): Promise<void>;
 export declare function deleteContact(req: AuthRequest, res: Response): Promise<void>;
 export declare function listBookings(req: AuthRequest, res: Response): Promise<void>;
+export declare function listBookingHistory(req: AuthRequest, res: Response): Promise<void>;
 export declare function getBooking(req: AuthRequest, res: Response): Promise<void>;
 export declare function updateBooking(req: AuthRequest, res: Response): Promise<void>;
 export declare function listPortfolio(req: AuthRequest, res: Response): Promise<void>;
@@ -25,6 +26,7 @@ export declare function listAccounts(req: AuthRequest, res: Response): Promise<v
 export declare function createAccount(req: AuthRequest, res: Response): Promise<void>;
 export declare function toggleAccountStatus(req: AuthRequest, res: Response): Promise<void>;
 export declare function listInvitations(req: AuthRequest, res: Response): Promise<void>;
+export declare function listInvitationHistory(req: AuthRequest, res: Response): Promise<void>;
 export declare function getInvitation(req: AuthRequest, res: Response): Promise<void>;
 export declare function createInvitation(req: AuthRequest, res: Response): Promise<void>;
 export declare function updateInvitation(req: AuthRequest, res: Response): Promise<void>;

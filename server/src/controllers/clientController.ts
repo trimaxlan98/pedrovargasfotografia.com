@@ -30,6 +30,8 @@ function serializeGallery(input: unknown): string | undefined {
   return undefined
 }
 
+const MANUAL_ARCHIVE_REASON = 'MANUAL_DELETE'
+
 interface GuestStats {
   total: number
   confirmed: number
@@ -71,15 +73,23 @@ async function appendGuestStats<T extends { id: string }>(invitations: T[]): Pro
 
 export async function getMyBookings(req: AuthRequest, res: Response): Promise<void> {
   const bookings = await prisma.booking.findMany({
-    where: { clientId: req.user!.userId },
+    where: { clientId: req.user!.userId, archivedAt: null },
     orderBy: { createdAt: 'desc' },
+  })
+  R.success(res, bookings)
+}
+
+export async function getMyBookingHistory(req: AuthRequest, res: Response): Promise<void> {
+  const bookings = await prisma.booking.findMany({
+    where: { clientId: req.user!.userId, archivedAt: { not: null } },
+    orderBy: { archivedAt: 'desc' },
   })
   R.success(res, bookings)
 }
 
 export async function getMyBooking(req: AuthRequest, res: Response): Promise<void> {
   const booking = await prisma.booking.findFirst({
-    where: { id: req.params.id, clientId: req.user!.userId },
+    where: { id: req.params.id, clientId: req.user!.userId, archivedAt: null },
   })
   if (!booking) { R.notFound(res, 'Reserva no encontrada'); return }
   R.success(res, booking)
@@ -124,7 +134,7 @@ export async function createBooking(req: AuthRequest, res: Response): Promise<vo
 
 export async function cancelBooking(req: AuthRequest, res: Response): Promise<void> {
   const booking = await prisma.booking.findFirst({
-    where: { id: req.params.id, clientId: req.user!.userId },
+    where: { id: req.params.id, clientId: req.user!.userId, archivedAt: null },
   })
   if (!booking) { R.notFound(res, 'Reserva no encontrada'); return }
   if (['COMPLETED', 'CANCELLED'].includes(booking.status)) {
@@ -132,7 +142,7 @@ export async function cancelBooking(req: AuthRequest, res: Response): Promise<vo
   }
 
   const updated = await prisma.booking.update({
-    where: { id: req.params.id },
+    where: { id: booking.id },
     data: { status: 'CANCELLED' },
   })
   R.success(res, updated, 'Reserva cancelada')
@@ -142,8 +152,18 @@ export async function cancelBooking(req: AuthRequest, res: Response): Promise<vo
 
 export async function getMyInvitations(req: AuthRequest, res: Response): Promise<void> {
   const invitations = await prisma.digitalInvitation.findMany({
-    where: { clientId: req.user!.userId },
+    where: { clientId: req.user!.userId, archivedAt: null },
     orderBy: { createdAt: 'desc' },
+  })
+  const normalized = invitations.map(normalizeInvitation)
+  const withStats = await appendGuestStats(normalized)
+  R.success(res, withStats)
+}
+
+export async function getMyInvitationHistory(req: AuthRequest, res: Response): Promise<void> {
+  const invitations = await prisma.digitalInvitation.findMany({
+    where: { clientId: req.user!.userId, archivedAt: { not: null } },
+    orderBy: { archivedAt: 'desc' },
   })
   const normalized = invitations.map(normalizeInvitation)
   const withStats = await appendGuestStats(normalized)
@@ -152,7 +172,7 @@ export async function getMyInvitations(req: AuthRequest, res: Response): Promise
 
 export async function getMyInvitation(req: AuthRequest, res: Response): Promise<void> {
   const invitation = await prisma.digitalInvitation.findFirst({
-    where: { id: req.params.id, clientId: req.user!.userId },
+    where: { id: req.params.id, clientId: req.user!.userId, archivedAt: null },
   })
   if (!invitation) { R.notFound(res, 'Invitación no encontrada'); return }
   const [withStats] = await appendGuestStats([normalizeInvitation(invitation)])
@@ -202,7 +222,7 @@ export async function createInvitation(req: AuthRequest, res: Response): Promise
 
 export async function updateInvitation(req: AuthRequest, res: Response): Promise<void> {
   const existing = await prisma.digitalInvitation.findFirst({
-    where: { id: req.params.id, clientId: req.user!.userId },
+    where: { id: req.params.id, clientId: req.user!.userId, archivedAt: null },
   })
   if (!existing) { R.notFound(res, 'Invitación no encontrada'); return }
 
@@ -234,7 +254,7 @@ export async function updateInvitation(req: AuthRequest, res: Response): Promise
   Object.keys(payload).forEach(key => payload[key] === undefined && delete payload[key])
 
   const invitation = await prisma.digitalInvitation.update({
-    where: { id: req.params.id },
+    where: { id: existing.id },
     data: payload,
   })
   R.success(res, normalizeInvitation(invitation), 'Invitación actualizada')
@@ -242,22 +262,29 @@ export async function updateInvitation(req: AuthRequest, res: Response): Promise
 
 export async function deleteInvitation(req: AuthRequest, res: Response): Promise<void> {
   const existing = await prisma.digitalInvitation.findFirst({
-    where: { id: req.params.id, clientId: req.user!.userId },
+    where: { id: req.params.id, clientId: req.user!.userId, archivedAt: null },
   })
   if (!existing) { R.notFound(res, 'Invitación no encontrada'); return }
 
-  await prisma.digitalInvitation.delete({ where: { id: req.params.id } })
+  await prisma.digitalInvitation.update({
+    where: { id: existing.id },
+    data: {
+      archivedAt: new Date(),
+      archiveReason: MANUAL_ARCHIVE_REASON,
+      isPublished: false,
+    },
+  })
   R.noContent(res)
 }
 
 export async function toggleInvitationPublished(req: AuthRequest, res: Response): Promise<void> {
   const existing = await prisma.digitalInvitation.findFirst({
-    where: { id: req.params.id, clientId: req.user!.userId },
+    where: { id: req.params.id, clientId: req.user!.userId, archivedAt: null },
   })
   if (!existing) { R.notFound(res, 'Invitación no encontrada'); return }
 
   const updated = await prisma.digitalInvitation.update({
-    where: { id: req.params.id },
+    where: { id: existing.id },
     data: { isPublished: !existing.isPublished },
   })
   R.success(res, normalizeInvitation(updated), `Invitación ${updated.isPublished ? 'publicada' : 'despublicada'}`)
@@ -267,7 +294,7 @@ export async function toggleInvitationPublished(req: AuthRequest, res: Response)
 
 export async function addGuests(req: AuthRequest, res: Response): Promise<void> {
   const invitation = await prisma.digitalInvitation.findFirst({
-    where: { id: req.params.id, clientId: req.user!.userId },
+    where: { id: req.params.id, clientId: req.user!.userId, archivedAt: null },
   })
   if (!invitation) { R.notFound(res, 'Invitación no encontrada'); return }
 
@@ -310,7 +337,7 @@ export async function seedGuestsForDevelopment(req: AuthRequest, res: Response):
   }
 
   const invitation = await prisma.digitalInvitation.findFirst({
-    where: { id: req.params.id, clientId: req.user!.userId },
+    where: { id: req.params.id, clientId: req.user!.userId, archivedAt: null },
   })
   if (!invitation) { R.notFound(res, 'Invitacion no encontrada'); return }
 
@@ -341,7 +368,7 @@ export async function seedGuestsForDevelopment(req: AuthRequest, res: Response):
 
 export async function listGuests(req: AuthRequest, res: Response): Promise<void> {
   const invitation = await prisma.digitalInvitation.findFirst({
-    where: { id: req.params.id, clientId: req.user!.userId },
+    where: { id: req.params.id, clientId: req.user!.userId, archivedAt: null },
   })
   if (!invitation) { R.notFound(res, 'Invitación no encontrada'); return }
 
@@ -354,7 +381,7 @@ export async function listGuests(req: AuthRequest, res: Response): Promise<void>
 
 export async function deleteGuest(req: AuthRequest, res: Response): Promise<void> {
   const invitation = await prisma.digitalInvitation.findFirst({
-    where: { id: req.params.id, clientId: req.user!.userId },
+    where: { id: req.params.id, clientId: req.user!.userId, archivedAt: null },
   })
   if (!invitation) { R.notFound(res, 'Invitación no encontrada'); return }
 
@@ -371,7 +398,7 @@ export async function deleteGuest(req: AuthRequest, res: Response): Promise<void
 
 export async function addInvitationPhotos(req: AuthRequest, res: Response): Promise<void> {
   const existing = await prisma.digitalInvitation.findFirst({
-    where: { id: req.params.id, clientId: req.user!.userId },
+    where: { id: req.params.id, clientId: req.user!.userId, archivedAt: null },
   })
   if (!existing) { R.notFound(res, 'Invitación no encontrada'); return }
 
@@ -384,3 +411,4 @@ export async function addInvitationPhotos(req: AuthRequest, res: Response): Prom
   })
   R.success(res, normalizeInvitation(updated), 'Fotos agregadas')
 }
+

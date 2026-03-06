@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+﻿import { useEffect, useState } from 'react'
 import { Mail, Eye, Trash2, Plus, Pencil, Copy, Check, ExternalLink, ToggleLeft, ToggleRight } from 'lucide-react'
 import InvitationWizard from '../invitations/InvitationWizard'
 import api from '../../api/client'
@@ -9,23 +9,33 @@ export default function AdminInvitations() {
   const [showWizard, setShowWizard] = useState(false)
   const [editTarget, setEditTarget] = useState<ApiInvitation | undefined>()
   const [isLoading, setIsLoading] = useState(false)
+  const [viewMode, setViewMode] = useState<'active' | 'history'>('active')
   const [copied, setCopied] = useState<string | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
 
-  useEffect(() => { refresh() }, [])
+  useEffect(() => { refresh() }, [viewMode])
 
   const refresh = async () => {
     setIsLoading(true)
     try {
-      const res = await api.get<{ data: ApiInvitation[] }>('/admin/invitations')
+      const base = viewMode === 'history' ? '/admin/history/invitations' : '/admin/invitations'
+      const res = await api.get<{ data: ApiInvitation[] }>(base)
       setInvitations(res.data)
     } finally {
       setIsLoading(false)
     }
   }
 
-  const openCreate = () => { setEditTarget(undefined); setShowWizard(true) }
-  const openEdit = (inv: ApiInvitation) => { setEditTarget(inv); setShowWizard(true) }
+  const openCreate = () => {
+    if (viewMode === 'history') return
+    setEditTarget(undefined)
+    setShowWizard(true)
+  }
+  const openEdit = (inv: ApiInvitation) => {
+    if (viewMode === 'history') return
+    setEditTarget(inv)
+    setShowWizard(true)
+  }
 
   const closeWizard = () => { setShowWizard(false); setEditTarget(undefined) }
 
@@ -39,6 +49,7 @@ export default function AdminInvitations() {
   }
 
   const togglePublished = async (inv: ApiInvitation) => {
+    if (viewMode === 'history') return
     try {
       await api.patch(`/admin/invitations/${inv.id}/toggle-published`)
       refresh()
@@ -46,6 +57,7 @@ export default function AdminInvitations() {
   }
 
   const deleteInvitation = async (id: string) => {
+    if (viewMode === 'history') return
     try {
       await api.delete(`/admin/invitations/${id}`)
       setDeleteConfirm(null)
@@ -58,14 +70,37 @@ export default function AdminInvitations() {
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <p className="text-ivory/50 text-sm font-dm">
           {invitations.length} invitación{invitations.length !== 1 ? 'es' : ''}
+          {viewMode === 'history' ? ' en historial' : ''}
         </p>
-        <button
-          onClick={openCreate}
-          className="flex items-center gap-2 btn-primary px-4 py-2 text-sm"
-        >
-          <Plus size={16} />
-          Nueva invitación
-        </button>
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 rounded-lg border border-white/10 p-1">
+            <button
+              onClick={() => setViewMode('active')}
+              className={`px-2.5 py-1.5 rounded text-xs font-dm transition-colors ${
+                viewMode === 'active' ? 'bg-gold/20 text-gold' : 'text-ivory/50 hover:text-ivory'
+              }`}
+            >
+              Activas
+            </button>
+            <button
+              onClick={() => setViewMode('history')}
+              className={`px-2.5 py-1.5 rounded text-xs font-dm transition-colors ${
+                viewMode === 'history' ? 'bg-gold/20 text-gold' : 'text-ivory/50 hover:text-ivory'
+              }`}
+            >
+              Historial
+            </button>
+          </div>
+          {viewMode === 'active' && (
+            <button
+              onClick={openCreate}
+              className="flex items-center gap-2 btn-primary px-4 py-2 text-sm"
+            >
+              <Plus size={16} />
+              Nueva invitación
+            </button>
+          )}
+        </div>
       </div>
 
       {isLoading ? (
@@ -75,13 +110,19 @@ export default function AdminInvitations() {
       ) : invitations.length === 0 ? (
         <div className="glass rounded-xl border border-white/5 p-12 text-center">
           <Mail className="mx-auto text-ivory/20 mb-4" size={40} />
-          <p className="text-ivory/40 font-dm">No hay invitaciones creadas</p>
-          <p className="text-ivory/30 text-sm font-dm mt-2">
-            Crea una plantilla y asígnala a un cliente.
+          <p className="text-ivory/40 font-dm">
+            {viewMode === 'active' ? 'No hay invitaciones creadas' : 'No hay invitaciones en historial'}
           </p>
-          <button onClick={openCreate} className="btn-outline mt-5 px-6 py-2 text-sm">
-            Crear primera invitación
-          </button>
+          {viewMode === 'active' && (
+            <>
+              <p className="text-ivory/30 text-sm font-dm mt-2">
+                Crea una plantilla y asígnala a un cliente.
+              </p>
+              <button onClick={openCreate} className="btn-outline mt-5 px-6 py-2 text-sm">
+                Crear primera invitación
+              </button>
+            </>
+          )}
         </div>
       ) : (
         <>
@@ -128,7 +169,7 @@ export default function AdminInvitations() {
                   <button
                     onClick={() => openEdit(inv)}
                     className="flex-1 inline-flex items-center justify-center gap-1.5 text-ivory/70 border border-white/10 rounded-lg px-2 py-2 text-xs"
-                    title="Editar invitación"
+                    title="Editar invitaciÃ³n"
                   >
                     <Pencil size={13} /> Editar
                   </button>
@@ -146,7 +187,7 @@ export default function AdminInvitations() {
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex-1 inline-flex items-center justify-center gap-1.5 text-ivory/70 border border-white/10 rounded-lg px-2 py-2 text-xs"
-                    title="Ver invitación"
+                    title="Ver invitaciÃ³n"
                   >
                     <ExternalLink size={13} /> Ver
                   </a>
@@ -158,7 +199,7 @@ export default function AdminInvitations() {
                       onClick={() => deleteInvitation(inv.id)}
                       className="flex-1 text-red-300 bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-2 text-xs"
                     >
-                      Confirmar eliminación
+                      Confirmar eliminaciÃ³n
                     </button>
                     <button
                       onClick={() => setDeleteConfirm(null)}
@@ -185,7 +226,7 @@ export default function AdminInvitations() {
               <table className="w-full min-w-[960px]">
                 <thead>
                   <tr className="border-b border-white/5">
-                    {['Título', 'Cliente', 'Evento', 'Fecha', 'Vistas', 'Estado', 'Acciones'].map(h => (
+                    {['TÃ­tulo', 'Cliente', 'Evento', 'Fecha', 'Vistas', 'Estado', 'Acciones'].map(h => (
                       <th
                         key={h}
                         className="px-4 py-3 text-left text-ivory/40 text-xs font-dm uppercase tracking-wider"
@@ -235,7 +276,7 @@ export default function AdminInvitations() {
                           <button
                             onClick={() => openEdit(inv)}
                             className="text-ivory/40 hover:text-gold transition-colors"
-                            title="Editar invitación"
+                            title="Editar invitaciÃ³n"
                           >
                             <Pencil size={14} />
                           </button>
@@ -257,7 +298,7 @@ export default function AdminInvitations() {
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-ivory/40 hover:text-gold transition-colors"
-                            title="Ver invitación"
+                            title="Ver invitaciÃ³n"
                           >
                             <ExternalLink size={14} />
                           </a>
@@ -308,3 +349,5 @@ export default function AdminInvitations() {
     </div>
   )
 }
+
+

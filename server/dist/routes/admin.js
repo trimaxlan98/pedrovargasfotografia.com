@@ -50,6 +50,7 @@ router.patch('/contacts/:id', admin.updateContact);
 router.delete('/contacts/:id', admin.deleteContact);
 // Reservas
 router.get('/bookings', admin.listBookings);
+router.get('/history/bookings', admin.listBookingHistory);
 router.get('/bookings/:id', admin.getBooking);
 router.patch('/bookings/:id', admin.updateBooking);
 // Portfolio
@@ -75,6 +76,7 @@ router.post('/accounts', admin.createAccount);
 router.patch('/accounts/:id/toggle-status', admin.toggleAccountStatus);
 // Invitaciones digitales
 router.get('/invitations', admin.listInvitations);
+router.get('/history/invitations', admin.listInvitationHistory);
 router.get('/invitations/:id', admin.getInvitation);
 router.post('/invitations', admin.createInvitation);
 router.put('/invitations/:id', admin.updateInvitation);

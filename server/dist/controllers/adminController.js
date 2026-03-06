@@ -42,6 +42,7 @@ exports.getContact = getContact;
 exports.updateContact = updateContact;
 exports.deleteContact = deleteContact;
 exports.listBookings = listBookings;
+exports.listBookingHistory = listBookingHistory;
 exports.getBooking = getBooking;
 exports.updateBooking = updateBooking;
 exports.listPortfolio = listPortfolio;
@@ -61,6 +62,7 @@ exports.listAccounts = listAccounts;
 exports.createAccount = createAccount;
 exports.toggleAccountStatus = toggleAccountStatus;
 exports.listInvitations = listInvitations;
+exports.listInvitationHistory = listInvitationHistory;
 exports.getInvitation = getInvitation;
 exports.createInvitation = createInvitation;
 exports.updateInvitation = updateInvitation;
@@ -102,14 +104,15 @@ function serializeGallery(input) {
         return input;
     return undefined;
 }
+const MANUAL_ARCHIVE_REASON = 'MANUAL_DELETE';
 // ─── DASHBOARD ─────────────────────────────────────────────────────────────────
 async function getDashboard(_req, res) {
     const [totalContacts, pendingContacts, totalBookings, pendingBookings, confirmedBookings, totalClients, totalPortfolio, recentContacts, recentBookings,] = await Promise.all([
         prisma_1.default.contactRequest.count(),
         prisma_1.default.contactRequest.count({ where: { status: 'PENDING' } }),
-        prisma_1.default.booking.count(),
-        prisma_1.default.booking.count({ where: { status: 'PENDING' } }),
-        prisma_1.default.booking.count({ where: { status: 'CONFIRMED' } }),
+        prisma_1.default.booking.count({ where: { archivedAt: null } }),
+        prisma_1.default.booking.count({ where: { status: 'PENDING', archivedAt: null } }),
+        prisma_1.default.booking.count({ where: { status: 'CONFIRMED', archivedAt: null } }),
         prisma_1.default.user.count({ where: { role: 'CLIENT' } }),
         prisma_1.default.portfolioItem.count(),
         prisma_1.default.contactRequest.findMany({
@@ -118,6 +121,7 @@ async function getDashboard(_req, res) {
         }),
         prisma_1.default.booking.findMany({
             take: 5,
+            where: { archivedAt: null },
             orderBy: { createdAt: 'desc' },
             include: { client: { select: { name: true, email: true } } },
         }),
@@ -169,7 +173,7 @@ async function listBookings(req, res) {
     const limit = Math.min(50, Number(req.query.limit) || 10);
     const skip = (page - 1) * limit;
     const status = req.query.status;
-    const where = {};
+    const where = { archivedAt: null };
     if (status)
         where.status = status;
     const [bookings, total] = await Promise.all([
@@ -184,9 +188,29 @@ async function listBookings(req, res) {
     ]);
     R.paginate(res, bookings, total, page, limit);
 }
+async function listBookingHistory(req, res) {
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const limit = Math.min(50, Number(req.query.limit) || 10);
+    const skip = (page - 1) * limit;
+    const status = req.query.status;
+    const where = { archivedAt: { not: null } };
+    if (status)
+        where.status = status;
+    const [bookings, total] = await Promise.all([
+        prisma_1.default.booking.findMany({
+            where,
+            skip,
+            take: limit,
+            orderBy: { archivedAt: 'desc' },
+            include: { client: { select: { id: true, name: true, email: true, phone: true } } },
+        }),
+        prisma_1.default.booking.count({ where }),
+    ]);
+    R.paginate(res, bookings, total, page, limit);
+}
 async function getBooking(req, res) {
-    const booking = await prisma_1.default.booking.findUnique({
-        where: { id: req.params.id },
+    const booking = await prisma_1.default.booking.findFirst({
+        where: { id: req.params.id, archivedAt: null },
         include: { client: { select: { id: true, name: true, email: true, phone: true } } },
     });
     if (!booking) {
@@ -197,8 +221,16 @@ async function getBooking(req, res) {
 }
 async function updateBooking(req, res) {
     const { status, adminNotes, totalPrice, depositPaid } = req.body;
+    const existing = await prisma_1.default.booking.findFirst({
+        where: { id: req.params.id, archivedAt: null },
+        select: { id: true },
+    });
+    if (!existing) {
+        R.notFound(res, 'Reserva no encontrada');
+        return;
+    }
     const booking = await prisma_1.default.booking.update({
-        where: { id: req.params.id },
+        where: { id: existing.id },
         data: { status, adminNotes, totalPrice, depositPaid },
     });
     R.success(res, booking, 'Reserva actualizada');
@@ -430,18 +462,35 @@ async function listInvitations(req, res) {
     const skip = (page - 1) * limit;
     const [items, total] = await Promise.all([
         prisma_1.default.digitalInvitation.findMany({
+            where: { archivedAt: null },
             skip,
             take: limit,
             orderBy: { createdAt: 'desc' },
             include: { client: { select: { id: true, name: true, email: true } } },
         }),
-        prisma_1.default.digitalInvitation.count(),
+        prisma_1.default.digitalInvitation.count({ where: { archivedAt: null } }),
+    ]);
+    R.paginate(res, items.map(normalizeInvitation), total, page, limit);
+}
+async function listInvitationHistory(req, res) {
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const limit = Math.min(50, Number(req.query.limit) || 10);
+    const skip = (page - 1) * limit;
+    const [items, total] = await Promise.all([
+        prisma_1.default.digitalInvitation.findMany({
+            where: { archivedAt: { not: null } },
+            skip,
+            take: limit,
+            orderBy: { archivedAt: 'desc' },
+            include: { client: { select: { id: true, name: true, email: true } } },
+        }),
+        prisma_1.default.digitalInvitation.count({ where: { archivedAt: { not: null } } }),
     ]);
     R.paginate(res, items.map(normalizeInvitation), total, page, limit);
 }
 async function getInvitation(req, res) {
-    const item = await prisma_1.default.digitalInvitation.findUnique({
-        where: { id: req.params.id },
+    const item = await prisma_1.default.digitalInvitation.findFirst({
+        where: { id: req.params.id, archivedAt: null },
         include: { client: { select: { id: true, name: true, email: true } } },
     });
     if (!item) {
@@ -477,34 +526,61 @@ async function createInvitation(req, res) {
     R.created(res, normalizeInvitation(invitation));
 }
 async function updateInvitation(req, res) {
+    const existing = await prisma_1.default.digitalInvitation.findFirst({
+        where: { id: req.params.id, archivedAt: null },
+        select: { id: true },
+    });
+    if (!existing) {
+        R.notFound(res, 'Invitación no encontrada');
+        return;
+    }
     const payload = { ...req.body };
     if (payload.gallery) {
         payload.gallery = serializeGallery(payload.gallery);
     }
     const invitation = await prisma_1.default.digitalInvitation.update({
-        where: { id: req.params.id },
+        where: { id: existing.id },
         data: payload,
     });
     R.success(res, normalizeInvitation(invitation));
 }
 async function deleteInvitation(req, res) {
-    await prisma_1.default.digitalInvitation.delete({ where: { id: req.params.id } });
+    const existing = await prisma_1.default.digitalInvitation.findFirst({
+        where: { id: req.params.id, archivedAt: null },
+        select: { id: true },
+    });
+    if (!existing) {
+        R.notFound(res, 'Invitación no encontrada');
+        return;
+    }
+    await prisma_1.default.digitalInvitation.update({
+        where: { id: existing.id },
+        data: {
+            archivedAt: new Date(),
+            archiveReason: MANUAL_ARCHIVE_REASON,
+            isPublished: false,
+        },
+    });
     R.noContent(res);
 }
 async function toggleInvitationPublished(req, res) {
-    const existing = await prisma_1.default.digitalInvitation.findUnique({ where: { id: req.params.id } });
+    const existing = await prisma_1.default.digitalInvitation.findFirst({
+        where: { id: req.params.id, archivedAt: null },
+    });
     if (!existing) {
         R.notFound(res);
         return;
     }
     const updated = await prisma_1.default.digitalInvitation.update({
-        where: { id: req.params.id },
+        where: { id: existing.id },
         data: { isPublished: !existing.isPublished },
     });
     R.success(res, normalizeInvitation(updated));
 }
 async function addInvitationPhotos(req, res) {
-    const existing = await prisma_1.default.digitalInvitation.findUnique({ where: { id: req.params.id } });
+    const existing = await prisma_1.default.digitalInvitation.findFirst({
+        where: { id: req.params.id, archivedAt: null },
+    });
     if (!existing) {
         R.notFound(res);
         return;
@@ -519,7 +595,9 @@ async function addInvitationPhotos(req, res) {
     R.success(res, normalizeInvitation(updated));
 }
 async function listGuestsByInvitation(req, res) {
-    const invitation = await prisma_1.default.digitalInvitation.findUnique({ where: { id: req.params.id } });
+    const invitation = await prisma_1.default.digitalInvitation.findFirst({
+        where: { id: req.params.id, archivedAt: null },
+    });
     if (!invitation) {
         R.notFound(res, 'Invitación no encontrada');
         return;
@@ -531,7 +609,9 @@ async function listGuestsByInvitation(req, res) {
     R.success(res, guests);
 }
 async function addGuestsByInvitation(req, res) {
-    const invitation = await prisma_1.default.digitalInvitation.findUnique({ where: { id: req.params.id } });
+    const invitation = await prisma_1.default.digitalInvitation.findFirst({
+        where: { id: req.params.id, archivedAt: null },
+    });
     if (!invitation) {
         R.notFound(res, 'Invitación no encontrada');
         return;
@@ -548,7 +628,9 @@ async function addGuestsByInvitation(req, res) {
     R.created(res, guests, 'Invitados agregados');
 }
 async function deleteGuestByInvitation(req, res) {
-    const invitation = await prisma_1.default.digitalInvitation.findUnique({ where: { id: req.params.id } });
+    const invitation = await prisma_1.default.digitalInvitation.findFirst({
+        where: { id: req.params.id, archivedAt: null },
+    });
     if (!invitation) {
         R.notFound(res, 'Invitación no encontrada');
         return;

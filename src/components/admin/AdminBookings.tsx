@@ -28,6 +28,8 @@ interface Booking {
   adminNotes?: string
   totalPrice?: number
   depositPaid: boolean
+  archivedAt?: string | null
+  archiveReason?: string | null
   createdAt: string
   client: BookingClient
 }
@@ -59,22 +61,27 @@ export default function AdminBookings() {
   const [bookings, setBookings] = useState<Booking[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [filterStatus, setFilterStatus] = useState('')
+  const [viewMode, setViewMode] = useState<'active' | 'history'>('active')
   const [selected, setSelected] = useState<Booking | null>(null)
 
-  useEffect(() => { load() }, [filterStatus])
+  useEffect(() => { load() }, [filterStatus, viewMode])
 
   async function load() {
     setIsLoading(true)
     try {
       const params = filterStatus ? `?status=${filterStatus}&limit=50` : '?limit=50'
-      const res = await api.get<{ data: Booking[] }>(`/admin/bookings${params}`)
+      const base = viewMode === 'history' ? '/admin/history/bookings' : '/admin/bookings'
+      const res = await api.get<{ data: Booking[] }>(`${base}${params}`)
       setBookings(res.data)
     } finally {
       setIsLoading(false)
     }
   }
 
-  function openDetail(b: Booking) { setSelected(b) }
+  function openDetail(b: Booking) {
+    if (viewMode !== 'active') return
+    setSelected(b)
+  }
   function closeDetail() { setSelected(null) }
 
   function onSaved(updated: Booking) {
@@ -95,15 +102,36 @@ export default function AdminBookings() {
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <p className="text-ivory/50 text-sm font-dm">
           {bookings.length} reserva{bookings.length !== 1 ? 's' : ''}
+          {viewMode === 'history' ? ' en historial' : ''}
           {filterStatus && ` Â· ${STATUS_CONFIG[filterStatus]?.label}`}
         </p>
-        <button
-          onClick={load}
-          className="flex items-center gap-2 text-ivory/50 hover:text-gold text-sm font-dm transition-colors"
-        >
-          <RefreshCw size={14} className={isLoading ? 'animate-spin' : ''} />
-          Actualizar
-        </button>
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 rounded-lg border border-white/10 p-1">
+            <button
+              onClick={() => { setViewMode('active'); setSelected(null) }}
+              className={`px-2.5 py-1.5 rounded text-xs font-dm transition-colors ${
+                viewMode === 'active' ? 'bg-gold/20 text-gold' : 'text-ivory/50 hover:text-ivory'
+              }`}
+            >
+              Activas
+            </button>
+            <button
+              onClick={() => { setViewMode('history'); setSelected(null) }}
+              className={`px-2.5 py-1.5 rounded text-xs font-dm transition-colors ${
+                viewMode === 'history' ? 'bg-gold/20 text-gold' : 'text-ivory/50 hover:text-ivory'
+              }`}
+            >
+              Historial
+            </button>
+          </div>
+          <button
+            onClick={load}
+            className="flex items-center gap-2 text-ivory/50 hover:text-gold text-sm font-dm transition-colors"
+          >
+            <RefreshCw size={14} className={isLoading ? 'animate-spin' : ''} />
+            Actualizar
+          </button>
+        </div>
       </div>
 
       {/* Filter tabs */}
@@ -146,10 +174,12 @@ export default function AdminBookings() {
             {bookings.map(b => {
               const st = STATUS_CONFIG[b.status] || STATUS_CONFIG['PENDING']
               return (
-                <button
+                <div
                   key={b.id}
                   onClick={() => openDetail(b)}
-                  className="w-full text-left glass rounded-xl border border-white/5 p-4 space-y-3"
+                  className={`w-full text-left glass rounded-xl border border-white/5 p-4 space-y-3 ${
+                    viewMode === 'active' ? 'cursor-pointer' : ''
+                  }`}
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
@@ -165,6 +195,9 @@ export default function AdminBookings() {
                   <div className="space-y-1.5 text-xs font-dm">
                     <p className="text-ivory/75 truncate">{b.service}</p>
                     <p className="text-ivory/50">{b.eventType} · {new Date(b.eventDate).toLocaleDateString('es-MX', { dateStyle: 'medium' })}</p>
+                    {b.archivedAt && (
+                      <p className="text-ivory/35 text-xs">Archivada: {new Date(b.archivedAt).toLocaleDateString('es-MX', { dateStyle: 'medium' })}</p>
+                    )}
                     <p className="text-gold">
                       {b.totalPrice != null ? `$${b.totalPrice.toLocaleString('es-MX')} MXN` : 'Sin precio definido'}
                     </p>
@@ -172,9 +205,11 @@ export default function AdminBookings() {
 
                   <div className="flex items-center justify-between text-ivory/35 text-xs">
                     <span>Invitados: {b.guestCount ?? '-'}</span>
-                    <span className="inline-flex items-center gap-1 text-gold/80">Ver detalle <ChevronRight size={13} /></span>
+                    {viewMode === 'active' && (
+                      <span className="inline-flex items-center gap-1 text-gold/80">Ver detalle <ChevronRight size={13} /></span>
+                    )}
                   </div>
-                </button>
+                </div>
               )
             })}
           </div>
@@ -200,7 +235,7 @@ export default function AdminBookings() {
                     return (
                       <tr
                         key={b.id}
-                        className="hover:bg-white/3 transition-colors cursor-pointer group"
+                        className={`hover:bg-white/3 transition-colors group ${viewMode === 'active' ? 'cursor-pointer' : ''}`}
                         onClick={() => openDetail(b)}
                       >
                         <td className="px-4 py-3">
@@ -215,6 +250,11 @@ export default function AdminBookings() {
                         </td>
                         <td className="px-4 py-3 text-ivory/60 text-xs font-dm whitespace-nowrap">
                           {new Date(b.eventDate).toLocaleDateString('es-MX', { dateStyle: 'medium' })}
+                          {b.archivedAt && (
+                            <p className="text-ivory/35 mt-1">
+                              Archivada: {new Date(b.archivedAt).toLocaleDateString('es-MX')}
+                            </p>
+                          )}
                         </td>
                         <td className="px-4 py-3 text-ivory/50 text-sm font-dm text-center">
                           {b.guestCount ?? '-'}
@@ -232,10 +272,12 @@ export default function AdminBookings() {
                           }
                         </td>
                         <td className="px-4 py-3">
-                          <ChevronRight
-                            size={16}
-                            className="text-ivory/20 group-hover:text-gold transition-colors"
-                          />
+                          {viewMode === 'active' && (
+                            <ChevronRight
+                              size={16}
+                              className="text-ivory/20 group-hover:text-gold transition-colors"
+                            />
+                          )}
                         </td>
                       </tr>
                     )
@@ -249,7 +291,7 @@ export default function AdminBookings() {
 
       {/* Detail drawer */}
       <AnimatePresence>
-        {selected && (
+        {selected && viewMode === 'active' && (
           <BookingDetail
             booking={selected}
             onClose={closeDetail}

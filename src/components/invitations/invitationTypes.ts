@@ -55,6 +55,8 @@ export interface ApiInvitation {
   shareToken: string
   views: number
   isPublished: boolean
+  archivedAt?: string | null
+  archiveReason?: string | null
   guestGreeting?: string
   defaultGuestName?: string
   guestStats?: ApiInvitationGuestStats
