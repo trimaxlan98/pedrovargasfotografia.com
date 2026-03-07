@@ -34,14 +34,17 @@ async function main() {
   console.log('🌱 Iniciando seed de la base de datos...')
 
   // ──────────────── Admin ────────────────────────────────────────────────────────────
-  const adminEmail = process.env.ADMIN_EMAIL || 'admin@studiolumiere.mx'
-  const adminPassword = process.env.ADMIN_PASSWORD || 'Admin123!'
-  const adminName = process.env.ADMIN_NAME || 'Miguel Ángel Lumière'
+  const adminEmail = 'ppfotomx@gmail.com'
+  const adminPassword = process.env.ADMIN_PASSWORD || 'PedroVargas2026!'
+  const adminName = 'Pedro Vargas'
 
   const hashedAdmin = await bcrypt.hash(adminPassword, 12)
   const admin = await prisma.user.upsert({
     where: { email: adminEmail },
-    update: {},
+    update: {
+      name: adminName,
+      role: 'ADMIN',
+    },
     create: {
       email: adminEmail,
       password: hashedAdmin,
@@ -53,14 +56,15 @@ async function main() {
   console.log(`✅ Admin creado: ${admin.email}`)
 
   // ──────────────── Cliente de prueba ──────────────────────────────────────────────
+  const randomClientEmail = 'juan.perez@ejemplo.mx'
   const clientPassword = await bcrypt.hash('Cliente123!', 12)
   const client = await prisma.user.upsert({
-    where: { email: 'cliente@ejemplo.mx' },
+    where: { email: randomClientEmail },
     update: {},
     create: {
-      email: 'cliente@ejemplo.mx',
+      email: randomClientEmail,
       password: clientPassword,
-      name: 'María González',
+      name: 'Juan Pérez',
       role: 'CLIENT',
       phone: '+52 55 9876 5432',
     },
@@ -189,7 +193,7 @@ async function main() {
   console.log('\n🎉 Seed completado exitosamente!')
   console.log(`\n📧 Admin: ${adminEmail}`)
   console.log(`🔑 Contraseña: ${adminPassword}`)
-  console.log('📧 Cliente demo: cliente@ejemplo.mx')
+  console.log(`📧 Cliente demo: ${randomClientEmail}`)
   console.log('🔑 Contraseña: Cliente123!')
 }
 
