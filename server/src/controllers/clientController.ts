@@ -2,6 +2,7 @@ import { Response } from 'express'
 import { validationResult } from 'express-validator'
 import { v4 as uuidv4 } from 'uuid'
 import prisma from '../utils/prisma'
+import * as archivalService from '../services/archivalService'
 import { AuthRequest } from '../types'
 import * as R from '../utils/response'
 import { sendBookingConfirmation } from '../utils/email'
@@ -288,6 +289,17 @@ export async function toggleInvitationPublished(req: AuthRequest, res: Response)
     data: { isPublished: !existing.isPublished },
   })
   R.success(res, normalizeInvitation(updated), `Invitación ${updated.isPublished ? 'publicada' : 'despublicada'}`)
+}
+
+export async function archiveInvitation(req: AuthRequest, res: Response): Promise<void> {
+  const existing = await prisma.digitalInvitation.findFirst({
+    where: { id: req.params.id, clientId: req.user!.userId, archivedAt: null },
+  })
+  if (!existing) { R.notFound(res, 'Invitación no encontrada'); return }
+
+  const { reason } = req.body
+  const invitation = await archivalService.archiveInvitation(existing.id, reason)
+  R.success(res, normalizeInvitation(invitation), 'Invitación archivada')
 }
 
 // ─── INVITADOS (GUESTS) ────────────────────────────────────────────────────────

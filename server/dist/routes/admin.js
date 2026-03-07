@@ -50,9 +50,12 @@ router.patch('/contacts/:id', admin.updateContact);
 router.delete('/contacts/:id', admin.deleteContact);
 // Reservas
 router.get('/bookings', admin.listBookings);
+router.get('/bookings/archived', admin.getArchivedBookings);
 router.get('/history/bookings', admin.listBookingHistory);
 router.get('/bookings/:id', admin.getBooking);
 router.patch('/bookings/:id', admin.updateBooking);
+router.post('/bookings/:id/archive', admin.archiveBooking);
+router.post('/bookings/:id/unarchive', admin.unarchiveBooking);
 // Portfolio
 router.get('/portfolio', admin.listPortfolio);
 router.post('/portfolio', upload_1.uploadImage.single('image'), admin.createPortfolioItem);
@@ -76,10 +79,13 @@ router.post('/accounts', admin.createAccount);
 router.patch('/accounts/:id/toggle-status', admin.toggleAccountStatus);
 // Invitaciones digitales
 router.get('/invitations', admin.listInvitations);
+router.get('/invitations/archived', admin.getArchivedInvitations);
 router.get('/history/invitations', admin.listInvitationHistory);
 router.get('/invitations/:id', admin.getInvitation);
 router.post('/invitations', admin.createInvitation);
 router.put('/invitations/:id', admin.updateInvitation);
+router.post('/invitations/:id/archive', admin.archiveInvitation);
+router.post('/invitations/:id/unarchive', admin.unarchiveInvitation);
 router.delete('/invitations/:id', admin.deleteInvitation);
 router.patch('/invitations/:id/toggle-published', admin.toggleInvitationPublished);
 router.post('/invitations/:id/photos', upload_1.uploadImage.array('images', 8), admin.addInvitationPhotos);

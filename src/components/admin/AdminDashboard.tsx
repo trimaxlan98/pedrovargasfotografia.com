@@ -148,8 +148,8 @@ export default function AdminDashboard() {
         {/* Logo */}
         <div className="p-6 border-b border-white/5">
           <p className="label-caps text-gold text-xs">Panel Admin</p>
-          <h1 className="font-cormorant text-xl text-ivory mt-1">Pedro Vargas Fotografía</h1>
-          <p className="text-ivory/40 text-xs font-dm mt-1">{user?.email}</p>
+          <h1 className="font-cormorant text-xl text-near-black dark:text-ivory mt-1">Pedro Vargas Fotografía</h1>
+          <p className="text-near-black/40 dark:text-ivory/40 text-xs font-dm mt-1">{user?.email}</p>
         </div>
 
         {/* Nav */}
@@ -162,7 +162,7 @@ export default function AdminDashboard() {
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-dm transition-colors ${
                 section === id
                   ? 'bg-gold/25 text-[#6A4B1F] dark:bg-gold/20 dark:text-gold'
-                  : 'text-ivory/60 hover:text-ivory hover:bg-white/5'
+                  : 'text-near-black/60 dark:text-ivory/60 hover:text-near-black dark:hover:text-ivory hover:bg-near-black/5 dark:hover:bg-white/5'
               }`}
             >
               <Icon size={17} />

@@ -9,6 +9,9 @@ export declare function listBookings(req: AuthRequest, res: Response): Promise<v
 export declare function listBookingHistory(req: AuthRequest, res: Response): Promise<void>;
 export declare function getBooking(req: AuthRequest, res: Response): Promise<void>;
 export declare function updateBooking(req: AuthRequest, res: Response): Promise<void>;
+export declare function archiveBooking(req: AuthRequest, res: Response): Promise<void>;
+export declare function unarchiveBooking(req: AuthRequest, res: Response): Promise<void>;
+export declare function getArchivedBookings(_req: AuthRequest, res: Response): Promise<void>;
 export declare function listPortfolio(req: AuthRequest, res: Response): Promise<void>;
 export declare function createPortfolioItem(req: AuthRequest, res: Response): Promise<void>;
 export declare function updatePortfolioItem(req: AuthRequest, res: Response): Promise<void>;
@@ -32,6 +35,9 @@ export declare function createInvitation(req: AuthRequest, res: Response): Promi
 export declare function updateInvitation(req: AuthRequest, res: Response): Promise<void>;
 export declare function deleteInvitation(req: AuthRequest, res: Response): Promise<void>;
 export declare function toggleInvitationPublished(req: AuthRequest, res: Response): Promise<void>;
+export declare function archiveInvitation(req: AuthRequest, res: Response): Promise<void>;
+export declare function unarchiveInvitation(req: AuthRequest, res: Response): Promise<void>;
+export declare function getArchivedInvitations(_req: AuthRequest, res: Response): Promise<void>;
 export declare function addInvitationPhotos(req: AuthRequest, res: Response): Promise<void>;
 export declare function listGuestsByInvitation(req: AuthRequest, res: Response): Promise<void>;
 export declare function addGuestsByInvitation(req: AuthRequest, res: Response): Promise<void>;

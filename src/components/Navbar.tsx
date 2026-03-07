@@ -112,7 +112,7 @@ export default function Navbar() {
               <div className="relative">
                 <button
                   onClick={() => setUserMenuOpen(!userMenuOpen)}
-                  className="flex items-center gap-2 text-ivory/70 hover:text-ivory transition-colors"
+                  className="flex items-center gap-2 text-ivory/70 hover:text-ivory transition-colors group-hover:text-gold"
                 >
                   <div className="w-8 h-8 rounded-full bg-gold/20 border border-gold/30 flex items-center justify-center">
                     <span className="text-gold text-xs font-semibold">{user?.name?.[0]}</span>
@@ -130,14 +130,14 @@ export default function Navbar() {
                     >
                       <a
                         href={isAdmin ? '/admin' : '/cliente'}
-                        className="flex items-center gap-3 px-4 py-3 text-ivory/70 hover:text-ivory hover:bg-white/5 transition-colors font-dm text-sm"
+                        className="flex items-center gap-3 px-4 py-3 text-ivory/70 hover:text-ivory dark:text-ivory/70 dark:hover:text-ivory hover:bg-black/5 dark:hover:bg-white/5 transition-colors font-dm text-sm"
                       >
                         <LayoutDashboard size={15} />
                         {isAdmin ? 'Panel Admin' : 'Mi Portal'}
                       </a>
                       <button
                         onClick={() => { logout(); setUserMenuOpen(false) }}
-                        className="w-full flex items-center gap-3 px-4 py-3 text-ivory/50 hover:text-danger hover:bg-danger/10 transition-colors font-dm text-sm"
+                        className="w-full flex items-center gap-3 px-4 py-3 text-ivory/50 hover:text-danger dark:text-ivory/50 dark:hover:text-danger hover:bg-danger/10 transition-colors font-dm text-sm border-t border-black/5 dark:border-white/5"
                       >
                         <LogOut size={15} />
                         Cerrar sesión

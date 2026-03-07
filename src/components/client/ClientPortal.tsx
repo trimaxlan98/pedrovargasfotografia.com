@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import {
   CalendarDays, Mail, LogOut, Plus, Eye, CheckCircle, Clock, XCircle,
-  ExternalLink, Pencil, Trash2, Copy, Check, ToggleLeft, ToggleRight, Users, Home, Moon, Sun, HelpCircle,
+  ExternalLink, Pencil, Trash2, Copy, Check, ToggleLeft, ToggleRight, Users, Home, Moon, Sun, HelpCircle, Archive
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import api from '../../api/client'
@@ -119,6 +119,13 @@ export default function ClientPortal() {
     } catch { /* silent */ }
   }
 
+  async function archiveInvitation(id: string) {
+    try {
+      await api.post(`/client/invitations/${id}/archive`, {})
+      loadInvitations()
+    } catch { alert('Error al archivar') }
+  }
+
   async function deleteInvitation(id: string) {
     try {
       await api.delete(`/client/invitations/${id}`)
@@ -154,8 +161,8 @@ export default function ClientPortal() {
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <div>
             <p className="label-caps text-gold text-xs">Mi Cuenta</p>
-            <h1 className="font-cormorant text-xl text-ivory">{user?.name}</h1>
-            <p className="text-ivory/40 text-xs font-dm">{user?.email}</p>
+            <h1 className="font-cormorant text-xl text-near-black dark:text-ivory">{user?.name}</h1>
+            <p className="text-near-black/40 dark:text-ivory/40 text-xs font-dm">{user?.email}</p>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -495,13 +502,22 @@ export default function ClientPortal() {
                           </button>
                         </div>
                       ) : (
-                        <button
-                          onClick={() => setDeleteConfirm(inv.id)}
-                          className="text-ivory/25 hover:text-danger transition-colors px-1"
-                          title="Eliminar invitación"
-                        >
-                          <Trash2 size={13} />
-                        </button>
+                        <div className="flex items-center gap-2 ml-1">
+                          <button
+                            onClick={() => archiveInvitation(inv.id)}
+                            className="text-ivory/25 hover:text-gold transition-colors px-1"
+                            title="Archivar invitación"
+                          >
+                            <Archive size={13} />
+                          </button>
+                          <button
+                            onClick={() => setDeleteConfirm(inv.id)}
+                            className="text-ivory/25 hover:text-danger transition-colors px-1"
+                            title="Eliminar invitación"
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        </div>
                       )}
                     </div>
                   </motion.div>

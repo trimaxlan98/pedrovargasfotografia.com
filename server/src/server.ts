@@ -1,9 +1,7 @@
 import 'dotenv/config'
 import app from './app'
-import { startArchivalWorkflow } from './services/archivalService'
 
 const PORT = Number(process.env.PORT) || 3001
-const stopArchivalWorkflow = startArchivalWorkflow()
 
 const server = app.listen(PORT, () => {
   console.log(`\n🎯 Pedro Vargas Fotografía API`)
@@ -15,7 +13,6 @@ const server = app.listen(PORT, () => {
 
 process.on('SIGTERM', () => {
   console.log('SIGTERM recibido. Cerrando servidor...')
-  stopArchivalWorkflow()
   server.close(() => {
     console.log('Servidor cerrado.')
     process.exit(0)

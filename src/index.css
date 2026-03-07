@@ -608,3 +608,21 @@ html.dark .inv-wizard-field::placeholder {
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
+
+/* v1.1.2.3 – ivory opacity utilities for dark mode */
+html.dark .text-ivory\/75 { color: rgba(245, 240, 232, 0.75); }
+html.dark .text-ivory\/45 { color: rgba(245, 240, 232, 0.45); }
+
+/* v1.1.2.3 – scope nav-transparent dropdown to light mode only */
+html:not(.dark) .nav-transparent .user-dropdown {
+  color: #0A0A0A;
+}
+html:not(.dark) .nav-transparent .user-dropdown a,
+html:not(.dark) .nav-transparent .user-dropdown button {
+  color: #0A0A0A;
+}
+
+/* v1.1.2.3 – archive status badge */
+.badge-archived {
+  @apply bg-gray-700/30 text-gray-400 text-xs px-2 py-0.5 rounded-full;
+}

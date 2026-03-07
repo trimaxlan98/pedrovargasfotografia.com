@@ -109,7 +109,7 @@ export default function Testimonials() {
               className="w-[340px] flex-shrink-0 mx-3 glass p-6 flex flex-col gap-4"
             >
               <Stars />
-              <p className="font-cormorant italic text-ivory/75 text-lg leading-relaxed flex-1">
+              <p className="font-cormorant italic text-ivory/90 text-lg leading-relaxed flex-1">
                 "{t.quote}"
               </p>
               <div className="flex items-center gap-3 pt-3 border-t border-black/12 dark:border-white/12">
@@ -118,7 +118,7 @@ export default function Testimonials() {
                 </div>
                 <div>
                   <p className="font-dm text-ivory text-sm font-medium leading-tight">{t.name}</p>
-                  <p className="font-dm text-ivory/45 text-xs mt-0.5">{t.event}</p>
+                  <p className="font-dm text-ivory/60 text-xs mt-0.5">{t.event}</p>
                 </div>
               </div>
             </div>

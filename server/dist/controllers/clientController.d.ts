@@ -12,6 +12,7 @@ export declare function createInvitation(req: AuthRequest, res: Response): Promi
 export declare function updateInvitation(req: AuthRequest, res: Response): Promise<void>;
 export declare function deleteInvitation(req: AuthRequest, res: Response): Promise<void>;
 export declare function toggleInvitationPublished(req: AuthRequest, res: Response): Promise<void>;
+export declare function archiveInvitation(req: AuthRequest, res: Response): Promise<void>;
 export declare function addGuests(req: AuthRequest, res: Response): Promise<void>;
 export declare function seedGuestsForDevelopment(req: AuthRequest, res: Response): Promise<void>;
 export declare function listGuests(req: AuthRequest, res: Response): Promise<void>;

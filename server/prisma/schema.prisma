@@ -72,10 +72,10 @@ model Booking {
   status      String   @default("PENDING") // PENDING | CONFIRMED | DEPOSIT_PAID | IN_PROGRESS | COMPLETED | CANCELLED
   notes       String?
   adminNotes  String?
-  totalPrice  Float?
-  depositPaid Boolean  @default(false)
   archivedAt  DateTime?
   archiveReason String?
+  totalPrice  Float?
+  depositPaid Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -165,13 +165,11 @@ model DigitalInvitation {
   views        Int      @default(0)
   isPublished  Boolean  @default(true)
   rsvpDeadline DateTime?
-  archivedAt   DateTime?
-  archiveReason String?
-  
-  // Nuevos campos para personalización por defecto
   guestGreeting    String?  @default("Hola")
   defaultGuestName String?  @default("Familia y Amigos")
   
+  archivedAt   DateTime?
+  archiveReason String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 

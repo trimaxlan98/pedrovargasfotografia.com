@@ -48,6 +48,7 @@ exports.createInvitation = createInvitation;
 exports.updateInvitation = updateInvitation;
 exports.deleteInvitation = deleteInvitation;
 exports.toggleInvitationPublished = toggleInvitationPublished;
+exports.archiveInvitation = archiveInvitation;
 exports.addGuests = addGuests;
 exports.seedGuestsForDevelopment = seedGuestsForDevelopment;
 exports.listGuests = listGuests;
@@ -56,6 +57,7 @@ exports.addInvitationPhotos = addInvitationPhotos;
 const express_validator_1 = require("express-validator");
 const uuid_1 = require("uuid");
 const prisma_1 = __importDefault(require("../utils/prisma"));
+const archivalService = __importStar(require("../services/archivalService"));
 const R = __importStar(require("../utils/response"));
 const email_1 = require("../utils/email");
 function parseGallery(raw) {
@@ -313,6 +315,18 @@ async function toggleInvitationPublished(req, res) {
         data: { isPublished: !existing.isPublished },
     });
     R.success(res, normalizeInvitation(updated), `Invitación ${updated.isPublished ? 'publicada' : 'despublicada'}`);
+}
+async function archiveInvitation(req, res) {
+    const existing = await prisma_1.default.digitalInvitation.findFirst({
+        where: { id: req.params.id, clientId: req.user.userId, archivedAt: null },
+    });
+    if (!existing) {
+        R.notFound(res, 'Invitación no encontrada');
+        return;
+    }
+    const { reason } = req.body;
+    const invitation = await archivalService.archiveInvitation(existing.id, reason);
+    R.success(res, normalizeInvitation(invitation), 'Invitación archivada');
 }
 // ─── INVITADOS (GUESTS) ────────────────────────────────────────────────────────
 async function addGuests(req, res) {

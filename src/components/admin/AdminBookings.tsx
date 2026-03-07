@@ -2,7 +2,7 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   CalendarDays, User, MapPin, Users, DollarSign, X,
-  ChevronRight, RefreshCw, FileText,
+  ChevronRight, RefreshCw, FileText, Archive, RotateCcw
 } from 'lucide-react'
 import api from '../../api/client'
 
@@ -61,7 +61,7 @@ export default function AdminBookings() {
   const [bookings, setBookings] = useState<Booking[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [filterStatus, setFilterStatus] = useState('')
-  const [viewMode, setViewMode] = useState<'active' | 'history'>('active')
+  const [viewMode, setViewMode] = useState<'active' | 'archived'>('active')
   const [selected, setSelected] = useState<Booking | null>(null)
 
   useEffect(() => { load() }, [filterStatus, viewMode])
@@ -70,7 +70,7 @@ export default function AdminBookings() {
     setIsLoading(true)
     try {
       const params = filterStatus ? `?status=${filterStatus}&limit=50` : '?limit=50'
-      const base = viewMode === 'history' ? '/admin/history/bookings' : '/admin/bookings'
+      const base = viewMode === 'archived' ? '/admin/bookings/archived' : '/admin/bookings'
       const res = await api.get<{ data: Booking[] }>(`${base}${params}`)
       setBookings(res.data)
     } finally {
@@ -89,6 +89,26 @@ export default function AdminBookings() {
     setSelected(updated)
   }
 
+  async function archiveBooking(id: string) {
+    const reason = window.prompt('Motivo del archivo (opcional):')
+    if (reason === null) return // cancelled
+    try {
+      await api.post(`/admin/bookings/${id}/archive`, { reason })
+      setBookings(prev => prev.filter(b => b.id !== id))
+    } catch (err) {
+      alert('Error al archivar')
+    }
+  }
+
+  async function unarchiveBooking(id: string) {
+    try {
+      await api.post(`/admin/bookings/${id}/unarchive`, {})
+      setBookings(prev => prev.filter(b => b.id !== id))
+    } catch (err) {
+      alert('Error al restaurar')
+    }
+  }
+
   const counts = FILTER_TABS.reduce<Record<string, number>>((acc, t) => {
     acc[t.key] = t.key === ''
       ? bookings.length
@@ -102,8 +122,8 @@ export default function AdminBookings() {
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <p className="text-ivory/50 text-sm font-dm">
           {bookings.length} reserva{bookings.length !== 1 ? 's' : ''}
-          {viewMode === 'history' ? ' en historial' : ''}
-          {filterStatus && ` Â· ${STATUS_CONFIG[filterStatus]?.label}`}
+          {viewMode === 'archived' ? ' archivadas' : ''}
+          {filterStatus && ` · ${STATUS_CONFIG[filterStatus]?.label}`}
         </p>
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-1 rounded-lg border border-white/10 p-1">
@@ -116,12 +136,12 @@ export default function AdminBookings() {
               Activas
             </button>
             <button
-              onClick={() => { setViewMode('history'); setSelected(null) }}
+              onClick={() => { setViewMode('archived'); setSelected(null) }}
               className={`px-2.5 py-1.5 rounded text-xs font-dm transition-colors ${
-                viewMode === 'history' ? 'bg-gold/20 text-gold' : 'text-ivory/50 hover:text-ivory'
+                viewMode === 'archived' ? 'bg-gold/20 text-gold' : 'text-ivory/50 hover:text-ivory'
               }`}
             >
-              Historial
+              Archivadas
             </button>
           </div>
           <button
@@ -205,9 +225,27 @@ export default function AdminBookings() {
 
                   <div className="flex items-center justify-between text-ivory/35 text-xs">
                     <span>Invitados: {b.guestCount ?? '-'}</span>
-                    {viewMode === 'active' && (
-                      <span className="inline-flex items-center gap-1 text-gold/80">Ver detalle <ChevronRight size={13} /></span>
-                    )}
+                    <div className="flex items-center gap-3">
+                      {viewMode === 'active' ? (
+                        <>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); archiveBooking(b.id) }}
+                            className="text-ivory/30 hover:text-gold transition-colors p-1"
+                            title="Archivar"
+                          >
+                            <Archive size={14} />
+                          </button>
+                          <span className="inline-flex items-center gap-1 text-gold/80">Ver detalle <ChevronRight size={13} /></span>
+                        </>
+                      ) : (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); unarchiveBooking(b.id) }}
+                          className="text-ivory/30 hover:text-gold transition-colors p-1 flex items-center gap-1"
+                        >
+                          <RotateCcw size={14} /> Restaurar
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               )
@@ -272,12 +310,31 @@ export default function AdminBookings() {
                           }
                         </td>
                         <td className="px-4 py-3">
-                          {viewMode === 'active' && (
-                            <ChevronRight
-                              size={16}
-                              className="text-ivory/20 group-hover:text-gold transition-colors"
-                            />
-                          )}
+                          <div className="flex items-center gap-2">
+                            {viewMode === 'active' ? (
+                              <>
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); archiveBooking(b.id) }}
+                                  className="text-ivory/20 hover:text-gold transition-colors p-1"
+                                  title="Archivar"
+                                >
+                                  <Archive size={14} />
+                                </button>
+                                <ChevronRight
+                                  size={16}
+                                  className="text-ivory/20 group-hover:text-gold transition-colors"
+                                />
+                              </>
+                            ) : (
+                              <button
+                                onClick={(e) => { e.stopPropagation(); unarchiveBooking(b.id) }}
+                                className="text-ivory/20 hover:text-gold transition-colors p-1"
+                                title="Restaurar"
+                              >
+                                <RotateCcw size={14} />
+                              </button>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     )

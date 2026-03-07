@@ -1,5 +1,5 @@
 ﻿import { useEffect, useState } from 'react'
-import { Mail, Eye, Trash2, Plus, Pencil, Copy, Check, ExternalLink, ToggleLeft, ToggleRight } from 'lucide-react'
+import { Mail, Eye, Trash2, Plus, Pencil, Copy, Check, ExternalLink, ToggleLeft, ToggleRight, Archive, RotateCcw } from 'lucide-react'
 import InvitationWizard from '../invitations/InvitationWizard'
 import api from '../../api/client'
 import { ApiInvitation } from '../invitations/invitationTypes'
@@ -9,7 +9,7 @@ export default function AdminInvitations() {
   const [showWizard, setShowWizard] = useState(false)
   const [editTarget, setEditTarget] = useState<ApiInvitation | undefined>()
   const [isLoading, setIsLoading] = useState(false)
-  const [viewMode, setViewMode] = useState<'active' | 'history'>('active')
+  const [viewMode, setViewMode] = useState<'active' | 'archived'>('active')
   const [copied, setCopied] = useState<string | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
 
@@ -18,7 +18,7 @@ export default function AdminInvitations() {
   const refresh = async () => {
     setIsLoading(true)
     try {
-      const base = viewMode === 'history' ? '/admin/history/invitations' : '/admin/invitations'
+      const base = viewMode === 'archived' ? '/admin/invitations/archived' : '/admin/invitations'
       const res = await api.get<{ data: ApiInvitation[] }>(base)
       setInvitations(res.data)
     } finally {
@@ -26,13 +26,29 @@ export default function AdminInvitations() {
     }
   }
 
+  const archiveInvitation = async (id: string) => {
+    const reason = window.prompt('Motivo del archivo (opcional):')
+    if (reason === null) return
+    try {
+      await api.post(`/admin/invitations/${id}/archive`, { reason })
+      refresh()
+    } catch { alert('Error al archivar') }
+  }
+
+  const unarchiveInvitation = async (id: string) => {
+    try {
+      await api.post(`/admin/invitations/${id}/unarchive`, {})
+      refresh()
+    } catch { alert('Error al restaurar') }
+  }
+
   const openCreate = () => {
-    if (viewMode === 'history') return
+    if (viewMode !== 'active') return
     setEditTarget(undefined)
     setShowWizard(true)
   }
   const openEdit = (inv: ApiInvitation) => {
-    if (viewMode === 'history') return
+    if (viewMode !== 'active') return
     setEditTarget(inv)
     setShowWizard(true)
   }
@@ -49,7 +65,7 @@ export default function AdminInvitations() {
   }
 
   const togglePublished = async (inv: ApiInvitation) => {
-    if (viewMode === 'history') return
+    if (viewMode !== 'active') return
     try {
       await api.patch(`/admin/invitations/${inv.id}/toggle-published`)
       refresh()
@@ -57,7 +73,7 @@ export default function AdminInvitations() {
   }
 
   const deleteInvitation = async (id: string) => {
-    if (viewMode === 'history') return
+    if (viewMode !== 'active') return
     try {
       await api.delete(`/admin/invitations/${id}`)
       setDeleteConfirm(null)
@@ -70,7 +86,7 @@ export default function AdminInvitations() {
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <p className="text-ivory/50 text-sm font-dm">
           {invitations.length} invitación{invitations.length !== 1 ? 'es' : ''}
-          {viewMode === 'history' ? ' en historial' : ''}
+          {viewMode === 'archived' ? ' archivada' : ''}
         </p>
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-1 rounded-lg border border-white/10 p-1">
@@ -83,12 +99,12 @@ export default function AdminInvitations() {
               Activas
             </button>
             <button
-              onClick={() => setViewMode('history')}
+              onClick={() => setViewMode('archived')}
               className={`px-2.5 py-1.5 rounded text-xs font-dm transition-colors ${
-                viewMode === 'history' ? 'bg-gold/20 text-gold' : 'text-ivory/50 hover:text-ivory'
+                viewMode === 'archived' ? 'bg-gold/20 text-gold' : 'text-ivory/50 hover:text-ivory'
               }`}
             >
-              Historial
+              Archivadas
             </button>
           </div>
           {viewMode === 'active' && (
@@ -298,34 +314,54 @@ export default function AdminInvitations() {
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-ivory/40 hover:text-gold transition-colors"
-                            title="Ver invitaciÃ³n"
+                            title="Ver invitación"
                           >
                             <ExternalLink size={14} />
                           </a>
 
-                          {deleteConfirm === inv.id ? (
-                            <div className="flex items-center gap-1">
-                              <button
-                                onClick={() => deleteInvitation(inv.id)}
-                                className="text-red-400 text-xs font-dm hover:text-red-300"
-                              >
-                                Confirmar
-                              </button>
-                              <button
-                                onClick={() => setDeleteConfirm(null)}
-                                className="text-ivory/30 text-xs font-dm hover:text-ivory"
-                              >
-                                x
-                              </button>
-                            </div>
+                          {viewMode === 'active' ? (
+                            <button
+                              onClick={() => archiveInvitation(inv.id)}
+                              className="text-ivory/40 hover:text-gold transition-colors"
+                              title="Archivar"
+                            >
+                              <Archive size={14} />
+                            </button>
                           ) : (
                             <button
-                              onClick={() => setDeleteConfirm(inv.id)}
-                              className="text-ivory/30 hover:text-danger transition-colors"
-                              title="Eliminar"
+                              onClick={() => unarchiveInvitation(inv.id)}
+                              className="text-ivory/40 hover:text-gold transition-colors"
+                              title="Restaurar"
                             >
-                              <Trash2 size={14} />
+                              <RotateCcw size={14} />
                             </button>
+                          )}
+
+                          {viewMode === 'active' && (
+                            deleteConfirm === inv.id ? (
+                              <div className="flex items-center gap-1">
+                                <button
+                                  onClick={() => deleteInvitation(inv.id)}
+                                  className="text-red-400 text-xs font-dm hover:text-red-300"
+                                >
+                                  Confirmar
+                                </button>
+                                <button
+                                  onClick={() => setDeleteConfirm(null)}
+                                  className="text-ivory/30 text-xs font-dm hover:text-ivory"
+                                >
+                                  x
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() => setDeleteConfirm(inv.id)}
+                                className="text-ivory/30 hover:text-danger transition-colors"
+                                title="Eliminar"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            )
                           )}
                         </div>
                       </td>

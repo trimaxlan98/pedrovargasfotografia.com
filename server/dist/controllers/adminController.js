@@ -45,6 +45,9 @@ exports.listBookings = listBookings;
 exports.listBookingHistory = listBookingHistory;
 exports.getBooking = getBooking;
 exports.updateBooking = updateBooking;
+exports.archiveBooking = archiveBooking;
+exports.unarchiveBooking = unarchiveBooking;
+exports.getArchivedBookings = getArchivedBookings;
 exports.listPortfolio = listPortfolio;
 exports.createPortfolioItem = createPortfolioItem;
 exports.updatePortfolioItem = updatePortfolioItem;
@@ -68,6 +71,9 @@ exports.createInvitation = createInvitation;
 exports.updateInvitation = updateInvitation;
 exports.deleteInvitation = deleteInvitation;
 exports.toggleInvitationPublished = toggleInvitationPublished;
+exports.archiveInvitation = archiveInvitation;
+exports.unarchiveInvitation = unarchiveInvitation;
+exports.getArchivedInvitations = getArchivedInvitations;
 exports.addInvitationPhotos = addInvitationPhotos;
 exports.listGuestsByInvitation = listGuestsByInvitation;
 exports.addGuestsByInvitation = addGuestsByInvitation;
@@ -75,6 +81,7 @@ exports.deleteGuestByInvitation = deleteGuestByInvitation;
 exports.getSettings = getSettings;
 exports.updateSettings = updateSettings;
 const prisma_1 = __importDefault(require("../utils/prisma"));
+const archivalService = __importStar(require("../services/archivalService"));
 const uuid_1 = require("uuid");
 const password_1 = require("../utils/password");
 const R = __importStar(require("../utils/response"));
@@ -234,6 +241,19 @@ async function updateBooking(req, res) {
         data: { status, adminNotes, totalPrice, depositPaid },
     });
     R.success(res, booking, 'Reserva actualizada');
+}
+async function archiveBooking(req, res) {
+    const { reason } = req.body;
+    const booking = await archivalService.archiveBooking(req.params.id, reason);
+    R.success(res, booking, 'Reserva archivada');
+}
+async function unarchiveBooking(req, res) {
+    const booking = await archivalService.unarchiveBooking(req.params.id);
+    R.success(res, booking, 'Reserva restaurada');
+}
+async function getArchivedBookings(_req, res) {
+    const bookings = await archivalService.getArchivedBookings();
+    R.success(res, bookings);
 }
 // ─── PORTFOLIO ─────────────────────────────────────────────────────────────────
 async function listPortfolio(req, res) {
@@ -576,6 +596,19 @@ async function toggleInvitationPublished(req, res) {
         data: { isPublished: !existing.isPublished },
     });
     R.success(res, normalizeInvitation(updated));
+}
+async function archiveInvitation(req, res) {
+    const { reason } = req.body;
+    const invitation = await archivalService.archiveInvitation(req.params.id, reason);
+    R.success(res, normalizeInvitation(invitation), 'Invitación archivada');
+}
+async function unarchiveInvitation(req, res) {
+    const invitation = await archivalService.unarchiveInvitation(req.params.id);
+    R.success(res, normalizeInvitation(invitation), 'Invitación restaurada');
+}
+async function getArchivedInvitations(_req, res) {
+    const invitations = await archivalService.getArchivedInvitations();
+    R.success(res, invitations.map(normalizeInvitation));
 }
 async function addInvitationPhotos(req, res) {
     const existing = await prisma_1.default.digitalInvitation.findFirst({
