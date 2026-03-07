@@ -3,6 +3,7 @@ import { authenticate } from '../middleware/auth'
 import { requireAdmin } from '../middleware/roles'
 import { uploadImage } from '../middleware/upload'
 import * as admin from '../controllers/adminController'
+import * as notifications from '../controllers/notificationController'
 
 const router = Router()
 
@@ -66,5 +67,10 @@ router.delete('/invitations/:id/guests/:gid', admin.deleteGuestByInvitation)
 // Configuración del sitio
 router.get('/settings', admin.getSettings)
 router.put('/settings', admin.updateSettings)
+
+// Notificaciones de actividad
+router.get('/notifications', notifications.listNotifications)
+router.patch('/notifications/mark-all-read', notifications.markAllRead)
+router.patch('/notifications/:id/read', notifications.markRead)
 
 export default router

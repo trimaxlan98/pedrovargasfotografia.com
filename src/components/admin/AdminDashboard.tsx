@@ -14,6 +14,7 @@ import AdminClients from './AdminClients'
 import AdminAccounts from './AdminAccounts'
 import AdminSettings from './AdminSettings'
 import AdminTutorial from './AdminTutorial'
+import AdminNotifications from './AdminNotifications'
 
 interface DashboardStats {
   totalContacts: number
@@ -217,6 +218,7 @@ export default function AdminDashboard() {
             <p className="text-ivory/40 text-xs font-dm">Bienvenido, {user?.name}</p>
           </div>
           <div className="ml-auto flex items-center gap-1">
+            <AdminNotifications />
             <button
               onClick={() => window.dispatchEvent(new CustomEvent('spotlight:reset', { detail: { tourKey: 'admin_tour_done' } }))}
               aria-label="Ver tutorial"

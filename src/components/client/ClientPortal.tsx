@@ -9,6 +9,7 @@ import api from '../../api/client'
 import InvitationWizard from '../invitations/InvitationWizard'
 import GuestListPanel from './GuestListPanel'
 import ClientTutorial from './ClientTutorial'
+import TermsModal from './TermsModal'
 import { ApiInvitation } from '../invitations/invitationTypes'
 
 interface Booking {
@@ -39,8 +40,16 @@ const STATUS_CONFIG: Record<string, { label: string; icon: React.ElementType; co
 type Tab = 'bookings' | 'invitations' | 'history'
 
 export default function ClientPortal() {
-  const { user, logout } = useAuth()
+  const { user, logout, refreshUser } = useAuth()
   const [tab, setTab] = useState<Tab>('bookings')
+  const [showTerms, setShowTerms] = useState(false)
+
+  // Show T&C modal if client hasn't accepted terms yet
+  useEffect(() => {
+    if (user && user.role === 'CLIENT' && !user.termsAcceptedAt) {
+      setShowTerms(true)
+    }
+  }, [user])
   const [bookings, setBookings] = useState<Booking[]>([])
   const [invitations, setInvitations] = useState<InvitationItem[]>([])
   const [historyBookings, setHistoryBookings] = useState<Booking[]>([])
@@ -148,7 +157,18 @@ export default function ClientPortal() {
 
   return (
     <div className="min-h-screen bg-near-black">
-      <ClientTutorial />
+      {/* Terms modal — shown before tutorial on first login */}
+      {showTerms && (
+        <TermsModal
+          onAccepted={async () => {
+            await refreshUser()
+            setShowTerms(false)
+          }}
+          onDeclined={logout}
+        />
+      )}
+      {/* Tutorial only renders once terms are accepted */}
+      {!showTerms && <ClientTutorial />}
       {/* Header */}
       <header className="border-b border-white/5 px-6 py-4">
         <div className="max-w-4xl mx-auto flex items-center justify-between">

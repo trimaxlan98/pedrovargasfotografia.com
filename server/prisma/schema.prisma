@@ -10,20 +10,22 @@ datasource db {
 // ─── USUARIOS Y AUTENTICACIÓN ──────────────────────────────────────────────────
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  password  String
-  name      String
-  phone     String?
-  role      String   @default("CLIENT") // ADMIN | CLIENT
-  isActive  Boolean  @default(true)
-  avatar    String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id               String    @id @default(cuid())
+  email            String    @unique
+  password         String
+  name             String
+  phone            String?
+  role             String    @default("CLIENT") // ADMIN | CLIENT
+  isActive         Boolean   @default(true)
+  avatar           String?
+  termsAcceptedAt  DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
   bookings      Booking[]
   invitations   DigitalInvitation[]
   refreshTokens RefreshToken[]
+  activityLogs  ActivityLog[]
 
   @@map("users")
 }
@@ -198,6 +200,26 @@ model InvitationGuest {
   invitation DigitalInvitation @relation(fields: [invitationId], references: [id], onDelete: Cascade)
 
   @@map("invitation_guests")
+}
+
+// ─── REGISTRO DE ACTIVIDAD ─────────────────────────────────────────────────────
+
+model ActivityLog {
+  id        String   @id @default(cuid())
+  userId    String
+  userName  String
+  userEmail String
+  action    String   // REGISTER | LOGIN | TERMS_ACCEPTED | BOOKING_CREATED | BOOKING_CANCELLED | INVITATION_CREATED | INVITATION_UPDATED | INVITATION_DELETED
+  detail    String?
+  metadata  String?  // JSON serializado
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([isRead])
+  @@index([createdAt])
+  @@map("activity_logs")
 }
 
 // ─── CONFIGURACIÓN DEL SITIO ───────────────────────────────────────────────────

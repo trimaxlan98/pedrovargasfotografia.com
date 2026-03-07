@@ -38,8 +38,8 @@ export default function InvitationPage() {
     return (
       <div className="min-h-screen bg-[#0A0A0A] text-ivory flex items-center justify-center px-6">
         <div className="max-w-md text-center">
-          <p className="label-caps text-gold mb-3">Invitacion no encontrada</p>
-          <h1 className="font-cormorant text-2xl mb-4">Esta invitacion no esta disponible</h1>
+          <p className="label-caps text-gold mb-3">Invitación no encontrada</p>
+          <h1 className="font-cormorant text-2xl mb-4">Esta invitación no está disponible</h1>
           <p className="text-ivory/60 text-sm font-dm mb-6">
             Verifica el enlace o pide a tu estudio que la vuelva a publicar.
           </p>
@@ -56,7 +56,7 @@ export default function InvitationPage() {
       <header className="sticky top-0 z-30 bg-[#1a120d]/90 backdrop-blur-sm border-b border-white/10">
         <div className="max-w-[520px] mx-auto px-6 py-4 flex items-center justify-between">
           <div>
-            <p className="text-xs uppercase tracking-[0.3em] text-gold">Invitacion digital</p>
+            <p className="text-xs uppercase tracking-[0.3em] text-gold">Invitación digital</p>
             <h2 className="font-cormorant text-lg text-ivory">{invitation.title}</h2>
           </div>
           <Link to="/" className="text-ivory/70 text-xs font-dm hover:text-ivory">

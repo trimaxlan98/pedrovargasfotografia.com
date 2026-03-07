@@ -5,6 +5,7 @@ import prisma from '../utils/prisma'
 import { AuthRequest } from '../types'
 import * as R from '../utils/response'
 import { sendBookingConfirmation } from '../utils/email'
+import { logActivity } from '../utils/activityLogger'
 
 function parseGallery(raw?: string | null): string[] {
   if (!raw) return []
@@ -129,6 +130,16 @@ export async function createBooking(req: AuthRequest, res: Response): Promise<vo
     }).catch(console.error)
   }
 
+  if (user) {
+    logActivity({
+      userId: user.id,
+      userName: user.name,
+      userEmail: user.email,
+      action: 'BOOKING_CREATED',
+      detail: `Nueva reserva: ${service} — ${eventType}`,
+    })
+  }
+
   R.created(res, booking, 'Reserva creada. Te contactaremos para confirmar los detalles.')
 }
 
@@ -145,6 +156,18 @@ export async function cancelBooking(req: AuthRequest, res: Response): Promise<vo
     where: { id: booking.id },
     data: { status: 'CANCELLED' },
   })
+
+  const cancelUser = await prisma.user.findUnique({ where: { id: req.user!.userId }, select: { name: true, email: true } })
+  if (cancelUser) {
+    logActivity({
+      userId: req.user!.userId,
+      userName: cancelUser.name,
+      userEmail: cancelUser.email,
+      action: 'BOOKING_CANCELLED',
+      detail: `Reserva cancelada: ${booking.service} — ${booking.eventType}`,
+    })
+  }
+
   R.success(res, updated, 'Reserva cancelada')
 }
 
@@ -217,6 +240,17 @@ export async function createInvitation(req: AuthRequest, res: Response): Promise
       defaultGuestName,
     },
   })
+  const invUser = await prisma.user.findUnique({ where: { id: req.user!.userId }, select: { name: true, email: true } })
+  if (invUser) {
+    logActivity({
+      userId: req.user!.userId,
+      userName: invUser.name,
+      userEmail: invUser.email,
+      action: 'INVITATION_CREATED',
+      detail: `Nueva invitación: ${title} (${eventType})`,
+    })
+  }
+
   R.created(res, normalizeInvitation(invitation), 'Invitación creada exitosamente')
 }
 
@@ -274,6 +308,18 @@ export async function deleteInvitation(req: AuthRequest, res: Response): Promise
       isPublished: false,
     },
   })
+
+  const delUser = await prisma.user.findUnique({ where: { id: req.user!.userId }, select: { name: true, email: true } })
+  if (delUser) {
+    logActivity({
+      userId: req.user!.userId,
+      userName: delUser.name,
+      userEmail: delUser.email,
+      action: 'INVITATION_DELETED',
+      detail: `Invitación eliminada: ${existing.title}`,
+    })
+  }
+
   R.noContent(res)
 }
 
@@ -332,14 +378,14 @@ export async function addGuests(req: AuthRequest, res: Response): Promise<void> 
 
 export async function seedGuestsForDevelopment(req: AuthRequest, res: Response): Promise<void> {
   if (process.env.NODE_ENV === 'production') {
-    R.forbidden(res, 'Accion no disponible en produccion')
+    R.forbidden(res, 'Acción no disponible en producción')
     return
   }
 
   const invitation = await prisma.digitalInvitation.findFirst({
     where: { id: req.params.id, clientId: req.user!.userId, archivedAt: null },
   })
-  if (!invitation) { R.notFound(res, 'Invitacion no encontrada'); return }
+  if (!invitation) { R.notFound(res, 'Invitación no encontrada'); return }
 
   const now = new Date()
   const testGuests: Array<{ name: string; response: 'PENDING' | 'ACCEPTED' | 'DECLINED'; respondedAt?: Date }> = [
@@ -377,6 +423,25 @@ export async function listGuests(req: AuthRequest, res: Response): Promise<void>
     orderBy: { createdAt: 'asc' },
   })
   R.success(res, guests)
+}
+
+export async function updateGuest(req: AuthRequest, res: Response): Promise<void> {
+  const invitation = await prisma.digitalInvitation.findFirst({
+    where: { id: req.params.id, clientId: req.user!.userId, archivedAt: null },
+  })
+  if (!invitation) { R.notFound(res, 'Invitación no encontrada'); return }
+
+  const guest = await prisma.invitationGuest.findFirst({
+    where: { id: req.params.gid, invitationId: invitation.id },
+  })
+  if (!guest) { R.notFound(res, 'Invitado no encontrado'); return }
+
+  const { personalizedMessage } = req.body
+  const updated = await prisma.invitationGuest.update({
+    where: { id: guest.id },
+    data: { personalizedMessage: personalizedMessage !== undefined ? (personalizedMessage || null) : undefined },
+  })
+  R.success(res, updated, 'Mensaje actualizado')
 }
 
 export async function deleteGuest(req: AuthRequest, res: Response): Promise<void> {

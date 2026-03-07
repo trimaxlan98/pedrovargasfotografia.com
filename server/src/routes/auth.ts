@@ -27,5 +27,6 @@ router.post('/logout', auth.logout)
 router.get('/me', authenticate, auth.getMe)
 router.patch('/me', authenticate, auth.updateMe)
 router.patch('/change-password', authenticate, auth.changePassword)
+router.patch('/accept-terms', authenticate, auth.acceptTerms)
 
 export default router

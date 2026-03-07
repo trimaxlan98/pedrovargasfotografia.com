@@ -42,6 +42,7 @@ router.post('/invitations/:id/photos', uploadImage.array('images', 8), client.ad
 router.get('/invitations/:id/guests', client.listGuests)
 router.post('/invitations/:id/guests', client.addGuests)
 router.post('/invitations/:id/guests/dev-seed', client.seedGuestsForDevelopment)
+router.patch('/invitations/:id/guests/:gid', client.updateGuest)
 router.delete('/invitations/:id/guests/:gid', client.deleteGuest)
 
 export default router

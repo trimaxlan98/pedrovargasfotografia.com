@@ -10,6 +10,12 @@ const ACCENT_BY_TEMPLATE: Record<string, string> = {
   floral: '#b5607a',
   rustic: '#c9a96e',
   moderno: '#7baee0',
+  vintage: '#7a4a1e',
+  pearl: '#7878aa',
+  esmeralda: '#4dba7c',
+  noir: '#d0d0d0',
+  lavanda: '#7a50c8',
+  terracota: '#aa4b2d',
 }
 
 interface GuestData {
@@ -23,7 +29,7 @@ export default function GuestInvitationPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [rsvpStatus, setRsvpStatus] = useState<'PENDING' | 'ACCEPTED' | 'DECLINED' | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [message, setMessage] = useState('')
+  const [feedbackMsg, setFeedbackMsg] = useState('')
   const [deadlineExpired, setDeadlineExpired] = useState(false)
 
   useEffect(() => {
@@ -47,9 +53,14 @@ export default function GuestInvitationPage() {
     try {
       const res = await api.post<{ message: string }>(`/public/guest/${guestToken}/rsvp`, { response })
       setRsvpStatus(response)
-      setMessage(res.message ?? (response === 'ACCEPTED' ? '¡Gracias por confirmar!' : 'Recibimos tu respuesta.'))
+      setFeedbackMsg(
+        res.message ??
+          (response === 'ACCEPTED'
+            ? '¡Gracias por confirmar tu asistencia!'
+            : 'Recibimos tu respuesta, lamentamos que no puedas asistir.')
+      )
     } catch (e) {
-      setMessage(e instanceof Error ? e.message : 'Error al enviar respuesta')
+      setFeedbackMsg(e instanceof Error ? e.message : 'Error al enviar respuesta')
     } finally {
       setIsSubmitting(false)
     }
@@ -79,40 +90,39 @@ export default function GuestInvitationPage() {
   }
 
   const { guest, invitation } = data
-  const accent = ACCENT_BY_TEMPLATE[invitation.template] ?? '#C9A96E'
+  const baseTemplate = String(invitation.template ?? 'warm').replace(/-emboss$|-foil$/, '')
+  const accent = ACCENT_BY_TEMPLATE[baseTemplate] ?? '#C9A96E'
   const shareUrl = `${window.location.origin}/invitacion/${invitation.shareToken}`
 
   return (
     <div className="min-h-screen bg-[#0A0A0A] pb-40">
       {/* Header */}
       <header className="sticky top-0 z-30 bg-[#0A0A0A]/90 backdrop-blur-sm border-b border-white/10">
-        <div className="max-w-[520px] mx-auto px-6 py-4 flex items-center justify-between">
+        <div className="max-w-[520px] mx-auto px-6 py-3 flex items-center justify-between">
           <div>
-            <p className="text-[0.65rem] uppercase tracking-[0.3em] font-dm" style={{ color: accent }}>
+            <p
+              className="text-[0.6rem] uppercase tracking-[0.32em] font-dm"
+              style={{ color: accent }}
+            >
               Invitación personal
             </p>
-            <h2 className="font-cormorant text-lg text-ivory">{invitation.title}</h2>
+            <h2 className="font-cormorant text-base text-ivory leading-tight">{invitation.title}</h2>
           </div>
-          <Link to="/" className="text-ivory/50 text-xs font-dm hover:text-ivory transition-colors">
+          <Link to="/" className="text-ivory/40 text-xs font-dm hover:text-ivory transition-colors">
             Ir al sitio
           </Link>
         </div>
       </header>
 
-      {/* Greeting */}
-      <div className="max-w-[520px] mx-auto px-6 pt-6 pb-2">
-        <p className="font-cormorant text-2xl text-ivory">
-          {invitation.guestGreeting || 'Hola'}, <span style={{ color: accent }}>{guest.name}</span>
-        </p>
-        <p className="text-ivory/50 text-sm font-dm mt-1">
-          {guest.personalizedMessage || 'tienes una invitación especial'}
-        </p>
-      </div>
-
-      {/* Invitation strip */}
+      {/* Strip — guestName y guestMessage se pasan al componente para mostrarse dentro */}
       <main className="py-4 px-4">
         <div className="max-w-[520px] mx-auto shadow-[0_40px_120px_rgba(0,0,0,0.6)] rounded-[28px] overflow-hidden">
-          <InvitationStrip invitation={invitation} shareUrl={shareUrl} />
+          <InvitationStrip
+            invitation={invitation}
+            shareUrl={shareUrl}
+            guestName={guest.name}
+            guestMessage={guest.personalizedMessage || undefined}
+          />
         </div>
       </main>
 
@@ -125,12 +135,12 @@ export default function GuestInvitationPage() {
             <RsvpCountdown deadline={invitation.rsvpDeadline} accentColor={accent} />
           )}
 
-          {/* Message (post-response or error) */}
-          {message && (
-            <p className="text-center text-sm font-dm" style={{ color: accent }}>{message}</p>
+          {/* Feedback post-respuesta */}
+          {feedbackMsg && (
+            <p className="text-center text-sm font-dm" style={{ color: accent }}>{feedbackMsg}</p>
           )}
 
-          {/* RSVP Buttons */}
+          {/* Botones RSVP */}
           {rsvpStatus === 'PENDING' && !deadlineExpired ? (
             <div className="flex gap-3">
               <button
@@ -139,7 +149,7 @@ export default function GuestInvitationPage() {
                 className="flex-1 py-3 rounded-xl text-sm font-dm font-medium transition-all disabled:opacity-50"
                 style={{ background: accent, color: '#0A0A0A' }}
               >
-                {isSubmitting ? '...' : '✓ Confirmo mi asistencia'}
+                {isSubmitting ? '…' : '✓ Confirmo mi asistencia'}
               </button>
               <button
                 onClick={() => submitRsvp('DECLINED')}

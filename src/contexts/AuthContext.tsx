@@ -8,6 +8,7 @@ export interface User {
   role: 'ADMIN' | 'CLIENT'
   phone?: string
   avatar?: string
+  termsAcceptedAt?: string | null
 }
 
 interface AuthResponse {

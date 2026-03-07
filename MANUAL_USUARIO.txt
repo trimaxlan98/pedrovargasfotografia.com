@@ -1,0 +1,118 @@
+\documentclass[12pt,a4paper]{report}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{geometry}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{listings}
+\usepackage{enumitem}
+
+% Configuración de colores
+\definecolor{codblue}{RGB}{0, 102, 204}
+\definecolor{codgray}{RGB}{128, 128, 128}
+
+% Configuración de márgenes
+\geometry{top=3cm, bottom=3cm, left=2.5cm, right=2.5cm}
+
+% Configuración de cabecera y pie de página
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{CO.DE AEROSPACE}
+\fancyhead[R]{Manual de Usuario - Sistema de Fotografía}
+\fancyfoot[C]{\thepage}
+
+% Títulos
+\titleformat{\chapter}[display]
+  {\normalfont\bfseries\color{codblue}}{\chaptertitlename\ \thechapter}{10pt}{\Huge}
+
+\begin{document}
+
+% Portada
+\begin{titlepage}
+    \centering
+    \vspace*{2cm}
+    {\Huge \textbf{CO.DE AEROSPACE} \par}
+    \vspace{1cm}
+    {\Large \textbf{SISTEMA DE GESTIÓN DE FOTOGRAFÍA PROFESIONAL} \par}
+    \vspace{0.5cm}
+    {\large Manual de Usuario y Documentación Técnica \par}
+    \vfill
+    \textbf{Autores:} \par
+    \vspace{0.5cm}
+    \begin{tabular}{ll}
+        \textbf{Jair Molina Arce} & Jefe de Desarrollo y Arquitectura Software \\
+        \textbf{Alan Rosas Palacios} & Especialista en Despliegue y Servidores (CI/CD) \\
+        \textbf{Yuri Ordaz} & Líder de QA y Diseño de Experiencia (UX/UI) \\
+    \end{tabular}
+    \vfill
+    {\large \today \par}
+    \vspace{2cm}
+\end{titlepage}
+
+\tableofcontents
+
+\chapter{Introducción}
+Este manual describe el funcionamiento integral de la plataforma de fotografía profesional desarrollada por \textbf{CO.DE AEROSPACE}. El sistema permite la gestión completa de sesiones fotográficas, desde la reserva inicial hasta la entrega de invitaciones digitales y gestión de invitados mediante tecnología QR.
+
+\chapter{Guía del Administrador}
+
+\section{Panel de Control (Dashboard)}
+El administrador tiene acceso a una visión global de la plataforma, incluyendo:
+\begin{itemize}
+    \item Resumen de reservas activas.
+    \item Notificaciones de nuevos contactos.
+    \item Estado de las invitaciones digitales emitidas.
+\end{itemize}
+
+\section{Gestión de Clientes}
+Desde el módulo de clientes, el administrador puede crear cuentas personalizadas para los clientes, asignándoles credenciales de acceso para que estos gestionen su propio contenido.
+
+\section{Módulo de Portafolio}
+El administrador puede actualizar la galería pública del sitio web, subiendo nuevas fotografías en alta resolución y categorizándolas por tipo de evento (Bodas, XV Años, Sesiones, etc.).
+
+\section{Sistema de Reservas}
+Permite la organización cronológica de los eventos. Cada reserva está vinculada a un cliente y puede incluir detalles específicos de la locación y el horario.
+
+\chapter{Guía del Cliente}
+
+\section{Portal del Cliente}
+Al iniciar sesión, el cliente accede a un panel privado donde puede ver el estado de su contrato, sus fotos seleccionadas y herramientas de personalización.
+
+\section{Constructor de Invitaciones (Invitation Builder)}
+Una de las herramientas estrella de CO.DE AEROSPACE. El cliente puede:
+\begin{itemize}
+    \item Personalizar colores y tipografías de su invitación.
+    \item Añadir detalles del evento (Mapa, Fecha, Dress Code).
+    \item Configurar la fecha límite de RSVP.
+\end{itemize}
+
+\section{Gestión de Invitados}
+El cliente puede cargar su lista de invitados, generar pases individuales y monitorear en tiempo real quién ha confirmado su asistencia.
+
+\chapter{Guía del Invitado}
+
+\section{Recepción de Invitación y RSVP}
+Los invitados reciben un enlace único donde pueden:
+\begin{itemize}
+    \item Ver la cuenta regresiva para el evento.
+    \item Confirmar asistencia y número de acompañantes.
+    \item Descargar su pase con código QR para el control de acceso.
+\end{itemize}
+
+\chapter{Mantenimiento y Automatización}
+
+\section{Flujo de Archivado Automático (Archival Workflow)}
+El sistema implementa un servicio de limpieza automática para optimizar el rendimiento del servidor:
+\begin{itemize}
+    \item \textbf{Reservas:} Se archivan automáticamente tras 180 días del evento.
+    \item \textbf{Invitaciones:} Se archivan tras 365 días de inactividad.
+\end{itemize}
+Este proceso es gestionado por el servicio de backend para garantizar que la base de datos se mantenga ligera y rápida.
+
+\chapter{Soporte Técnico}
+Para reportar fallos de sistema o solicitar nuevas funcionalidades, contactar al equipo de ingeniería de CO.DE AEROSPACE.
+
+\end{document}

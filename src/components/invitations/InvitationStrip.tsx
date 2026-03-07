@@ -216,9 +216,13 @@ function getRsvpHref(rsvpValue: string): string {
 export default function InvitationStrip({
   invitation,
   shareUrl,
+  guestName,
+  guestMessage,
 }: {
   invitation: ApiInvitation
   shareUrl: string
+  guestName?: string
+  guestMessage?: string
 }) {
   const templateStr = String(invitation.template ?? 'warm')
   const hasEmboss = templateStr.endsWith('-emboss')
@@ -285,7 +289,7 @@ export default function InvitationStrip({
     setTimeout(() => setCopied(false), 2500)
   }
 
-  const whatsappShare = `https://wa.me/?text=${encodeURIComponent(`Mira mi invitacion digital: ${shareUrl}`)}`
+  const whatsappShare = `https://wa.me/?text=${encodeURIComponent(`Mira mi invitación digital: ${shareUrl}`)}`
 
   return (
     <div className="w-full text-sm leading-relaxed" style={{ background: s.bg, color: s.text }}>
@@ -332,6 +336,48 @@ export default function InvitationStrip({
           </div>
         </div>
       </section>
+
+      {/* ── Sección personalizada por invitado ── */}
+      {guestName && (
+        <section className={`${PAD} py-10 text-center`}>
+          <div
+            className="px-6 py-8 rounded-[20px]"
+            style={{
+              background: s.glass,
+              border: `1px solid ${s.glassBorder}`,
+              ...(hasEmboss ? embossPanel : {}),
+            }}
+          >
+            <SectionLabel s={s}>Esta invitación es para ti</SectionLabel>
+            <ThinDivider s={s} />
+            <p
+              className={`font-cormorant text-3xl sm:text-4xl mt-5 leading-snug${hasFoil ? ' inv-foil-text' : ''}`}
+              style={hasFoil ? { background: foilGradient } : { color: s.text, ...embossText }}
+            >
+              {invitation.guestGreeting || 'Con cariño te invitamos'},
+            </p>
+            <p
+              className="font-cormorant text-3xl sm:text-4xl mt-1 leading-snug"
+              style={{ color: s.accent, ...embossText }}
+            >
+              {guestName}
+            </p>
+            {guestMessage && (
+              <>
+                <div className="mt-5 mb-4">
+                  <Ornament s={s} />
+                </div>
+                <p
+                  className="text-base font-cormorant italic leading-relaxed"
+                  style={{ color: s.text, opacity: 0.82 }}
+                >
+                  {guestMessage}
+                </p>
+              </>
+            )}
+          </div>
+        </section>
+      )}
 
       {quote ? (
         <section className={`${PAD} py-12`}>
@@ -391,7 +437,7 @@ export default function InvitationStrip({
         <div className="text-center mb-6">
           <SectionLabel s={s}>Nuestra historia</SectionLabel>
           <p className="font-cormorant text-lg mt-2" style={{ color: s.text }}>
-            Un vistazo a nuestro camino
+            Un vistazo a nuestro camino juntos
           </p>
         </div>
         <div className="grid grid-cols-2 gap-3">
@@ -404,7 +450,7 @@ export default function InvitationStrip({
                 border: `1px solid ${s.divider}`,
               }}
             >
-              <img src={url} alt={`Galeria ${idx + 1}`} className="w-full h-full object-cover" loading="lazy" />
+              <img src={url} alt={`Galería ${idx + 1}`} className="w-full h-full object-cover" loading="lazy" />
             </div>
           ))}
         </div>
@@ -413,7 +459,7 @@ export default function InvitationStrip({
       {dressCode ? (
         <section className={`${PAD} pb-12`}>
           <div className="px-6 py-6 text-center" style={{ background: s.glass, border: `1px solid ${s.glassBorder}` }}>
-            <SectionLabel s={s}>Codigo de vestimenta</SectionLabel>
+            <SectionLabel s={s}>Código de vestimenta</SectionLabel>
             <p className="font-cormorant text-lg mt-3" style={{ color: s.text }}>
               {dressCode}
             </p>
@@ -449,7 +495,7 @@ export default function InvitationStrip({
           <div className="flex-1 h-px" style={{ background: s.divider }} />
         </div>
 
-        <SectionLabel s={s}>Comparte esta invitacion</SectionLabel>
+        <SectionLabel s={s}>Comparte esta invitación</SectionLabel>
 
         <div
           className="mt-6 mx-auto w-32 h-32 grid place-items-center shadow-xl"
@@ -501,7 +547,7 @@ export default function InvitationStrip({
 
         <div className="mt-10 pt-6" style={{ borderTop: `1px solid ${s.divider}` }}>
           <p className="text-[0.5rem] uppercase tracking-[0.3em]" style={{ color: s.textMuted, opacity: 0.45 }}>
-            Invitacion creada por Pedro Vargas Fotografia
+            Invitación creada por Pedro Vargas Fotografía
           </p>
         </div>
       </section>
