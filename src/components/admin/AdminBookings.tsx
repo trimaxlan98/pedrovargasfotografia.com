@@ -39,7 +39,7 @@ interface Booking {
 const STATUS_CONFIG: Record<string, { label: string; color: string; dot: string }> = {
   PENDING:      { label: 'Pendiente',       color: 'text-yellow-400 bg-yellow-400/10', dot: 'bg-yellow-400' },
   CONFIRMED:    { label: 'Confirmado',      color: 'text-green-400 bg-green-400/10',   dot: 'bg-green-400' },
-  DEPOSIT_PAID: { label: 'DepÃ³sito pagado', color: 'text-teal-400 bg-teal-400/10',     dot: 'bg-teal-400' },
+  DEPOSIT_PAID: { label: 'Depósito pagado', color: 'text-teal-400 bg-teal-400/10',     dot: 'bg-teal-400' },
   IN_PROGRESS:  { label: 'En progreso',     color: 'text-blue-400 bg-blue-400/10',     dot: 'bg-blue-400' },
   COMPLETED:    { label: 'Completado',      color: 'text-emerald-400 bg-emerald-400/10', dot: 'bg-emerald-400' },
   CANCELLED:    { label: 'Cancelado',       color: 'text-red-400 bg-red-400/10',       dot: 'bg-red-400' },
@@ -49,7 +49,7 @@ const FILTER_TABS: Array<{ key: string; label: string }> = [
   { key: '',             label: 'Todas' },
   { key: 'PENDING',      label: 'Pendientes' },
   { key: 'CONFIRMED',    label: 'Confirmadas' },
-  { key: 'DEPOSIT_PAID', label: 'DepÃ³sito' },
+  { key: 'DEPOSIT_PAID', label: 'Depósito' },
   { key: 'IN_PROGRESS',  label: 'En progreso' },
   { key: 'COMPLETED',    label: 'Completadas' },
   { key: 'CANCELLED',    label: 'Canceladas' },
@@ -103,7 +103,7 @@ export default function AdminBookings() {
         <p className="text-ivory/50 text-sm font-dm">
           {bookings.length} reserva{bookings.length !== 1 ? 's' : ''}
           {viewMode === 'history' ? ' en historial' : ''}
-          {filterStatus && ` Â· ${STATUS_CONFIG[filterStatus]?.label}`}
+          {filterStatus && ` · ${STATUS_CONFIG[filterStatus]?.label}`}
         </p>
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-1 rounded-lg border border-white/10 p-1">
@@ -437,7 +437,7 @@ function BookingDetail({
 
           {/* â”€â”€ Admin edit form â”€â”€ */}
           <div className="border-t border-white/5 pt-5 space-y-4">
-            <p className="label-caps text-gold text-xs">GestiÃ³n Admin</p>
+            <p className="label-caps text-gold text-xs">Gestión Admin</p>
 
             {/* Status */}
             <div>
@@ -450,7 +450,7 @@ function BookingDetail({
               >
                 <option value="PENDING"      style={{ backgroundColor: '#1a1a1a' }}>Pendiente</option>
                 <option value="CONFIRMED"    style={{ backgroundColor: '#1a1a1a' }}>Confirmado</option>
-                <option value="DEPOSIT_PAID" style={{ backgroundColor: '#1a1a1a' }}>DepÃ³sito pagado</option>
+                <option value="DEPOSIT_PAID" style={{ backgroundColor: '#1a1a1a' }}>Depósito pagado</option>
                 <option value="IN_PROGRESS"  style={{ backgroundColor: '#1a1a1a' }}>En progreso</option>
                 <option value="COMPLETED"    style={{ backgroundColor: '#1a1a1a' }}>Completado</option>
                 <option value="CANCELLED"    style={{ backgroundColor: '#1a1a1a' }}>Cancelado</option>
@@ -486,7 +486,7 @@ function BookingDetail({
                 }`} />
               </div>
               <span className="text-ivory/70 text-sm font-dm group-hover:text-ivory transition-colors">
-                DepÃ³sito recibido
+                Depósito recibido
               </span>
             </label>
 
@@ -521,7 +521,7 @@ function BookingDetail({
             disabled={isSaving}
             className="btn-primary flex-1 py-2.5 text-sm"
           >
-            {isSaving ? 'Guardando...' : saved ? 'Â¡Guardado!' : 'Guardar cambios'}
+            {isSaving ? 'Guardando...' : saved ? '¡Guardado!' : 'Guardar cambios'}
           </button>
         </div>
       </motion.div>

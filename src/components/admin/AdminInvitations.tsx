@@ -169,7 +169,7 @@ export default function AdminInvitations() {
                   <button
                     onClick={() => openEdit(inv)}
                     className="flex-1 inline-flex items-center justify-center gap-1.5 text-ivory/70 border border-white/10 rounded-lg px-2 py-2 text-xs"
-                    title="Editar invitaciÃ³n"
+                    title="Editar invitación"
                   >
                     <Pencil size={13} /> Editar
                   </button>
@@ -187,7 +187,7 @@ export default function AdminInvitations() {
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex-1 inline-flex items-center justify-center gap-1.5 text-ivory/70 border border-white/10 rounded-lg px-2 py-2 text-xs"
-                    title="Ver invitaciÃ³n"
+                    title="Ver invitación"
                   >
                     <ExternalLink size={13} /> Ver
                   </a>
@@ -199,7 +199,7 @@ export default function AdminInvitations() {
                       onClick={() => deleteInvitation(inv.id)}
                       className="flex-1 text-red-300 bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-2 text-xs"
                     >
-                      Confirmar eliminaciÃ³n
+                      Confirmar eliminación
                     </button>
                     <button
                       onClick={() => setDeleteConfirm(null)}
@@ -226,7 +226,7 @@ export default function AdminInvitations() {
               <table className="w-full min-w-[960px]">
                 <thead>
                   <tr className="border-b border-white/5">
-                    {['TÃ­tulo', 'Cliente', 'Evento', 'Fecha', 'Vistas', 'Estado', 'Acciones'].map(h => (
+                    {['Título', 'Cliente', 'Evento', 'Fecha', 'Vistas', 'Estado', 'Acciones'].map(h => (
                       <th
                         key={h}
                         className="px-4 py-3 text-left text-ivory/40 text-xs font-dm uppercase tracking-wider"
@@ -276,7 +276,7 @@ export default function AdminInvitations() {
                           <button
                             onClick={() => openEdit(inv)}
                             className="text-ivory/40 hover:text-gold transition-colors"
-                            title="Editar invitaciÃ³n"
+                            title="Editar invitación"
                           >
                             <Pencil size={14} />
                           </button>
@@ -298,7 +298,7 @@ export default function AdminInvitations() {
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-ivory/40 hover:text-gold transition-colors"
-                            title="Ver invitaciÃ³n"
+                            title="Ver invitación"
                           >
                             <ExternalLink size={14} />
                           </a>

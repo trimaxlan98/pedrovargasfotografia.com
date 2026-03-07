@@ -10,7 +10,6 @@ import api from '../../api/client'
 import AdminInvitations from './AdminInvitations'
 import AdminBookings from './AdminBookings'
 import AdminPortfolio from './AdminPortfolio'
-import AdminClients from './AdminClients'
 import AdminAccounts from './AdminAccounts'
 import AdminSettings from './AdminSettings'
 import AdminTutorial from './AdminTutorial'
@@ -58,7 +57,7 @@ const STATUS_LABELS: Record<string, { label: string; color: string }> = {
   DEPOSIT_PAID:{ label: 'Depósito pagado', color: 'text-teal-400 bg-teal-400/10' },
 }
 
-type Section = 'dashboard' | 'contacts' | 'bookings' | 'portfolio' | 'clients' | 'accounts' | 'invitations' | 'settings'
+type Section = 'dashboard' | 'contacts' | 'bookings' | 'portfolio' | 'accounts' | 'invitations' | 'settings'
 
 export default function AdminDashboard() {
   const { user, logout } = useAuth()
@@ -132,7 +131,6 @@ export default function AdminDashboard() {
     { id: 'contacts',  icon: MessageSquare,  label: 'Contactos',  badge: data?.stats.pendingContacts },
     { id: 'bookings',  icon: CalendarDays,   label: 'Reservas',   badge: data?.stats.pendingBookings },
     { id: 'portfolio', icon: Image,          label: 'Portfolio' },
-    { id: 'clients',   icon: Users,          label: 'Clientes' },
     { id: 'accounts',  icon: Shield,         label: 'Cuentas' },
     { id: 'invitations', icon: Mail,         label: 'Invitaciones' },
     { id: 'settings',  icon: Settings,       label: 'Configuración' },
@@ -256,7 +254,6 @@ export default function AdminDashboard() {
               {section === 'invitations' && <AdminInvitations />}
               {section === 'bookings'    && <AdminBookings />}
               {section === 'portfolio'   && <AdminPortfolio />}
-              {section === 'clients'     && <AdminClients />}
               {section === 'accounts'    && <AdminAccounts />}
               {section === 'settings'    && <AdminSettings />}
             </>
