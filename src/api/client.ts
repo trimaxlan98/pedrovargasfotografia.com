@@ -1,11 +1,14 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
+const API_URL = import.meta.env.VITE_API_URL || '/api'
 
 interface RequestOptions extends RequestInit {
   params?: Record<string, string | number | undefined>
 }
 
 function buildUrl(path: string, params?: Record<string, string | number | undefined>): string {
-  const url = new URL(`${API_URL}${path}`)
+  const base = API_URL.startsWith('http')
+    ? API_URL
+    : `${window.location.origin}${API_URL}`
+  const url = new URL(`${base}${path}`)
   if (params) {
     Object.entries(params).forEach(([k, v]) => {
       if (v !== undefined) url.searchParams.set(k, String(v))

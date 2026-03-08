@@ -20,7 +20,7 @@ interface PortfolioItem {
 
 const CATEGORIES = ['Todas', 'Bodas', 'Corporativo', 'Retratos', 'Quince Años', 'Graduaciones', 'Social', 'Editorial']
 
-const BASE_URL = (import.meta.env.VITE_API_URL as string | undefined)?.replace('/api', '') ?? 'http://localhost:3001'
+const BASE_URL = (import.meta.env.VITE_API_URL as string | undefined)?.replace('/api', '') ?? ''
 
 function imgSrc(url: string) {
   return url.startsWith('http') ? url : `${BASE_URL}${url}`
