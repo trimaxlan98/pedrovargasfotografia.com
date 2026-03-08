@@ -54,7 +54,7 @@ export default function Services() {
   return (
     <section
       id="servicios"
-      className="section-padding bg-[#111111]"
+      className="section-padding bg-[#F1ECE2] dark:bg-[#10100F]"
       ref={ref as React.RefObject<HTMLElement>}
     >
       <div className="max-w-[1400px] mx-auto">
@@ -71,7 +71,7 @@ export default function Services() {
         </motion.div>
 
         {/* Grid */}
-        <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-px bg-ivory/5">
+        <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-px bg-[#D8D1C5] dark:bg-white/10">
           {services.map((service, i) => {
             const Icon = service.icon
             return (
@@ -80,33 +80,33 @@ export default function Services() {
                 initial={{ opacity: 0, y: 30 }}
                 animate={inView ? { opacity: 1, y: 0 } : {}}
                 transition={{ duration: 0.6, delay: i * 0.08 }}
-                className="group relative bg-[#111111] p-8 hover:bg-[#1A1A1A] transition-colors duration-400 overflow-hidden"
+                className="group relative bg-[#F7F4EE] dark:bg-[#161614] p-8 hover:bg-[#FDFCF9] dark:hover:bg-[#1D1D1A] transition-colors duration-400 overflow-hidden"
               >
                 {/* Ghost number */}
                 <span
-                  className="absolute -top-4 -right-2 font-cormorant font-bold text-[8rem] leading-none text-ivory/3 select-none pointer-events-none group-hover:text-ivory/5 transition-colors duration-500"
+                  className="absolute -top-4 -right-2 font-cormorant font-bold text-[8rem] leading-none text-black/6 dark:text-white/5 select-none pointer-events-none group-hover:text-black/10 dark:group-hover:text-white/10 transition-colors duration-500"
                 >
                   {service.num}
                 </span>
 
                 {/* Number label */}
-                <p className="label-caps text-gold/60 text-[0.6rem] mb-5">{service.num}</p>
+                <p className="label-caps text-gold/70 text-[0.6rem] mb-5">{service.num}</p>
 
                 {/* Icon */}
-                <div className="mb-5 w-10 h-10 flex items-center justify-center border border-ivory/10 group-hover:border-gold/30 transition-colors duration-400">
-                  <Icon className="w-4 h-4 text-ivory/50 group-hover:text-gold transition-colors duration-400" />
+                <div className="mb-5 w-10 h-10 flex items-center justify-center border border-black/15 dark:border-white/15 group-hover:border-gold/40 transition-colors duration-400">
+                  <Icon className="w-4 h-4 text-black/40 dark:text-white/55 group-hover:text-gold transition-colors duration-400" />
                 </div>
 
                 {/* Content */}
-                <h3 className="font-cormorant text-ivory text-2xl font-light mb-3 group-hover:text-ivory transition-colors">
+                <h3 className="font-cormorant text-ivory text-2xl font-light mb-3 group-hover:text-black dark:group-hover:text-gold transition-colors">
                   {service.title}
                 </h3>
-                <p className="font-dm text-ivory/45 text-sm leading-relaxed mb-6">{service.desc}</p>
+                <p className="font-dm text-black/55 dark:text-ivory/60 text-sm leading-relaxed mb-6">{service.desc}</p>
 
                 {/* Price + CTA */}
                 <div className="flex items-center justify-between">
                   <span className="font-cormorant italic text-gold text-lg">{service.price}</span>
-                  <ArrowRight className="w-4 h-4 text-ivory/20 group-hover:text-gold group-hover:translate-x-1 transition-all duration-300" />
+                  <ArrowRight className="w-4 h-4 text-black/25 dark:text-ivory/35 group-hover:text-gold group-hover:translate-x-1 transition-all duration-300" />
                 </div>
 
                 {/* Bottom gold line */}

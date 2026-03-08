@@ -22,9 +22,34 @@ export default function Contact() {
   const set = (field: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
     setForm(prev => ({ ...prev, [field]: e.target.value }))
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [error, setError] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setSent(true)
+    setIsLoading(true)
+    setError('')
+    try {
+      const res = await fetch((import.meta.env.VITE_API_URL || '/api') + '/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: form.name,
+          email: form.email,
+          phone: form.phone,
+          eventDate: form.date,
+          service: form.service,
+          message: form.message,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.message || 'Error al enviar')
+      setSent(true)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error de conexión. Intenta más tarde.')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -216,9 +241,23 @@ export default function Contact() {
                   />
                 </div>
 
-                <button type="submit" className="btn-primary justify-center gap-3 mt-2">
+                {error && (
+                  <motion.p
+                    initial={{ opacity: 0, y: -4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="text-red-400 text-sm text-center bg-red-400/10 rounded px-4 py-2"
+                  >
+                    {error}
+                  </motion.p>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="btn-primary justify-center gap-3 mt-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                >
                   <Send className="w-4 h-4" />
-                  Enviar Solicitud
+                  {isLoading ? 'Enviando...' : 'Enviar Solicitud'}
                 </button>
 
                 <p className="font-dm text-ivory/20 text-xs text-center">

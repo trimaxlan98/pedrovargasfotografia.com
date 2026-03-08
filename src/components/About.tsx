@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion'
 import { useInView } from './useInView'
 import { Award, Camera, Users, Globe } from 'lucide-react'
+import { profilePhotos } from '../data/galleryData'
 
 const highlights = [
   { icon: Camera, value: '+500', label: 'Eventos fotografiados' },
@@ -28,11 +29,18 @@ export default function About() {
             className="relative"
           >
             <div
-              className="w-full max-w-[480px] h-[580px] photo-placeholder-warm relative overflow-hidden"
+              className="w-full max-w-[480px] h-[580px] relative overflow-hidden"
               style={{
                 boxShadow: '40px 40px 80px rgba(0,0,0,0.6)',
               }}
             >
+              <img
+                src={profilePhotos.about.src}
+                alt={profilePhotos.about.alt}
+                loading="lazy"
+                className="absolute inset-0 w-full h-full object-cover"
+                style={{ objectPosition: profilePhotos.about.position }}
+              />
               {/* Warm bokeh */}
               <div
                 className="absolute bottom-1/4 right-1/4 w-48 h-48 rounded-full"
@@ -84,7 +92,7 @@ export default function About() {
 
             <div className="space-y-5 font-dm text-ivory/55 text-[0.9rem] leading-[1.85] mb-10">
               <p>
-                Soy <strong className="text-ivory font-medium">Miguel Ángel Lumière</strong>, fotógrafo profesional con más de 12 años capturando los momentos más importantes en la vida de las personas. Mi trabajo va más allá de las fotos: es la preservación de emociones.
+                Soy <strong className="text-ivory font-medium">Pedro Vargas</strong>, fotógrafo profesional con más de 12 años capturando los momentos más importantes en la vida de las personas. Mi trabajo va más allá de las fotos: es la preservación de emociones.
               </p>
               <p>
                 Formado en la <em className="text-ivory/70">Academia de Artes Visuales de la UNAM</em> y con estudios en Nueva York bajo la tutoría del maestro Robert Klein, mi estilo fusiona la estética cinematográfica internacional con la calidez de la cultura mexicana.

@@ -1,14 +1,15 @@
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
+  darkMode: 'class',
   theme: {
     extend: {
       colors: {
-        black: '#000000',
-        'near-black': '#0A0A0A',
-        surface: '#111111',
-        'surface-hover': '#1A1A1A',
-        ivory: '#F5F0E8',
+        black: '#1F1C17',
+        'near-black': '#F7F4EE',
+        surface: '#FDFCF9',
+        'surface-hover': '#F1ECE2',
+        ivory: '#2A2620',
         gold: '#C9A96E',
         'gold-light': '#D4B87A',
         danger: '#E05C5C',

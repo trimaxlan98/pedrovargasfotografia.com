@@ -1,0 +1,241 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ─── USUARIOS Y AUTENTICACIÓN ──────────────────────────────────────────────────
+
+model User {
+  id               String    @id @default(cuid())
+  email            String    @unique
+  password         String
+  name             String
+  phone            String?
+  role             String    @default("CLIENT") // ADMIN | CLIENT
+  isActive         Boolean   @default(true)
+  avatar           String?
+  termsAcceptedAt  DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  bookings      Booking[]
+  invitations   DigitalInvitation[]
+  refreshTokens RefreshToken[]
+  activityLogs  ActivityLog[]
+
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("refresh_tokens")
+}
+
+// ─── SOLICITUDES DE CONTACTO ───────────────────────────────────────────────────
+
+model ContactRequest {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  phone     String?
+  eventDate String?
+  service   String
+  message   String
+  status    String   @default("PENDING") // PENDING | IN_PROGRESS | RESPONDED | CLOSED
+  notes     String?  // notas internas del admin
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("contact_requests")
+}
+
+// ─── RESERVAS ──────────────────────────────────────────────────────────────────
+
+model Booking {
+  id          String   @id @default(cuid())
+  clientId    String
+  service     String
+  eventDate   DateTime
+  eventType   String
+  venue       String?
+  guestCount  Int?
+  budget      Float?
+  status      String   @default("PENDING") // PENDING | CONFIRMED | DEPOSIT_PAID | IN_PROGRESS | COMPLETED | CANCELLED
+  notes       String?
+  adminNotes  String?
+  totalPrice  Float?
+  depositPaid Boolean  @default(false)
+  archivedAt  DateTime?
+  archiveReason String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  client User @relation(fields: [clientId], references: [id])
+
+  @@index([archivedAt])
+  @@map("bookings")
+}
+
+// ─── PORTFOLIO ─────────────────────────────────────────────────────────────────
+
+model PortfolioItem {
+  id          String   @id @default(cuid())
+  title       String
+  category    String   // Bodas | Corporativo | Retratos | Quince Años | Graduaciones | Social
+  imageUrl    String
+  description String?
+  eventDate   String?
+  location    String?
+  featured    Boolean  @default(false)
+  order       Int      @default(0)
+  isVisible   Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("portfolio_items")
+}
+
+// ─── TESTIMONIOS ───────────────────────────────────────────────────────────────
+
+model Testimonial {
+  id         String   @id @default(cuid())
+  clientName String
+  eventType  String
+  rating     Int      @default(5)
+  text       String
+  isVisible  Boolean  @default(true)
+  featured   Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("testimonials")
+}
+
+// ─── SERVICIOS ─────────────────────────────────────────────────────────────────
+
+model Service {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  price       String
+  features    String   // JSON serializado como string
+  iconName    String?
+  isActive    Boolean  @default(true)
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("services")
+}
+
+// ─── INVITACIONES DIGITALES ────────────────────────────────────────────────────
+
+model DigitalInvitation {
+  id           String   @id @default(cuid())
+  clientId     String
+  eventType    String   // Boda | XV Años | Cumpleaños | Bautizo | Graduación | Corporativo
+  title        String
+  names        String
+  eventDate    String
+  eventTime    String?
+  venue        String?
+  locationNote String?
+  message      String?
+  quote        String?
+  hashtag      String?
+  template     String   @default("elegante")
+  primaryColor String   @default("#1a2744")
+  textColor    String   @default("#F5F0E8")
+  fontStyle    String   @default("serif")
+  isDark       Boolean  @default(true)
+  dressCode    String?
+  rsvpLabel    String?
+  rsvpValue    String?
+  gallery      String?  // JSON array de URLs
+  shareToken   String   @unique @default(cuid())
+  views        Int      @default(0)
+  isPublished  Boolean  @default(true)
+  rsvpDeadline DateTime?
+  archivedAt   DateTime?
+  archiveReason String?
+  
+  // Nuevos campos para personalización por defecto
+  guestGreeting    String?  @default("Hola")
+  defaultGuestName String?  @default("Familia y Amigos")
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  client User               @relation(fields: [clientId], references: [id])
+  guests InvitationGuest[]
+
+  @@index([archivedAt])
+  @@map("digital_invitations")
+}
+
+model InvitationGuest {
+  id           String    @id @default(cuid())
+  invitationId String
+  name         String
+  token        String    @unique @default(cuid())
+  response     String    @default("PENDING") // PENDING | ACCEPTED | DECLINED
+  
+  // Nuevo campo para mensaje personalizado por invitado
+  personalizedMessage String? 
+  
+  respondedAt  DateTime?
+  createdAt    DateTime  @default(now())
+
+  invitation DigitalInvitation @relation(fields: [invitationId], references: [id], onDelete: Cascade)
+
+  @@map("invitation_guests")
+}
+
+// ─── REGISTRO DE ACTIVIDAD ─────────────────────────────────────────────────────
+
+model ActivityLog {
+  id        String   @id @default(cuid())
+  userId    String
+  userName  String
+  userEmail String
+  action    String   // REGISTER | LOGIN | TERMS_ACCEPTED | BOOKING_CREATED | BOOKING_CANCELLED | INVITATION_CREATED | INVITATION_UPDATED | INVITATION_DELETED
+  detail    String?
+  metadata  String?  // JSON serializado
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([isRead])
+  @@index([createdAt])
+  @@map("activity_logs")
+}
+
+// ─── CONFIGURACIÓN DEL SITIO ───────────────────────────────────────────────────
+
+model SiteSettings {
+  id           String   @id @default("main")
+  phone        String   @default("+52 55 1234 5678")
+  email        String   @default("hola@studiolumiere.mx")
+  address      String   @default("Ciudad de México, CDMX")
+  instagram    String?
+  facebook     String?
+  whatsapp     String?
+  aboutText    String?
+  heroTitle    String   @default("Cada Momento Contado en Luz")
+  heroSubtitle String?
+  updatedAt    DateTime @updatedAt
+
+  @@map("site_settings")
+}
