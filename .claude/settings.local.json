@@ -17,7 +17,8 @@
       "mcp__ide__getDiagnostics",
       "Bash(npx tsx:*)",
       "Bash(npx kill-port:*)",
-      "Bash(xargs ls:*)"
+      "Bash(xargs ls:*)",
+      "Bash(/mnt/c/Users/ADMIN/Documents/GitHub/pedrovargasfotografia.com/.env:*)"
     ]
   }
 }
