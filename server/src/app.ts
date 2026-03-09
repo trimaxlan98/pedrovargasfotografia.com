@@ -17,6 +17,9 @@ import { errorHandler, notFoundHandler } from './middleware/errorHandler'
 
 const app = express()
 
+// Trust Hostinger's reverse proxy so rate limiting and IP detection work correctly
+app.set('trust proxy', 1)
+
 // ─── Seguridad ────────────────────────────────────────────────────────────────
 app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' },

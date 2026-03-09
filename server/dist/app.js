@@ -19,6 +19,8 @@ const contact_1 = __importDefault(require("./routes/contact"));
 const public_1 = __importDefault(require("./routes/public"));
 const errorHandler_1 = require("./middleware/errorHandler");
 const app = (0, express_1.default)();
+// Trust Hostinger's reverse proxy so rate limiting and IP detection work correctly
+app.set('trust proxy', 1);
 // ─── Seguridad ────────────────────────────────────────────────────────────────
 app.use((0, helmet_1.default)({
     crossOriginResourcePolicy: { policy: 'cross-origin' },
