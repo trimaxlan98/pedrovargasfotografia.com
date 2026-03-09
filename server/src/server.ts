@@ -7,12 +7,13 @@ import prisma from './utils/prisma'
 import { hashPassword } from './utils/password'
 
 // Run DB migrations synchronously before accepting requests.
-// Uses direct path to prisma binary to avoid npx download delays.
+// Uses process.execPath (current node binary) to run the Prisma CLI as a
+// plain JS script — avoids executable permission issues with .bin symlinks.
 function runMigrations() {
-  const prismaBin = path.resolve(__dirname, '../../node_modules/.bin/prisma')
+  const prismaCli = path.resolve(__dirname, '../../node_modules/prisma/build/index.js')
   const schemaPath = path.resolve(__dirname, '../prisma/schema.prisma')
   console.log('⚙️  Ejecutando migraciones...')
-  const result = spawnSync(prismaBin, ['migrate', 'deploy', '--schema', schemaPath], {
+  const result = spawnSync(process.execPath, [prismaCli, 'migrate', 'deploy', '--schema', schemaPath], {
     stdio: 'pipe',
     env: process.env,
     timeout: 30000,
@@ -22,7 +23,7 @@ function runMigrations() {
   if (result.status === 0) {
     console.log('✅ Migraciones aplicadas')
   } else {
-    console.error('⚠️  Migraciones fallaron, status:', result.status)
+    console.error('⚠️  Migraciones fallaron, status:', result.status, result.error?.message)
   }
 }
 
