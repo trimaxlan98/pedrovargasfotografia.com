@@ -55,7 +55,7 @@ if (process.env.NODE_ENV !== 'test') {
 const uploadDir = process.env.UPLOAD_DIR || 'uploads';
 app.use('/uploads', express_1.default.static(path_1.default.resolve(uploadDir)));
 // Servir frontend construido (producción)
-const publicDir = path_1.default.resolve(__dirname, '../../public');
+const publicDir = path_1.default.resolve(__dirname, '../../dist');
 app.use(express_1.default.static(publicDir));
 // ─── Health check ──────────────────────────────────────────────────────────────
 app.get('/api/health', (_req, res) => {

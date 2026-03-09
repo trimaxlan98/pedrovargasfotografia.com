@@ -61,7 +61,7 @@ const uploadDir = process.env.UPLOAD_DIR || 'uploads'
 app.use('/uploads', express.static(path.resolve(uploadDir)))
 
 // Servir frontend construido (producción)
-const publicDir = path.resolve(__dirname, '../../public')
+const publicDir = path.resolve(__dirname, '../../dist')
 app.use(express.static(publicDir))
 
 // ─── Health check ──────────────────────────────────────────────────────────────
