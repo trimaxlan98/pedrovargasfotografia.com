@@ -11,8 +11,9 @@
     "dev": "concurrently \"npm run dev:client\" \"npm run dev:server\"",
     "dev:client": "vite",
     "dev:server": "npm run dev --prefix server",
-    "build": "npx tsc -b && npx vite build && npx prisma generate --schema=server/prisma/schema.prisma && npx prisma migrate deploy --schema=server/prisma/schema.prisma",
+    "build": "npx tsc -b && npx vite build",
     "build:all": "npm run build && npm run build --prefix server",
+    "postinstall": "npx prisma generate --schema=server/prisma/schema.prisma && npx prisma migrate deploy --schema=server/prisma/schema.prisma",
     "start": "node server/dist/server.js",
     "lint": "eslint .",
     "preview": "vite preview"
