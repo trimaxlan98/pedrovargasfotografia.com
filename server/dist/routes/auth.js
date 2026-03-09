@@ -32,12 +32,23 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const express_validator_1 = require("express-validator");
+const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
 const auth = __importStar(require("../controllers/authController"));
 const auth_1 = require("../middleware/auth");
 const router = (0, express_1.Router)();
+const loginLimiter = (0, express_rate_limit_1.default)({
+    windowMs: 15 * 60 * 1000,
+    max: 20,
+    message: { success: false, message: 'Demasiados intentos de autenticación, intenta en 15 minutos' },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
 const registerValidation = [
     (0, express_validator_1.body)('name').trim().notEmpty().withMessage('El nombre es requerido').isLength({ min: 2, max: 100 }),
     (0, express_validator_1.body)('email').isEmail().normalizeEmail().withMessage('Email inválido'),
@@ -51,8 +62,8 @@ const loginValidation = [
     (0, express_validator_1.body)('email').isEmail().normalizeEmail().withMessage('Email inválido'),
     (0, express_validator_1.body)('password').notEmpty().withMessage('Contraseña requerida'),
 ];
-router.post('/register', registerValidation, auth.register);
-router.post('/login', loginValidation, auth.login);
+router.post('/register', loginLimiter, registerValidation, auth.register);
+router.post('/login', loginLimiter, loginValidation, auth.login);
 router.post('/refresh', auth.refresh);
 router.post('/logout', auth.logout);
 router.get('/me', auth_1.authenticate, auth.getMe);

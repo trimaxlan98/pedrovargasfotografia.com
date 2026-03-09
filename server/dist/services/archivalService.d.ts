@@ -27,6 +27,7 @@ export declare function archiveInvitation(id: string, reason?: string): Promise<
     id: string;
     createdAt: Date;
     updatedAt: Date;
+    message: string | null;
     clientId: string;
     eventDate: string;
     eventType: string;
@@ -38,7 +39,6 @@ export declare function archiveInvitation(id: string, reason?: string): Promise<
     names: string;
     eventTime: string | null;
     locationNote: string | null;
-    message: string | null;
     quote: string | null;
     hashtag: string | null;
     template: string;
@@ -85,6 +85,7 @@ export declare function unarchiveInvitation(id: string): Promise<{
     id: string;
     createdAt: Date;
     updatedAt: Date;
+    message: string | null;
     clientId: string;
     eventDate: string;
     eventType: string;
@@ -96,7 +97,6 @@ export declare function unarchiveInvitation(id: string): Promise<{
     names: string;
     eventTime: string | null;
     locationNote: string | null;
-    message: string | null;
     quote: string | null;
     hashtag: string | null;
     template: string;
@@ -155,6 +155,7 @@ export declare function getArchivedInvitations(): Promise<({
     id: string;
     createdAt: Date;
     updatedAt: Date;
+    message: string | null;
     clientId: string;
     eventDate: string;
     eventType: string;
@@ -166,7 +167,6 @@ export declare function getArchivedInvitations(): Promise<({
     names: string;
     eventTime: string | null;
     locationNote: string | null;
-    message: string | null;
     quote: string | null;
     hashtag: string | null;
     template: string;

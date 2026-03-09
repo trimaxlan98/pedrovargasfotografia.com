@@ -37,11 +37,6 @@ const globalLimiter = (0, express_rate_limit_1.default)({
     standardHeaders: true,
     legacyHeaders: false,
 });
-const authLimiter = (0, express_rate_limit_1.default)({
-    windowMs: 15 * 60 * 1000,
-    max: 10,
-    message: { success: false, message: 'Demasiados intentos de autenticación, intenta en 15 minutos' },
-});
 app.use(globalLimiter);
 // ─── Parsers ───────────────────────────────────────────────────────────────────
 app.use(express_1.default.json({ limit: '10mb' }));
@@ -67,7 +62,8 @@ app.get('/api/health', (_req, res) => {
     });
 });
 // ─── Rutas ─────────────────────────────────────────────────────────────────────
-app.use('/api/auth', authLimiter, auth_1.default);
+// authLimiter se aplica solo a rutas sensibles (login/register) en el router de auth
+app.use('/api/auth', auth_1.default);
 app.use('/api/admin', admin_1.default);
 app.use('/api/client', client_1.default);
 app.use('/api/contact', contact_1.default);
