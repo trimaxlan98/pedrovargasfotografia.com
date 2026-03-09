@@ -6,14 +6,32 @@ Object.defineProperty(exports, "__esModule", { value: true });
 require("dotenv/config");
 const app_1 = __importDefault(require("./app"));
 const archivalService_1 = require("./services/archivalService");
+const prisma_1 = __importDefault(require("./utils/prisma"));
+const password_1 = require("./utils/password");
+async function initAdmin() {
+    const adminEmail = process.env.ADMIN_EMAIL;
+    const adminPassword = process.env.ADMIN_PASSWORD;
+    const adminName = process.env.ADMIN_NAME || 'Admin';
+    if (!adminEmail || !adminPassword)
+        return;
+    const exists = await prisma_1.default.user.findUnique({ where: { email: adminEmail } });
+    if (!exists) {
+        const hashed = await (0, password_1.hashPassword)(adminPassword);
+        await prisma_1.default.user.create({
+            data: { email: adminEmail, password: hashed, name: adminName, role: 'ADMIN' },
+        });
+        console.log(`✅ Admin creado: ${adminEmail}`);
+    }
+}
 const PORT = Number(process.env.PORT) || 3001;
 const stopArchivalWorkflow = (0, archivalService_1.startArchivalWorkflow)();
-const server = app_1.default.listen(PORT, () => {
+const server = app_1.default.listen(PORT, async () => {
     console.log(`\n🎯 Pedro Vargas Fotografía API`);
     console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
     console.log(`🌍 Ambiente: ${process.env.NODE_ENV || 'development'}`);
     console.log(`📡 Frontend: ${process.env.FRONTEND_URL || 'http://localhost:5173'}`);
     console.log(`📋 Health: http://localhost:${PORT}/api/health\n`);
+    await initAdmin();
 });
 process.on('SIGTERM', () => {
     console.log('SIGTERM recibido. Cerrando servidor...');
