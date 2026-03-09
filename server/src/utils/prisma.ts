@@ -1,15 +1,27 @@
 import { PrismaClient } from '@prisma/client'
+import path from 'path'
 
 declare global {
   // eslint-disable-next-line no-var
   var prisma: PrismaClient | undefined
 }
 
-const dbUrl = process.env.DATABASE_URL || 'file:./dev.db'
-
-if (process.env.NODE_ENV === 'development') {
-  console.log('🔌 Prisma initializing with URL:', dbUrl)
+// Resolve SQLite relative paths using __dirname to ensure consistency
+// regardless of the working directory when the server starts.
+// __dirname here = server/dist/utils, so ../../prisma = server/prisma
+function resolveDbUrl(): string {
+  const url = process.env.DATABASE_URL || 'file:./dev.db'
+  if (url.startsWith('file:./') || url.startsWith('file:../')) {
+    const relativePath = url.slice(5) // remove 'file:'
+    const absolutePath = path.resolve(__dirname, '../../prisma', path.basename(relativePath))
+    return `file:${absolutePath}`
+  }
+  return url
 }
+
+const dbUrl = resolveDbUrl()
+
+console.log('🔌 Prisma DB:', dbUrl)
 
 const prisma = global.prisma ?? new PrismaClient({
   log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
