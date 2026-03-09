@@ -48,10 +48,16 @@ async function refreshTokens(): Promise<boolean> {
     return false
   }
 
-  const data = await res.json()
-  localStorage.setItem('accessToken', data.data.accessToken)
-  localStorage.setItem('refreshToken', data.data.refreshToken)
-  return true
+  try {
+    const data = await res.json()
+    localStorage.setItem('accessToken', data.data.accessToken)
+    localStorage.setItem('refreshToken', data.data.refreshToken)
+    return true
+  } catch {
+    localStorage.removeItem('accessToken')
+    localStorage.removeItem('refreshToken')
+    return false
+  }
 }
 
 export async function apiRequest<T = unknown>(
@@ -86,10 +92,15 @@ export async function apiRequest<T = unknown>(
     return {} as T
   }
 
-  const data = await response.json()
+  let data: unknown
+  try {
+    data = await response.json()
+  } catch {
+    throw new Error(`Error ${response.status}: respuesta inesperada del servidor`)
+  }
 
   if (!response.ok) {
-    throw new Error(data.message || `Error ${response.status}`)
+    throw new Error((data as { message?: string }).message || `Error ${response.status}`)
   }
 
   return data as T

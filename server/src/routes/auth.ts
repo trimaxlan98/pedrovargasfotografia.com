@@ -1,9 +1,18 @@
 import { Router } from 'express'
 import { body } from 'express-validator'
+import rateLimit from 'express-rate-limit'
 import * as auth from '../controllers/authController'
 import { authenticate } from '../middleware/auth'
 
 const router = Router()
+
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  message: { success: false, message: 'Demasiados intentos de autenticación, intenta en 15 minutos' },
+  standardHeaders: true,
+  legacyHeaders: false,
+})
 
 const registerValidation = [
   body('name').trim().notEmpty().withMessage('El nombre es requerido').isLength({ min: 2, max: 100 }),
@@ -20,8 +29,8 @@ const loginValidation = [
   body('password').notEmpty().withMessage('Contraseña requerida'),
 ]
 
-router.post('/register', registerValidation, auth.register)
-router.post('/login', loginValidation, auth.login)
+router.post('/register', loginLimiter, registerValidation, auth.register)
+router.post('/login', loginLimiter, loginValidation, auth.login)
 router.post('/refresh', auth.refresh)
 router.post('/logout', auth.logout)
 router.get('/me', authenticate, auth.getMe)

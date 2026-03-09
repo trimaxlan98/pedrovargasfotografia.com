@@ -38,12 +38,6 @@ const globalLimiter = rateLimit({
   legacyHeaders: false,
 })
 
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 10,
-  message: { success: false, message: 'Demasiados intentos de autenticación, intenta en 15 minutos' },
-})
-
 app.use(globalLimiter)
 
 // ─── Parsers ───────────────────────────────────────────────────────────────────
@@ -75,7 +69,8 @@ app.get('/api/health', (_req, res) => {
 })
 
 // ─── Rutas ─────────────────────────────────────────────────────────────────────
-app.use('/api/auth', authLimiter, authRoutes)
+// authLimiter se aplica solo a rutas sensibles (login/register) en el router de auth
+app.use('/api/auth', authRoutes)
 app.use('/api/admin', adminRoutes)
 app.use('/api/client', clientRoutes)
 app.use('/api/contact', contactRoutes)
