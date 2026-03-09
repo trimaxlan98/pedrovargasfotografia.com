@@ -13,8 +13,8 @@
     "dev:server": "npm run dev --prefix server",
     "build": "npx tsc -b && npx vite build",
     "build:all": "npm run build && npm run build --prefix server",
-    "postinstall": "npx vite build && npx prisma generate --schema=server/prisma/schema.prisma",
-    "start": "npx prisma migrate deploy --schema=server/prisma/schema.prisma && node server/dist/server.js",
+    "postinstall": "npx vite build && npx prisma generate --schema=server/prisma/schema.prisma && npx prisma migrate deploy --schema=server/prisma/schema.prisma",
+    "start": "node server/dist/server.js",
     "lint": "eslint .",
     "preview": "vite preview"
   },
