@@ -1,5 +1,15 @@
 const API_URL = import.meta.env.VITE_API_URL || '/api'
 
+// ─── DIAGNÓSTICO DE DESPLIEGUE ─────────────────────────────────────────────
+console.log('%c[DIAGNÓSTICO] Build info', 'color: #gold; font-weight: bold; font-size: 14px')
+console.log('[DIAGNÓSTICO] VITE_API_URL env:', import.meta.env.VITE_API_URL)
+console.log('[DIAGNÓSTICO] API_URL resuelto:', API_URL)
+console.log('[DIAGNÓSTICO] MODE:', import.meta.env.MODE)
+console.log('[DIAGNÓSTICO] DEV:', import.meta.env.DEV)
+console.log('[DIAGNÓSTICO] PROD:', import.meta.env.PROD)
+console.log('[DIAGNÓSTICO] window.location.origin:', typeof window !== 'undefined' ? window.location.origin : 'N/A')
+// ──────────────────────────────────────────────────────────────────────────
+
 interface RequestOptions extends RequestInit {
   params?: Record<string, string | number | undefined>
 }
