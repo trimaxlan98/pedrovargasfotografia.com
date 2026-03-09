@@ -38,6 +38,10 @@ const server = app_1.default.listen(PORT, () => {
     console.log(`📋 Health: http://localhost:${PORT}/api/health\n`);
     void initAdmin();
 });
+server.on('error', (err) => {
+    console.error('Error al iniciar servidor:', err);
+    process.exit(1);
+});
 process.on('SIGTERM', () => {
     console.log('SIGTERM recibido. Cerrando servidor...');
     stopArchivalWorkflow();
@@ -48,6 +52,10 @@ process.on('SIGTERM', () => {
 });
 process.on('unhandledRejection', (reason) => {
     console.error('Promesa rechazada sin manejar:', reason);
+});
+process.on('uncaughtException', (err) => {
+    console.error('Excepción no capturada:', err);
+    process.exit(1);
 });
 exports.default = server;
 //# sourceMappingURL=server.js.map

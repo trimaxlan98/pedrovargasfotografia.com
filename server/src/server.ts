@@ -36,6 +36,11 @@ const server = app.listen(PORT, () => {
   void initAdmin()
 })
 
+server.on('error', (err) => {
+  console.error('Error al iniciar servidor:', err)
+  process.exit(1)
+})
+
 process.on('SIGTERM', () => {
   console.log('SIGTERM recibido. Cerrando servidor...')
   stopArchivalWorkflow()
@@ -47,6 +52,11 @@ process.on('SIGTERM', () => {
 
 process.on('unhandledRejection', (reason) => {
   console.error('Promesa rechazada sin manejar:', reason)
+})
+
+process.on('uncaughtException', (err) => {
+  console.error('Excepción no capturada:', err)
+  process.exit(1)
 })
 
 export default server
