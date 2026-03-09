@@ -4,7 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 require("dotenv/config");
-const child_process_1 = require("child_process");
+const { spawnSync } = require("child_process");
 const client_1 = require("@prisma/client");
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const app_1 = __importDefault(require("./app"));
@@ -17,10 +17,19 @@ async function initDatabase() {
     }
     console.log('🔧 Ejecutando migraciones...');
     try {
-        (0, child_process_1.execSync)('node_modules/.bin/prisma migrate deploy --schema=server/prisma/schema.prisma', {
-            stdio: 'inherit',
-            cwd: process.cwd(),
-        });
+        const result = spawnSync(
+            'node_modules/.bin/prisma',
+            ['migrate', 'deploy', '--schema=server/prisma/schema.prisma'],
+            {
+                stdio: 'pipe',
+                cwd: process.cwd(),
+                timeout: 60000,
+                env: { ...process.env },
+            }
+        );
+        if (result.stdout) console.log(result.stdout.toString());
+        if (result.stderr) console.error(result.stderr.toString());
+        if (result.error) throw result.error;
         console.log('✅ Migraciones aplicadas');
     }
     catch (e) {

@@ -1,5 +1,5 @@
 import 'dotenv/config'
-import { execSync } from 'child_process'
+import { spawnSync } from 'child_process'
 import { PrismaClient } from '@prisma/client'
 import bcrypt from 'bcryptjs'
 import app from './app'
@@ -13,10 +13,19 @@ async function initDatabase() {
 
   console.log('🔧 Ejecutando migraciones...')
   try {
-    execSync('node_modules/.bin/prisma migrate deploy --schema=server/prisma/schema.prisma', {
-      stdio: 'inherit',
-      cwd: process.cwd(),
-    })
+    const result = spawnSync(
+      'node_modules/.bin/prisma',
+      ['migrate', 'deploy', '--schema=server/prisma/schema.prisma'],
+      {
+        stdio: 'pipe',
+        cwd: process.cwd(),
+        timeout: 60000,
+        env: { ...process.env },
+      }
+    )
+    if (result.stdout) console.log(result.stdout.toString())
+    if (result.stderr) console.error(result.stderr.toString())
+    if (result.error) throw result.error
     console.log('✅ Migraciones aplicadas')
   } catch (e) {
     console.error('⚠️  Error en migraciones (continuando de todos modos):', (e as Error).message)
