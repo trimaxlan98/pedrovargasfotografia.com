@@ -51,6 +51,19 @@ async function loadApp() {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const { hashPassword } = require('./utils/password') as typeof import('./utils/password')
 
+  // Apply pending migrations before any DB access
+  try {
+    console.log('[startup] Aplicando migraciones de base de datos...')
+    const { execSync } = require('child_process') as typeof import('child_process')
+    const { join } = require('path') as typeof import('path')
+    const serverRoot = join(__dirname, '..') // dist/../ = server/
+    const prismabin = join(serverRoot, 'node_modules', '.bin', 'prisma')
+    execSync(`"${prismabin}" migrate deploy`, { stdio: 'inherit', cwd: serverRoot })
+    console.log('[startup] Migraciones aplicadas ✅')
+  } catch (e: unknown) {
+    console.error('[startup] Error aplicando migraciones:', (e as Error).message)
+  }
+
   // Install Express as the request handler
   requestHandler = app as typeof requestHandler
   console.log('[startup] Express app lista ✅')
@@ -70,10 +83,51 @@ async function loadApp() {
           data: { email: adminEmail, password: hashed, name: adminName, role: 'ADMIN' },
         })
         console.log(`✅ Admin creado: ${adminEmail}`)
+      } else {
+        console.log(`[startup] Admin ya existe: ${adminEmail}`)
       }
     }
   } catch (e: unknown) {
     console.error('initAdmin error:', (e as Error).message)
+  }
+
+  // Seed site settings if missing
+  try {
+    const settings = await prisma.siteSettings.findUnique({ where: { id: 'main' } })
+    if (!settings) {
+      await prisma.siteSettings.create({
+        data: {
+          id: 'main',
+          phone: '+52 55 1234 5678',
+          email: 'hola@pedrovargasfotografia.com',
+          address: 'Ciudad de México, CDMX',
+          heroTitle: 'Cada Momento Contado en Luz',
+          heroSubtitle: 'Fotografía profesional para tus momentos más importantes',
+        },
+      })
+      console.log('[startup] Configuración del sitio creada ✅')
+    }
+  } catch (e: unknown) {
+    console.error('initSiteSettings error:', (e as Error).message)
+  }
+
+  // Seed default services if none exist
+  try {
+    const serviceCount = await prisma.service.count()
+    if (serviceCount === 0) {
+      const defaultServices = [
+        { title: 'Bodas & Celebraciones', description: 'Cada detalle de tu día especial inmortalizado con arte y emoción.', price: 'Desde $15,000 MXN', features: JSON.stringify(['Cobertura completa del evento', 'Álbum digital premium', 'Edición profesional', 'Entrega en 4 semanas']), iconName: 'Heart', order: 1 },
+        { title: 'Eventos Corporativos', description: 'Imagen profesional que refleja la esencia de tu empresa.', price: 'Desde $8,000 MXN', features: JSON.stringify(['Fotografía de presentaciones', 'Retratos ejecutivos', 'Eventos y conferencias', 'Licencia comercial']), iconName: 'Briefcase', order: 2 },
+        { title: 'Retratos & Sesiones', description: 'Tu personalidad capturada en imágenes que cuentan tu historia.', price: 'Desde $3,500 MXN', features: JSON.stringify(['Sesión de 2 horas', '30 fotos editadas', 'Múltiples looks', 'Galería privada online']), iconName: 'User', order: 3 },
+        { title: 'XV Años & Graduaciones', description: 'Hitos de vida que merecen ser recordados para siempre.', price: 'Desde $12,000 MXN', features: JSON.stringify(['Cobertura del evento', 'Sesión previa incluida', 'Video highlight', 'Álbum impreso']), iconName: 'Star', order: 4 },
+        { title: 'Fotografía Editorial', description: 'Imágenes con narrativa visual para marcas y publicaciones.', price: 'Desde $10,000 MXN', features: JSON.stringify(['Concepto creativo', 'Dirección de arte', 'Post-producción avanzada', 'Derechos de uso']), iconName: 'Camera', order: 5 },
+        { title: 'Video + Foto Combo', description: 'El paquete completo para preservar cada momento en imagen y movimiento.', price: 'Desde $20,000 MXN', features: JSON.stringify(['Foto y video profesional', 'Highlight cinematográfico', 'Drone opcional', 'Disco duro incluido']), iconName: 'Video', order: 6 },
+      ]
+      await prisma.service.createMany({ data: defaultServices })
+      console.log(`[startup] ${defaultServices.length} servicios por defecto creados ✅`)
+    }
+  } catch (e: unknown) {
+    console.error('initServices error:', (e as Error).message)
   }
 }
 
