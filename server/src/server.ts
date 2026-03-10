@@ -51,21 +51,6 @@ async function loadApp() {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const { hashPassword } = require('./utils/password') as typeof import('./utils/password')
 
-  // Apply pending migrations before any DB access
-  try {
-    console.log('[startup] Aplicando migraciones de base de datos...')
-    const { execSync } = require('child_process') as typeof import('child_process')
-    const { join } = require('path') as typeof import('path')
-    // Project root = server/dist/../../  (server/dist → server → project root)
-    const projectRoot = join(__dirname, '..', '..')
-    const prismabin = join(projectRoot, 'node_modules', '.bin', 'prisma')
-    const schema = join(projectRoot, 'server', 'prisma', 'schema.prisma')
-    execSync(`"${prismabin}" migrate deploy --schema="${schema}"`, { stdio: 'pipe', cwd: projectRoot })
-    console.log('[startup] Migraciones aplicadas ✅')
-  } catch (e: unknown) {
-    console.error('[startup] Error aplicando migraciones:', (e as Error).message)
-  }
-
   // Install Express as the request handler
   requestHandler = app as typeof requestHandler
   console.log('[startup] Express app lista ✅')

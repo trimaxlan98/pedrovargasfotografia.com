@@ -44,21 +44,6 @@ async function loadApp() {
     const prisma = require('./utils/prisma').default;
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const { hashPassword } = require('./utils/password');
-    // Apply pending migrations before any DB access
-    try {
-        console.log('[startup] Aplicando migraciones de base de datos...');
-        const { execSync } = require('child_process');
-        const { join } = require('path');
-        // Project root = server/dist/../../  (server/dist → server → project root)
-        const projectRoot = join(__dirname, '..', '..');
-        const prismabin = join(projectRoot, 'node_modules', '.bin', 'prisma');
-        const schema = join(projectRoot, 'server', 'prisma', 'schema.prisma');
-        execSync(`"${prismabin}" migrate deploy --schema="${schema}"`, { stdio: 'pipe', cwd: projectRoot });
-        console.log('[startup] Migraciones aplicadas ✅');
-    }
-    catch (e) {
-        console.error('[startup] Error aplicando migraciones:', e.message);
-    }
     // Install Express as the request handler
     requestHandler = app;
     console.log('[startup] Express app lista ✅');
