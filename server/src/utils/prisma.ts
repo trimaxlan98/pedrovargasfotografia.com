@@ -1,18 +1,11 @@
 import { PrismaClient } from '@prisma/client'
-import path from 'path'
 
 declare global {
   // eslint-disable-next-line no-var
   var prisma: PrismaClient | undefined
 }
 
-const rawDbUrl = process.env.DATABASE_URL || 'file:./dev.db'
-
-// Resolve relative SQLite paths to absolute so the DB file location is always
-// predictable regardless of the process working directory (important on Hostinger).
-const dbUrl = rawDbUrl.startsWith('file:./')
-  ? `file:${path.resolve(__dirname, '..', '..', rawDbUrl.slice(7))}`
-  : rawDbUrl
+const dbUrl = process.env.DATABASE_URL || 'file:./dev.db'
 
 console.log('🔌 Prisma DB:', dbUrl)
 

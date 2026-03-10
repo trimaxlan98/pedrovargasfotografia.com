@@ -49,9 +49,11 @@ async function loadApp() {
         console.log('[startup] Aplicando migraciones de base de datos...');
         const { execSync } = require('child_process');
         const { join } = require('path');
-        const serverRoot = join(__dirname, '..'); // dist/../ = server/
-        const prismabin = join(serverRoot, 'node_modules', '.bin', 'prisma');
-        execSync(`"${prismabin}" migrate deploy`, { stdio: 'inherit', cwd: serverRoot });
+        // Project root = server/dist/../../  (server/dist → server → project root)
+        const projectRoot = join(__dirname, '..', '..');
+        const prismabin = join(projectRoot, 'node_modules', '.bin', 'prisma');
+        const schema = join(projectRoot, 'server', 'prisma', 'schema.prisma');
+        execSync(`"${prismabin}" migrate deploy --schema="${schema}"`, { stdio: 'pipe', cwd: projectRoot });
         console.log('[startup] Migraciones aplicadas ✅');
     }
     catch (e) {
