@@ -51,6 +51,27 @@ async function loadApp() {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const { hashPassword } = require('./utils/password') as typeof import('./utils/password')
 
+  // Apply migrations using the root prisma binary (available in production).
+  // This runs with the correct DATABASE_URL env var, unlike the build-time postinstall.
+  try {
+    const { execSync } = require('child_process') as typeof import('child_process')
+    const { join } = require('path') as typeof import('path')
+    // __dirname = server/dist  →  ../.. = project root (nodejs/)
+    const projectRoot = join(__dirname, '..', '..')
+    const prismabin = join(projectRoot, 'node_modules', '.bin', 'prisma')
+    const schema = join(projectRoot, 'server', 'prisma', 'schema.prisma')
+    console.log('[startup] Aplicando migraciones...')
+    const out = execSync(`"${prismabin}" migrate deploy --schema="${schema}"`, {
+      cwd: projectRoot,
+      env: process.env,
+      stdio: 'pipe',
+    })
+    console.log('[startup] Migraciones OK ✅', out.toString().trim().split('\n').pop())
+  } catch (e: unknown) {
+    const err = e as NodeJS.ErrnoException & { stdout?: Buffer; stderr?: Buffer }
+    console.error('[startup] Error en migraciones:', err.stderr?.toString() || err.message)
+  }
+
   // Install Express as the request handler
   requestHandler = app as typeof requestHandler
   console.log('[startup] Express app lista ✅')
