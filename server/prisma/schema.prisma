@@ -163,6 +163,8 @@ model DigitalInvitation {
   dressCode    String?
   rsvpLabel    String?
   rsvpValue    String?
+  invitationType String  @default("general")  // "general" | "individual"
+  heroImage    String?
   gallery      String?  // JSON array de URLs
   shareToken   String   @unique @default(cuid())
   views        Int      @default(0)

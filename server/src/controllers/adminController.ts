@@ -30,6 +30,43 @@ function serializeGallery(input: unknown): string | undefined {
   return undefined
 }
 
+interface GuestStats {
+  total: number
+  confirmed: number
+  pending: number
+  declined: number
+}
+
+function emptyGuestStats(): GuestStats {
+  return { total: 0, confirmed: 0, pending: 0, declined: 0 }
+}
+
+async function appendGuestStats<T extends { id: string }>(invitations: T[]): Promise<Array<T & { guestStats: GuestStats }>> {
+  if (invitations.length === 0) return []
+
+  const grouped = await prisma.invitationGuest.groupBy({
+    by: ['invitationId', 'response'],
+    where: { invitationId: { in: invitations.map(i => i.id) } },
+    _count: { _all: true },
+  })
+
+  const byInvitation = new Map<string, GuestStats>()
+  for (const row of grouped) {
+    const stats = byInvitation.get(row.invitationId) ?? emptyGuestStats()
+    const count = row._count._all
+    stats.total += count
+    if (row.response === 'ACCEPTED') stats.confirmed += count
+    if (row.response === 'PENDING') stats.pending += count
+    if (row.response === 'DECLINED') stats.declined += count
+    byInvitation.set(row.invitationId, stats)
+  }
+
+  return invitations.map(inv => ({
+    ...inv,
+    guestStats: byInvitation.get(inv.id) ?? emptyGuestStats(),
+  }))
+}
+
 const MANUAL_ARCHIVE_REASON = 'MANUAL_DELETE'
 
 // ─── DASHBOARD ─────────────────────────────────────────────────────────────────
@@ -444,7 +481,8 @@ export async function listInvitations(req: AuthRequest, res: Response): Promise<
     }),
     prisma.digitalInvitation.count({ where: { archivedAt: null } }),
   ])
-  R.paginate(res, items.map(normalizeInvitation), total, page, limit)
+  const withStats = await appendGuestStats(items.map(normalizeInvitation))
+  R.paginate(res, withStats, total, page, limit)
 }
 
 export async function listInvitationHistory(req: AuthRequest, res: Response): Promise<void> {
@@ -462,7 +500,8 @@ export async function listInvitationHistory(req: AuthRequest, res: Response): Pr
     }),
     prisma.digitalInvitation.count({ where: { archivedAt: { not: null } } }),
   ])
-  R.paginate(res, items.map(normalizeInvitation), total, page, limit)
+  const withStats = await appendGuestStats(items.map(normalizeInvitation))
+  R.paginate(res, withStats, total, page, limit)
 }
 
 export async function getInvitation(req: AuthRequest, res: Response): Promise<void> {
@@ -471,20 +510,29 @@ export async function getInvitation(req: AuthRequest, res: Response): Promise<vo
     include: { client: { select: { id: true, name: true, email: true } } },
   })
   if (!item) { R.notFound(res); return }
-  R.success(res, normalizeInvitation(item))
+  const [withStats] = await appendGuestStats([normalizeInvitation(item)])
+  R.success(res, withStats)
 }
 
 export async function createInvitation(req: AuthRequest, res: Response): Promise<void> {
   const {
-    clientId, eventType, title, names, eventDate, eventTime, venue, locationNote,
+    clientId, invitationType, eventType, title, names, eventDate, eventTime, venue, locationNote,
     message, quote, hashtag, template, primaryColor, textColor, fontStyle,
-    isDark, dressCode, rsvpLabel, rsvpValue, gallery, isPublished, rsvpDeadline,
-    guestGreeting, defaultGuestName,
+    isDark, dressCode, rsvpLabel, rsvpValue, rsvpContact, heroImage, gallery,
+    isPublished, rsvpDeadline, guestGreeting, defaultGuestName,
   } = req.body
+
+  if (!clientId) { R.badRequest(res, 'Se requiere clientId'); return }
+
+  const clientExists = await prisma.user.findUnique({ where: { id: clientId }, select: { id: true } })
+  if (!clientExists) { R.notFound(res, 'Cliente no encontrado'); return }
+
+  const resolvedRsvp = rsvpValue || rsvpContact
 
   const shareToken = uuidv4()
   const invitation = await prisma.digitalInvitation.create({
     data: {
+      invitationType: invitationType || 'general',
       clientId,
       eventType, title, names, eventDate, eventTime, venue, locationNote,
       message, quote, hashtag,
@@ -496,7 +544,8 @@ export async function createInvitation(req: AuthRequest, res: Response): Promise
       isPublished: isPublished !== false,
       dressCode,
       rsvpLabel,
-      rsvpValue,
+      rsvpValue: resolvedRsvp,
+      heroImage,
       rsvpDeadline: rsvpDeadline ? new Date(rsvpDeadline) : undefined,
       gallery: serializeGallery(gallery),
       shareToken,
@@ -514,10 +563,30 @@ export async function updateInvitation(req: AuthRequest, res: Response): Promise
   })
   if (!existing) { R.notFound(res, 'Invitación no encontrada'); return }
 
-  const payload = { ...req.body }
-  if (payload.gallery) {
-    payload.gallery = serializeGallery(payload.gallery)
+  const {
+    invitationType, eventType, title, names, eventDate, eventTime, venue, locationNote,
+    message, quote, hashtag, template, primaryColor, textColor, fontStyle,
+    isDark, dressCode, rsvpLabel, rsvpValue, rsvpContact, heroImage, gallery,
+    isPublished, rsvpDeadline, guestGreeting, defaultGuestName,
+  } = req.body
+
+  const resolvedRsvpValue = rsvpValue || rsvpContact || undefined
+
+  const payload: any = {
+    invitationType, eventType, title, names, eventDate, eventTime, venue, locationNote,
+    message, quote, hashtag, template, primaryColor, textColor, fontStyle,
+    isDark, dressCode, rsvpLabel, rsvpValue: resolvedRsvpValue, heroImage,
+    isPublished, guestGreeting, defaultGuestName,
   }
+
+  if (gallery !== undefined) {
+    payload.gallery = serializeGallery(gallery)
+  }
+  if (rsvpDeadline !== undefined) {
+    payload.rsvpDeadline = rsvpDeadline ? new Date(rsvpDeadline) : null
+  }
+
+  Object.keys(payload).forEach(key => payload[key] === undefined && delete payload[key])
 
   const invitation = await prisma.digitalInvitation.update({
     where: { id: existing.id },

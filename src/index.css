@@ -389,6 +389,21 @@ select option {
   opacity: 1;
 }
 
+/* Invitation wizard modal — force readable text in light mode */
+html:not(.dark) .inv-wizard-modal h3,
+html:not(.dark) .inv-wizard-modal h4,
+html:not(.dark) .inv-wizard-modal p,
+html:not(.dark) .inv-wizard-modal label,
+html:not(.dark) .inv-wizard-modal span:not(.text-gold):not([class*="text-gold"]):not(.text-green-400):not(.text-red-400):not(.text-amber-300) {
+  color: #1a1a1a !important;
+}
+html:not(.dark) .inv-wizard-modal [class*="border-white\/"] {
+  border-color: rgba(0, 0, 0, 0.1) !important;
+}
+html:not(.dark) .inv-wizard-modal [class*="bg-white\/"] {
+  background-color: rgba(0, 0, 0, 0.04) !important;
+}
+
 /* ── Hero CSS-variable helpers ──────────────────────────── */
 .hero-text        { color: var(--hero-text); }
 .hero-text-muted  { color: var(--hero-text-muted); }

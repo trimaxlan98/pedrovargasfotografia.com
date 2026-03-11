@@ -8,7 +8,7 @@ const STEPS: TourStep[] = [
     targetId: null,
     sectionLabel: 'Inicio',
     title: 'Bienvenido al Panel de Control',
-    body: 'Cada botón del menú lateral se iluminará en tiempo real mientras avanzas. Completa los 8 pasos para conocer todas las secciones.',
+    body: 'Cada botón del menú lateral se iluminará en tiempo real mientras avanzas. Completa los 8 pasos para conocer todas las secciones, incluyendo el nuevo sistema de invitaciones con tipos General e Individual.',
   },
   {
     targetId: 'contacts',
@@ -80,12 +80,15 @@ const STEPS: TourStep[] = [
     title: 'Invitaciones Digitales',
     body: (
       <>
-        Crea invitaciones en <b style={{ color: IVORY }}>6 pasos</b> con{' '}
-        <span style={{ color: GOLD }}>10 plantillas</span> y efectos de relieve o lámina.
-        Asigna cada invitación a un cliente, genera su link único y código QR, y monitorea las Vistas.
+        Elige entre dos tipos: <span style={{ color: GOLD }}>General</span> (enlace único compartido,{' '}
+        <b style={{ color: IVORY }}>6 pasos</b>) o{' '}
+        <span style={{ color: GOLD }}>Individual</span> (enlace por invitado con RSVP,{' '}
+        <b style={{ color: IVORY }}>7 pasos</b>). Usa las pestañas{' '}
+        <b style={{ color: IVORY }}>Todas / General / Individual</b> para filtrar y monitorea
+        confirmaciones, pendientes y declinados en tiempo real.
       </>
     ),
-    tip: 'Puedes crear invitaciones en nombre de un cliente desde el menú desplegable en el paso 1.',
+    tip: 'Al crear una invitación Individual, el paso "Invitados" permite agregar personas o familias y copiar su enlace personalizado.',
   },
   {
     targetId: 'settings',
@@ -108,7 +111,7 @@ export default function AdminTutorial() {
       tourKey="admin_tour_done"
       steps={STEPS}
       selectorAttr="data-tutorial"
-      brandLabel="Pedro Vargas Fotografía · v1.1.2.4"
+      brandLabel="Pedro Vargas Fotografía · v1.1.2.6"
       onStepChange={() => {
         window.dispatchEvent(new CustomEvent('tutorial:open-sidebar'))
       }}

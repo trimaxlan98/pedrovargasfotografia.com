@@ -49,6 +49,8 @@ export declare function archiveInvitation(id: string, reason?: string): Promise<
     dressCode: string | null;
     rsvpLabel: string | null;
     rsvpValue: string | null;
+    invitationType: string;
+    heroImage: string | null;
     gallery: string | null;
     views: number;
     isPublished: boolean;
@@ -107,6 +109,8 @@ export declare function unarchiveInvitation(id: string): Promise<{
     dressCode: string | null;
     rsvpLabel: string | null;
     rsvpValue: string | null;
+    invitationType: string;
+    heroImage: string | null;
     gallery: string | null;
     views: number;
     isPublished: boolean;
@@ -177,6 +181,8 @@ export declare function getArchivedInvitations(): Promise<({
     dressCode: string | null;
     rsvpLabel: string | null;
     rsvpValue: string | null;
+    invitationType: string;
+    heroImage: string | null;
     gallery: string | null;
     views: number;
     isPublished: boolean;

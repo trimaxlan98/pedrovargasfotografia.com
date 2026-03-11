@@ -31,6 +31,7 @@ export interface ApiInvitationGuestStats {
 
 export interface ApiInvitation {
   id: string
+  invitationType?: 'general' | 'individual'
   clientId?: string
   eventType: string
   title: string

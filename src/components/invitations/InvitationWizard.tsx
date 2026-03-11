@@ -47,11 +47,14 @@ const TEMPLATES: Array<{ id: InvitationTemplate; label: string; desc: string; gr
   },
 ]
 
-const STEPS = ['Plantilla', 'Invitados', 'Datos', 'Contenido', 'Galeria', 'Publicar']
+const STEPS_GENERAL    = ['Tipo', 'Plantilla', 'Datos', 'Contenido', 'Galeria', 'Publicar']
+const STEPS_INDIVIDUAL = ['Tipo', 'Plantilla', 'Invitados', 'Datos', 'Contenido', 'Galeria', 'Publicar']
 
 type ReliefEffect = 'none' | 'emboss' | 'foil'
+type InvitationType = 'general' | 'individual'
 
 interface InvitationDraft {
+  invitationType: InvitationType
   title: string
   eventType: string
   eventDate: string
@@ -85,6 +88,7 @@ interface Client { id: string; name: string; email: string }
 interface PendingGuest { id: string; name: string }
 
 const emptyDraft: InvitationDraft = {
+  invitationType: 'general',
   title: 'Invitacion digital',
   eventType: 'Boda',
   eventDate: '',
@@ -109,6 +113,7 @@ function draftFromApi(inv: ApiInvitation, ownerName?: string, ownerEmail?: strin
     : rawTemplate.endsWith('-foil') ? 'foil' : 'none'
   const baseTemplate = rawTemplate.replace(/-emboss$|-foil$/, '') as InvitationTemplate
   return {
+    invitationType: ((inv as any).invitationType as InvitationType) || 'general',
     title: inv.title,
     eventType: inv.eventType,
     eventDate: inv.eventDate,
@@ -182,8 +187,14 @@ export default function InvitationWizard({
   )
   const [showDropdown, setShowDropdown] = useState(false)
 
-  const guestStep = 1
-  const publishStep = STEPS.length - 1
+  const activeSteps = draft.invitationType === 'general' ? STEPS_GENERAL : STEPS_INDIVIDUAL
+  const typeStep     = activeSteps.indexOf('Tipo')
+  const templateStep = activeSteps.indexOf('Plantilla')
+  const guestStep    = activeSteps.indexOf('Invitados')      // -1 for general
+  const dataStep     = activeSteps.indexOf('Datos')
+  const contentStep  = activeSteps.indexOf('Contenido')
+  const galleryStep  = activeSteps.indexOf('Galeria')
+  const publishStep  = activeSteps.length - 1
   const ic = 'inv-wizard-field w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-ivory text-sm focus:border-gold/50 focus:outline-none'
 
   useEffect(() => {
@@ -208,11 +219,11 @@ export default function InvitationWizard({
   const setDataAndTop = (df: keyof InvitationDraft['data'], tf: keyof InvitationDraft) => (v: string) =>
     setDraft(p => ({ ...p, [tf]: v as never, data: { ...p.data, [df]: v } }))
 
-  const next = () => setStep(s => Math.min(s + 1, STEPS.length - 1))
+  const next = () => setStep(s => Math.min(s + 1, activeSteps.length - 1))
   const prev = () => setStep(s => Math.max(s - 1, 0))
 
   useEffect(() => {
-    if (step !== guestStep || !savedInvitationId) return
+    if (guestStep < 0 || step !== guestStep || !savedInvitationId) return
     const base = mode === 'admin' ? '/admin/invitations' : '/client/invitations'
     api.get<{ data: ApiInvitationGuest[] }>(`${base}/${savedInvitationId}/guests`)
       .then(r => setGuests(r.data))
@@ -311,6 +322,7 @@ export default function InvitationWizard({
 
       const effectSuffix = draft.reliefEffect && draft.reliefEffect !== 'none' ? `-${draft.reliefEffect}` : ''
       const payload: Record<string, unknown> = {
+        invitationType: draft.invitationType,
         eventType: draft.data.eventType,
         title: draft.data.title,
         names: draft.data.names,
@@ -366,7 +378,7 @@ export default function InvitationWizard({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/70 backdrop-blur-sm">
       <motion.div
-        className="w-full max-w-3xl glass rounded-2xl border border-white/10 overflow-hidden"
+        className="inv-wizard-modal w-full max-w-3xl glass rounded-2xl border border-white/10 overflow-hidden"
         initial={{ opacity: 0, scale: 0.97 }}
         animate={{ opacity: 1, scale: 1 }}
       >
@@ -374,14 +386,14 @@ export default function InvitationWizard({
           <div>
             <p className="label-caps text-gold text-xs">Invitacion digital</p>
             <h3 className="font-cormorant text-xl text-ivory">
-              {isEdit ? 'Editar invitacion' : 'Crear en 6 pasos'}
+              {isEdit ? 'Editar invitacion' : `Crear ${draft.invitationType === 'general' ? 'invitación general' : 'invitación individual'}`}
             </h3>
           </div>
-          <button onClick={onClose} className="text-ivory/40 hover:text-ivory transition-colors">X</button>
+          <button onClick={onClose} className="text-ivory/40 hover:text-ivory transition-colors text-lg leading-none">✕</button>
         </div>
 
         <div className="px-6 py-4 border-b border-white/5 flex gap-2">
-          {STEPS.map((label, idx) => (
+          {activeSteps.map((label, idx) => (
             <button
               key={label}
               onClick={() => setStep(idx)}
@@ -399,7 +411,59 @@ export default function InvitationWizard({
         </div>
 
         <div className="p-6 max-h-[68vh] overflow-y-auto space-y-1">
-          {step === 0 && (
+          {step === typeStep && (
+            <div className="space-y-5">
+              <div>
+                <p className="label-caps text-ivory/40 text-[0.6rem] mb-1">Tipo de invitación</p>
+                <p className="text-ivory/30 text-xs font-dm mb-5">Elige cómo se distribuirá esta invitación</p>
+                <div className="grid grid-cols-1 gap-4">
+                  {([
+                    {
+                      id: 'general' as InvitationType,
+                      label: 'Invitación General',
+                      desc: 'Un enlace único compartido con todos los invitados. Ideal para WhatsApp o redes sociales.',
+                      icon: '✉',
+                      detail: 'Sin RSVP individual · Enlace único público',
+                    },
+                    {
+                      id: 'individual' as InvitationType,
+                      label: 'Individual Personalizada',
+                      desc: 'Cada invitado recibe su propio enlace con su nombre y puede confirmar asistencia (RSVP).',
+                      icon: '✦',
+                      detail: 'RSVP por invitado · Nombre personalizado · Seguimiento',
+                    },
+                  ]).map(opt => (
+                    <button
+                      key={opt.id}
+                      onClick={() => {
+                        if (draft.invitationType !== opt.id) {
+                          setDraft(p => ({ ...p, invitationType: opt.id }))
+                          setStep(0) // reset to Tipo step so user can review
+                        }
+                      }}
+                      className={`p-5 border rounded-xl text-left transition-all duration-200 flex gap-4 items-start ${
+                        draft.invitationType === opt.id
+                          ? 'border-gold bg-gold/10'
+                          : 'border-white/10 hover:border-white/30'
+                      }`}
+                    >
+                      <span className="text-2xl mt-0.5 flex-shrink-0" style={{ color: draft.invitationType === opt.id ? '#C9A96E' : 'rgba(255,255,255,0.3)' }}>{opt.icon}</span>
+                      <div>
+                        <h4 className="font-dm text-ivory text-sm font-medium mb-1">{opt.label}</h4>
+                        <p className="text-ivory/50 text-xs font-dm leading-relaxed mb-2">{opt.desc}</p>
+                        <p className="text-ivory/30 text-[0.6rem] font-dm uppercase tracking-wider">{opt.detail}</p>
+                      </div>
+                      {draft.invitationType === opt.id && (
+                        <CheckCircle size={18} className="text-gold flex-shrink-0 ml-auto mt-0.5" />
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {step === templateStep && (
             <div className="space-y-6">
               <div>
                 <p className="label-caps text-ivory/40 text-[0.6rem] mb-3">Elige una plantilla</p>
@@ -470,9 +534,21 @@ export default function InvitationWizard({
             </div>
           )}
 
-          {step === 1 && (
+          {step === guestStep && (
             <div className="space-y-4">
-              <p className="text-ivory/60 text-xs font-dm">Agrega invitados individuales o una familia completa.</p>
+              {draft.invitationType === 'general' ? (
+                <div className="border border-amber-500/20 bg-amber-500/5 rounded-lg p-4 flex gap-3">
+                  <span className="text-amber-400 text-lg flex-shrink-0">ℹ</span>
+                  <div>
+                    <p className="text-amber-300 text-xs font-dm font-medium mb-1">Invitación General seleccionada</p>
+                    <p className="text-ivory/50 text-xs font-dm leading-relaxed">
+                      La invitación general usa un enlace único sin personalización por invitado. Si quieres RSVP individual, cambia el tipo a <strong className="text-ivory/70">Individual Personalizada</strong> en el paso 1.
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-ivory/60 text-xs font-dm">Agrega invitados individuales o una familia completa.</p>
+              )}
 
               <div className="flex gap-2">
                 <input
@@ -564,7 +640,7 @@ export default function InvitationWizard({
             </div>
           )}
 
-          {step === 2 && (
+          {step === dataStep && (
             <div className="grid md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-ivory/80 text-xs font-dm mb-1.5">Titulo</label>
@@ -656,7 +732,7 @@ export default function InvitationWizard({
             </div>
           )}
 
-          {step === 3 && (
+          {step === contentStep && (
             <div className="grid md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-ivory/80 text-xs font-dm mb-1.5">Saludo al invitado (Ej. Hola, Querida...)</label>
@@ -686,7 +762,7 @@ export default function InvitationWizard({
             </div>
           )}
 
-          {step === 4 && (
+          {step === galleryStep && (
             <div className="space-y-5">
               {isEdit && (initialData?.gallery?.length ?? 0) > 0 && (
                 <div>
@@ -716,7 +792,7 @@ export default function InvitationWizard({
             </div>
           )}
 
-          {step === 5 && (
+          {step === publishStep && (
             <div className="space-y-4">
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
@@ -750,16 +826,24 @@ export default function InvitationWizard({
               <div className="border border-white/10 rounded-lg p-4 bg-white/5 flex items-start gap-3">
                 <CheckCircle size={15} className="text-gold flex-shrink-0 mt-0.5" />
                 <div className="text-ivory/60 text-xs font-dm leading-relaxed">
-                  Se generara un enlace unico y codigo QR al {isEdit ? 'actualizar' : 'guardar'}.
+                  {draft.invitationType === 'general'
+                    ? `Se generará un enlace único compartible al ${isEdit ? 'actualizar' : 'guardar'}.`
+                    : `Se generará un enlace base, luego añades invitados y cada uno recibe su propio enlace personalizado.`
+                  }
                 </div>
               </div>
 
               {isEdit && initialData?.shareToken && (
-                <div className="border border-white/10 rounded-lg p-4 bg-white/5">
-                  <p className="text-ivory/40 text-xs font-dm mb-2">Enlace actual</p>
+                <div className="border border-white/10 rounded-lg p-4 bg-white/5 space-y-2">
+                  <p className="text-ivory/40 text-xs font-dm">
+                    {draft.invitationType === 'individual' ? 'Enlace base (comparte a invitados vía su enlace personal)' : 'Enlace general'}
+                  </p>
                   <a href={`/invitacion/${initialData.shareToken}`} target="_blank" rel="noopener noreferrer" className="text-gold text-xs font-dm hover:text-gold-light flex items-center gap-1">
                     <Eye size={12} />/invitacion/{initialData.shareToken}
                   </a>
+                  {draft.invitationType === 'individual' && (
+                    <p className="text-ivory/30 text-[0.6rem] font-dm">Los invitados personalizados usan /g/:token — gestiónalos en el paso Invitados.</p>
+                  )}
                 </div>
               )}
             </div>

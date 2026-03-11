@@ -111,6 +111,35 @@ function serializeGallery(input) {
         return input;
     return undefined;
 }
+function emptyGuestStats() {
+    return { total: 0, confirmed: 0, pending: 0, declined: 0 };
+}
+async function appendGuestStats(invitations) {
+    if (invitations.length === 0)
+        return [];
+    const grouped = await prisma_1.default.invitationGuest.groupBy({
+        by: ['invitationId', 'response'],
+        where: { invitationId: { in: invitations.map(i => i.id) } },
+        _count: { _all: true },
+    });
+    const byInvitation = new Map();
+    for (const row of grouped) {
+        const stats = byInvitation.get(row.invitationId) ?? emptyGuestStats();
+        const count = row._count._all;
+        stats.total += count;
+        if (row.response === 'ACCEPTED')
+            stats.confirmed += count;
+        if (row.response === 'PENDING')
+            stats.pending += count;
+        if (row.response === 'DECLINED')
+            stats.declined += count;
+        byInvitation.set(row.invitationId, stats);
+    }
+    return invitations.map(inv => ({
+        ...inv,
+        guestStats: byInvitation.get(inv.id) ?? emptyGuestStats(),
+    }));
+}
 const MANUAL_ARCHIVE_REASON = 'MANUAL_DELETE';
 // ─── DASHBOARD ─────────────────────────────────────────────────────────────────
 async function getDashboard(_req, res) {
@@ -477,7 +506,8 @@ async function listInvitations(req, res) {
         }),
         prisma_1.default.digitalInvitation.count({ where: { archivedAt: null } }),
     ]);
-    R.paginate(res, items.map(normalizeInvitation), total, page, limit);
+    const withStats = await appendGuestStats(items.map(normalizeInvitation));
+    R.paginate(res, withStats, total, page, limit);
 }
 async function listInvitationHistory(req, res) {
     const page = Math.max(1, Number(req.query.page) || 1);
@@ -493,7 +523,8 @@ async function listInvitationHistory(req, res) {
         }),
         prisma_1.default.digitalInvitation.count({ where: { archivedAt: { not: null } } }),
     ]);
-    R.paginate(res, items.map(normalizeInvitation), total, page, limit);
+    const withStats = await appendGuestStats(items.map(normalizeInvitation));
+    R.paginate(res, withStats, total, page, limit);
 }
 async function getInvitation(req, res) {
     const item = await prisma_1.default.digitalInvitation.findFirst({
@@ -504,13 +535,25 @@ async function getInvitation(req, res) {
         R.notFound(res);
         return;
     }
-    R.success(res, normalizeInvitation(item));
+    const [withStats] = await appendGuestStats([normalizeInvitation(item)]);
+    R.success(res, withStats);
 }
 async function createInvitation(req, res) {
-    const { clientId, eventType, title, names, eventDate, eventTime, venue, locationNote, message, quote, hashtag, template, primaryColor, textColor, fontStyle, isDark, dressCode, rsvpLabel, rsvpValue, gallery, isPublished, rsvpDeadline, guestGreeting, defaultGuestName, } = req.body;
+    const { clientId, invitationType, eventType, title, names, eventDate, eventTime, venue, locationNote, message, quote, hashtag, template, primaryColor, textColor, fontStyle, isDark, dressCode, rsvpLabel, rsvpValue, rsvpContact, heroImage, gallery, isPublished, rsvpDeadline, guestGreeting, defaultGuestName, } = req.body;
+    if (!clientId) {
+        R.badRequest(res, 'Se requiere clientId');
+        return;
+    }
+    const clientExists = await prisma_1.default.user.findUnique({ where: { id: clientId }, select: { id: true } });
+    if (!clientExists) {
+        R.notFound(res, 'Cliente no encontrado');
+        return;
+    }
+    const resolvedRsvp = rsvpValue || rsvpContact;
     const shareToken = (0, uuid_1.v4)();
     const invitation = await prisma_1.default.digitalInvitation.create({
         data: {
+            invitationType: invitationType || 'general',
             clientId,
             eventType, title, names, eventDate, eventTime, venue, locationNote,
             message, quote, hashtag,
@@ -522,7 +565,8 @@ async function createInvitation(req, res) {
             isPublished: isPublished !== false,
             dressCode,
             rsvpLabel,
-            rsvpValue,
+            rsvpValue: resolvedRsvp,
+            heroImage,
             rsvpDeadline: rsvpDeadline ? new Date(rsvpDeadline) : undefined,
             gallery: serializeGallery(gallery),
             shareToken,
@@ -541,10 +585,21 @@ async function updateInvitation(req, res) {
         R.notFound(res, 'Invitación no encontrada');
         return;
     }
-    const payload = { ...req.body };
-    if (payload.gallery) {
-        payload.gallery = serializeGallery(payload.gallery);
+    const { invitationType, eventType, title, names, eventDate, eventTime, venue, locationNote, message, quote, hashtag, template, primaryColor, textColor, fontStyle, isDark, dressCode, rsvpLabel, rsvpValue, rsvpContact, heroImage, gallery, isPublished, rsvpDeadline, guestGreeting, defaultGuestName, } = req.body;
+    const resolvedRsvpValue = rsvpValue || rsvpContact || undefined;
+    const payload = {
+        invitationType, eventType, title, names, eventDate, eventTime, venue, locationNote,
+        message, quote, hashtag, template, primaryColor, textColor, fontStyle,
+        isDark, dressCode, rsvpLabel, rsvpValue: resolvedRsvpValue, heroImage,
+        isPublished, guestGreeting, defaultGuestName,
+    };
+    if (gallery !== undefined) {
+        payload.gallery = serializeGallery(gallery);
     }
+    if (rsvpDeadline !== undefined) {
+        payload.rsvpDeadline = rsvpDeadline ? new Date(rsvpDeadline) : null;
+    }
+    Object.keys(payload).forEach(key => payload[key] === undefined && delete payload[key]);
     const invitation = await prisma_1.default.digitalInvitation.update({
         where: { id: existing.id },
         data: payload,

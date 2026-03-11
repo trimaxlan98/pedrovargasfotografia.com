@@ -377,13 +377,6 @@ export default function ClientPortal() {
               <p className="text-ivory/50 text-sm font-dm">
                 {invitations.length} invitación{invitations.length !== 1 ? 'es' : ''}
               </p>
-              <button
-                onClick={() => { setEditInvitation(null); setShowInvitationWizard(true) }}
-                className="flex items-center gap-2 btn-primary px-4 py-2 text-sm"
-              >
-                <Plus size={16} />
-                Crear invitación
-              </button>
             </div>
 
             {isLoading ? (
@@ -394,15 +387,9 @@ export default function ClientPortal() {
               <div className="glass rounded-xl border border-white/5 p-12 text-center">
                 <Mail className="mx-auto text-ivory/20 mb-4" size={40} />
                 <p className="text-ivory/40 font-dm">No tienes invitaciones digitales</p>
-                <p className="text-ivory/30 text-sm font-dm mt-2 mb-5">
-                  Crea tu primera invitación y compártela con tus invitados.
+                <p className="text-ivory/30 text-sm font-dm mt-2">
+                  Tu fotógrafo creará y asignará tus invitaciones desde el panel administrativo.
                 </p>
-                <button
-                  onClick={() => setShowInvitationWizard(true)}
-                  className="btn-outline px-6 py-2 text-sm"
-                >
-                  Crear invitación
-                </button>
               </div>
             ) : (
               <div className="grid sm:grid-cols-2 gap-4">

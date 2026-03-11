@@ -247,19 +247,13 @@ export default function InvitationStrip({
   const fallbackGallery = getDemoGalleryForTemplate(baseTemplateId)
 
   const normalizedGallery = useMemo(() => {
-    const source = invitation.gallery && invitation.gallery.length > 0 ? invitation.gallery : fallbackGallery
-    const resolved = source
+    const userPhotos = (invitation.gallery ?? [])
       .map(resolveInvitationImageUrl)
       .filter(Boolean)
 
-    if (resolved.length >= 4) return resolved.slice(0, 8)
-
-    const fallbackResolved = fallbackGallery.map(resolveInvitationImageUrl)
-    const unique = [...resolved]
-    fallbackResolved.forEach(url => {
-      if (unique.length < 8 && !unique.includes(url)) unique.push(url)
-    })
-    return unique
+    // Use only user photos if any exist; fall back to demo gallery otherwise
+    const source = userPhotos.length > 0 ? userPhotos : fallbackGallery.map(resolveInvitationImageUrl)
+    return source.slice(0, 8)
   }, [invitation.gallery, invitation.template])
 
   const heroPhoto = useMemo(() => {

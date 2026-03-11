@@ -292,9 +292,76 @@ function InvitePreview({
 
 type SaveState = 'idle' | 'saving' | 'saved'
 
+function InvitationBuilderTeaser() {
+  const { ref, inView } = useInView()
+  return (
+    <section id="invitaciones" className="section-padding bg-[#0A0A0A]" ref={ref as React.RefObject<HTMLElement>}>
+      <div className="max-w-[1400px] mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.8 }}
+          className="text-center mb-16"
+        >
+          <p className="label-caps text-gold mb-4">Herramienta exclusiva</p>
+          <h2 className="font-cormorant text-fluid-section text-ivory font-light mb-3">
+            Invitaciones Digitales
+          </h2>
+          <p className="font-cormorant italic text-ivory/40 text-xl mb-6">
+            Micro-landing personalizada para tu evento
+          </p>
+          <div className="gold-line mx-auto mb-10" />
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.8, delay: 0.15 }}
+          className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto"
+        >
+          {[
+            {
+              label: 'Invitación General',
+              desc: 'Un enlace único que puedes compartir con todos tus invitados por WhatsApp o redes sociales.',
+              icon: '✉',
+            },
+            {
+              label: 'Individual Personalizada',
+              desc: 'Cada invitado recibe su propio enlace con su nombre, mensaje y botón de confirmación RSVP.',
+              icon: '✦',
+            },
+          ].map(card => (
+            <div key={card.label} className="glass rounded-xl border border-white/8 p-7 text-center">
+              <div className="text-3xl mb-4 text-gold">{card.icon}</div>
+              <h3 className="font-cormorant text-ivory text-xl mb-2">{card.label}</h3>
+              <p className="font-dm text-ivory/50 text-sm leading-relaxed">{card.desc}</p>
+            </div>
+          ))}
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={inView ? { opacity: 1 } : {}}
+          transition={{ duration: 0.8, delay: 0.35 }}
+          className="text-center mt-12"
+        >
+          <button
+            onClick={() => document.querySelector('#contacto')?.scrollIntoView({ behavior: 'smooth' })}
+            className="btn-primary px-10 py-3"
+          >
+            Solicitar invitación <ArrowRight className="w-4 h-4 inline ml-1" />
+          </button>
+        </motion.div>
+      </div>
+    </section>
+  )
+}
+
 export default function InvitationBuilder() {
   const { ref, inView } = useInView()
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, isAdmin } = useAuth()
+
+  if (!isAdmin) return <InvitationBuilderTeaser />
 
   const [tab, setTab] = useState<Tab>('estilo')
   const [template, setTemplate] = useState<Template>('warm')
