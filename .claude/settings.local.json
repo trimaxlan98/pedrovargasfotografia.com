@@ -21,7 +21,10 @@
       "Bash(/mnt/c/Users/ADMIN/Documents/GitHub/pedrovargasfotografia.com/.env:*)",
       "Bash(./node_modules/.bin/prisma migrate:*)",
       "Bash(pkill:*)",
-      "Bash(lsof:*)"
+      "Bash(lsof:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)"
     ]
   }
 }
