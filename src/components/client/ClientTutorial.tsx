@@ -8,7 +8,7 @@ const STEPS: TourStep[] = [
     targetId: null,
     sectionLabel: 'Inicio',
     title: 'Bienvenido a tu Portal',
-    body: 'Aquí gestionas tus reservas e invitaciones digitales. Este tutorial iluminará cada pestaña en tiempo real para mostrarte cómo funciona todo en 3 pasos.',
+    body: 'Aquí gestionas tus reservas e invitaciones digitales. Ahora puedes crear invitaciones de tipo General o Individual con RSVP por invitado. El tutorial iluminará cada pestaña en 3 pasos.',
   },
   {
     targetId: 'bookings',
@@ -31,12 +31,14 @@ const STEPS: TourStep[] = [
     placement: 'below',
     body: (
       <>
-        Crea y personaliza tus invitaciones con el asistente de{' '}
-        <b style={{ color: IVORY }}>6 pasos</b>: plantilla, datos del evento, colores, galería y RSVP.
-        Comparte el link único o código QR con tus invitados y monitorea las respuestas en tiempo real.
+        El asistente empieza eligiendo el tipo:{' '}
+        <span style={{ color: GOLD }}>General</span> (link compartido, 6 pasos) o{' '}
+        <span style={{ color: GOLD }}>Individual</span> (enlace personalizado por invitado con RSVP, 7 pasos).
+        Elige plantilla, datos del evento, colores y galería. Comparte el link o código QR y monitorea
+        las respuestas en tiempo real.
       </>
     ),
-    tip: 'Desde "Invitados" puedes gestionar la lista de asistentes y ver quién confirmó su asistencia.',
+    tip: 'Con tipo Individual, el paso "Invitados" te permite agregar personas o familias y ver quién confirmó, está pendiente o declinó.',
   },
   {
     targetId: 'history',
