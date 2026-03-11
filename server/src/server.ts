@@ -58,10 +58,12 @@ async function loadApp() {
     const { join } = require('path') as typeof import('path')
     // __dirname = server/dist  →  ../.. = project root (nodejs/)
     const projectRoot = join(__dirname, '..', '..')
-    const prismabin = join(projectRoot, 'node_modules', '.bin', 'prisma')
+    // Use the running node executable + prisma CLI script to avoid permission issues
+    // with .bin/ symlinks on Hostinger
+    const prismaCli = join(projectRoot, 'node_modules', 'prisma', 'build', 'index.js')
     const schema = join(projectRoot, 'server', 'prisma', 'schema.prisma')
     console.log('[startup] Aplicando migraciones...')
-    const out = execSync(`"${prismabin}" migrate deploy --schema="${schema}"`, {
+    const out = execSync(`"${process.execPath}" "${prismaCli}" migrate deploy --schema="${schema}"`, {
       cwd: projectRoot,
       env: process.env,
       stdio: 'pipe',
