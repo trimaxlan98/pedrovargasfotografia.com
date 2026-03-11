@@ -51,28 +51,8 @@ async function loadApp() {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const { hashPassword } = require('./utils/password') as typeof import('./utils/password')
 
-  // Apply migrations using the root prisma binary (available in production).
-  // This runs with the correct DATABASE_URL env var, unlike the build-time postinstall.
-  try {
-    const { execSync } = require('child_process') as typeof import('child_process')
-    const { join } = require('path') as typeof import('path')
-    // __dirname = server/dist  →  ../.. = project root (nodejs/)
-    const projectRoot = join(__dirname, '..', '..')
-    // Use the running node executable + prisma CLI script to avoid permission issues
-    // with .bin/ symlinks on Hostinger
-    const prismaCli = join(projectRoot, 'node_modules', 'prisma', 'build', 'index.js')
-    const schema = join(projectRoot, 'server', 'prisma', 'schema.prisma')
-    console.log('[startup] Aplicando migraciones...')
-    const out = execSync(`"${process.execPath}" "${prismaCli}" migrate deploy --schema="${schema}"`, {
-      cwd: projectRoot,
-      env: process.env,
-      stdio: 'pipe',
-    })
-    console.log('[startup] Migraciones OK ✅', out.toString().trim().split('\n').pop())
-  } catch (e: unknown) {
-    const err = e as NodeJS.ErrnoException & { stdout?: Buffer; stderr?: Buffer }
-    console.error('[startup] Error en migraciones:', err.stderr?.toString() || err.message)
-  }
+  // Apply pending SQL migrations directly — no CLI needed, no permissions issues.
+  await applyMigrations(prisma, require('path').join(__dirname, '..', 'prisma', 'migrations'))
 
   // Install Express as the request handler
   requestHandler = app as typeof requestHandler
@@ -138,6 +118,76 @@ async function loadApp() {
     }
   } catch (e: unknown) {
     console.error('initServices error:', (e as Error).message)
+  }
+}
+
+/**
+ * Applies pending Prisma migrations directly via SQL — no CLI required.
+ * Reads migration files from disk and records them in _prisma_migrations.
+ */
+async function applyMigrations(prisma: import('@prisma/client').PrismaClient, migrationsDir: string): Promise<void> {
+  const fs = require('fs') as typeof import('fs')
+  const path = require('path') as typeof import('path')
+  const crypto = require('crypto') as typeof import('crypto')
+
+  try {
+    // Ensure the migrations tracking table exists
+    await prisma.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS "_prisma_migrations" (
+        "id"                  TEXT    NOT NULL PRIMARY KEY,
+        "checksum"            TEXT    NOT NULL,
+        "finished_at"         DATETIME,
+        "migration_name"      TEXT    NOT NULL,
+        "logs"                TEXT,
+        "rolled_back_at"      DATETIME,
+        "started_at"          DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        "applied_steps_count" INTEGER NOT NULL DEFAULT 0
+      )
+    `)
+
+    const entries = fs.readdirSync(migrationsDir)
+      .filter((d: string) => d !== 'migration_lock.toml' && fs.statSync(path.join(migrationsDir, d)).isDirectory())
+      .sort()
+
+    let applied = 0
+    for (const dir of entries) {
+      const sqlFile = path.join(migrationsDir, dir, 'migration.sql')
+      if (!fs.existsSync(sqlFile)) continue
+
+      const sql = fs.readFileSync(sqlFile, 'utf-8')
+      const checksum = crypto.createHash('sha256').update(sql).digest('hex')
+
+      // Skip if already applied
+      const rows = await prisma.$queryRawUnsafe<{ id: string }[]>(
+        `SELECT id FROM "_prisma_migrations" WHERE migration_name = ? AND finished_at IS NOT NULL`,
+        dir,
+      )
+      if (rows.length > 0) continue
+
+      // Run each statement individually
+      const statements = sql.split(/;\s*\n/).map((s: string) => s.trim()).filter(Boolean)
+      for (const stmt of statements) {
+        await prisma.$executeRawUnsafe(stmt)
+      }
+
+      // Record migration as applied
+      const id = crypto.randomUUID()
+      await prisma.$executeRawUnsafe(
+        `INSERT INTO "_prisma_migrations" (id, checksum, migration_name, finished_at, applied_steps_count)
+         VALUES (?, ?, ?, datetime('now'), 1)`,
+        id, checksum, dir,
+      )
+      console.log(`[startup] Migración aplicada: ${dir}`)
+      applied++
+    }
+
+    if (applied === 0) {
+      console.log('[startup] DB ya actualizada, sin migraciones pendientes ✅')
+    } else {
+      console.log(`[startup] ${applied} migración(es) aplicada(s) ✅`)
+    }
+  } catch (e: unknown) {
+    console.error('[startup] Error aplicando migraciones:', (e as Error).message)
   }
 }
 
