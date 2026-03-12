@@ -47,10 +47,12 @@ async function loadApp() {
 
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const prisma = (require('./utils/prisma') as { default: import('@prisma/client').PrismaClient }).default
+  activePrisma = prisma
 
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const { hashPassword } = require('./utils/password') as typeof import('./utils/password')
 
+  console.log('[startup] Iniciando motor de base de datos...')
   // Apply pending SQL migrations directly — no CLI needed, no permissions issues.
   await applyMigrations(prisma, require('path').join(__dirname, '..', 'prisma', 'migrations'))
 
@@ -196,21 +198,41 @@ server.on('error', (err) => {
   process.exit(1)
 })
 
+// Referencia global al cliente Prisma para desconectar antes de salir
+let activePrisma: import('@prisma/client').PrismaClient | null = null
+
+function gracefulExit(code: number): void {
+  const done = () => {
+    process.stdout.write(`[exit] Proceso terminando con código ${code}\n`)
+    process.exit(code)
+  }
+  if (activePrisma) {
+    const timeout = setTimeout(done, 3000)
+    activePrisma.$disconnect().then(() => {
+      clearTimeout(timeout)
+      done()
+    }).catch(done)
+  } else {
+    done()
+  }
+}
+
 process.on('SIGTERM', () => {
-  console.log('SIGTERM recibido. Cerrando servidor...')
+  process.stdout.write('SIGTERM recibido. Cerrando servidor...\n')
   server.close(() => {
-    console.log('Servidor cerrado.')
-    process.exit(0)
+    process.stdout.write('Servidor cerrado.\n')
+    gracefulExit(0)
   })
 })
 
 process.on('unhandledRejection', (reason) => {
-  console.error('Promesa rechazada sin manejar:', reason)
+  process.stdout.write(`[ERROR] Promesa rechazada sin manejar: ${reason}\n`)
+  gracefulExit(1)
 })
 
 process.on('uncaughtException', (err) => {
-  console.error('Excepción no capturada:', err)
-  process.exit(1)
+  process.stdout.write(`[ERROR] Excepción no capturada: ${err?.message ?? err}\n${(err as Error)?.stack ?? ''}\n`)
+  gracefulExit(1)
 })
 
 export default server
