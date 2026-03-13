@@ -64,6 +64,26 @@ export interface ApiInvitation {
   rsvpDeadline?: string | null
   createdAt: string
   client?: { id: string; name: string; email: string }
+
+  // Sección Ceremonia
+  ceremonyVenue?: string
+  ceremonyAddress?: string
+  ceremonyTime?: string
+  ceremonyPhoto?: string
+  ceremonyMapUrl?: string
+
+  // Sección Recepción
+  receptionVenue?: string
+  receptionAddress?: string
+  receptionTime?: string
+  receptionPhoto?: string
+  receptionMapUrl?: string
+
+  // Secciones adicionales
+  parentsInfo?: string
+  sponsorsInfo?: string
+  giftsInfo?: string
+  instagramHandle?: string
 }
 
 export interface ApiInvitationGuest {
@@ -158,30 +178,52 @@ export function resolveInvitationImageUrl(url?: string): string {
   return url
 }
 
-const demoTemplate: InvitationTemplate = 'rustic'
+const demoTemplate: InvitationTemplate = 'floral'
 
 export const demoInvitation: ApiInvitation = {
   id: 'demo',
-  eventType: 'Boda',
-  title: 'Estás invitado a nuestra boda',
-  names: 'Elizabeth & Salomón',
-  eventDate: '12 junio 2026',
+  eventType: 'XV Años',
+  title: 'Mis Quince Años',
+  names: 'Sofía Valentina',
+  eventDate: '28 junio 2026',
   eventTime: '18:00',
-  venue: 'Hacienda San Rafael',
+  venue: 'Jardín Magnolia',
   locationNote: 'Querétaro, México',
-  message: 'El amor contigo es un viaje sin fin, y cada día es una nueva aventura.',
-  quote: 'Amar es encontrar en la felicidad de otro tu propia felicidad.',
-  hashtag: '#BodaElizabethSalomon',
+  message: 'Con el corazón lleno de alegría, quiero compartir este momento tan especial contigo.',
+  quote: 'El amor y la alegría de vivir no tienen edad.',
+  hashtag: '#XVSofiaValentina',
   template: demoTemplate,
-  primaryColor: '#b07b4b',
-  textColor: '#2b1a10',
-  dressCode: 'Etiqueta formal, tonos claros',
+  primaryColor: '#b5607a',
+  textColor: '#3a1422',
+  dressCode: 'Formal · Tonos pastel o blancos',
   rsvpLabel: 'Confirmar asistencia',
   rsvpValue: 'WhatsApp: +52 555 123 4567',
-  heroImage: portfolioBodasSesionCampo,
+  heroImage: portfolioXvRetratoJardin,
   gallery: getDemoGalleryForTemplate(demoTemplate),
   shareToken: 'demo',
   views: 0,
   isPublished: true,
   createdAt: new Date().toISOString(),
+  guestGreeting: 'Con todo mi cariño te invito',
+  defaultGuestName: 'Familia y Amigos',
+
+  // Ceremony
+  ceremonyVenue: 'Parroquia San Francisco de Asís',
+  ceremonyAddress: 'Av. Tecnológico 100, Santiago de Querétaro',
+  ceremonyTime: '17:00 hrs',
+  ceremonyPhoto: portfolioBodasSesionCampo,
+  ceremonyMapUrl: 'https://www.google.com/maps/search/?api=1&query=Parroquia+San+Francisco+Queretaro',
+
+  // Reception
+  receptionVenue: 'Jardín Magnolia',
+  receptionAddress: 'Blvd. Bernardo Quintana 500, Querétaro',
+  receptionTime: '19:00 hrs',
+  receptionPhoto: eventXvSalon,
+  receptionMapUrl: 'https://www.google.com/maps/search/?api=1&query=Jardin+Magnolia+Queretaro',
+
+  // Additional sections
+  parentsInfo: JSON.stringify(['Lic. Carlos Hernández & Dra. Mariana López']),
+  sponsorsInfo: JSON.stringify(['Ing. Roberto Vargas & Sra. Patricia Ruiz', 'Sr. Alejandro Méndez & Sra. Claudia Torres']),
+  giftsInfo: 'Mesa de regalos Liverpool — Evento: 12345678\nTienda Liverpool Galerías Querétaro',
+  instagramHandle: '@sofiavalentina_xv',
 }

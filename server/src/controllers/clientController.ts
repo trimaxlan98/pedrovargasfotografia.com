@@ -215,6 +215,9 @@ export async function createInvitation(req: AuthRequest, res: Response): Promise
     message, quote, hashtag, template, primaryColor, textColor, fontStyle,
     isDark, dressCode, rsvpLabel, rsvpValue, rsvpContact, heroImage, gallery,
     isPublished, rsvpDeadline, guestGreeting, defaultGuestName,
+    ceremonyVenue, ceremonyAddress, ceremonyTime, ceremonyPhoto, ceremonyMapUrl,
+    receptionVenue, receptionAddress, receptionTime, receptionPhoto, receptionMapUrl,
+    parentsInfo, sponsorsInfo, giftsInfo, instagramHandle,
   } = req.body
 
   const shareToken = uuidv4()
@@ -241,6 +244,9 @@ export async function createInvitation(req: AuthRequest, res: Response): Promise
       shareToken,
       guestGreeting,
       defaultGuestName,
+      ceremonyVenue, ceremonyAddress, ceremonyTime, ceremonyPhoto, ceremonyMapUrl,
+      receptionVenue, receptionAddress, receptionTime, receptionPhoto, receptionMapUrl,
+      parentsInfo, sponsorsInfo, giftsInfo, instagramHandle,
     },
   })
   const invUser = await prisma.user.findUnique({ where: { id: req.user!.userId }, select: { name: true, email: true } })
@@ -268,6 +274,9 @@ export async function updateInvitation(req: AuthRequest, res: Response): Promise
     message, quote, hashtag, template, primaryColor, textColor, fontStyle,
     isDark, dressCode, rsvpLabel, rsvpValue, rsvpContact, heroImage, gallery,
     isPublished, rsvpDeadline, guestGreeting, defaultGuestName,
+    ceremonyVenue, ceremonyAddress, ceremonyTime, ceremonyPhoto, ceremonyMapUrl,
+    receptionVenue, receptionAddress, receptionTime, receptionPhoto, receptionMapUrl,
+    parentsInfo, sponsorsInfo, giftsInfo, instagramHandle,
   } = req.body
 
   // rsvpContact is a legacy alias — map it to rsvpValue, never send to Prisma directly
@@ -278,6 +287,9 @@ export async function updateInvitation(req: AuthRequest, res: Response): Promise
     message, quote, hashtag, template, primaryColor, textColor, fontStyle,
     isDark, dressCode, rsvpLabel, rsvpValue: resolvedRsvpValue, heroImage,
     isPublished, guestGreeting, defaultGuestName,
+    ceremonyVenue, ceremonyAddress, ceremonyTime, ceremonyPhoto, ceremonyMapUrl,
+    receptionVenue, receptionAddress, receptionTime, receptionPhoto, receptionMapUrl,
+    parentsInfo, sponsorsInfo, giftsInfo, instagramHandle,
   }
 
   if (gallery !== undefined) {

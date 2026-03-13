@@ -520,6 +520,9 @@ export async function createInvitation(req: AuthRequest, res: Response): Promise
     message, quote, hashtag, template, primaryColor, textColor, fontStyle,
     isDark, dressCode, rsvpLabel, rsvpValue, rsvpContact, heroImage, gallery,
     isPublished, rsvpDeadline, guestGreeting, defaultGuestName,
+    ceremonyVenue, ceremonyAddress, ceremonyTime, ceremonyPhoto, ceremonyMapUrl,
+    receptionVenue, receptionAddress, receptionTime, receptionPhoto, receptionMapUrl,
+    parentsInfo, sponsorsInfo, giftsInfo, instagramHandle,
   } = req.body
 
   if (!clientId) { R.badRequest(res, 'Se requiere clientId'); return }
@@ -551,6 +554,9 @@ export async function createInvitation(req: AuthRequest, res: Response): Promise
       shareToken,
       guestGreeting,
       defaultGuestName,
+      ceremonyVenue, ceremonyAddress, ceremonyTime, ceremonyPhoto, ceremonyMapUrl,
+      receptionVenue, receptionAddress, receptionTime, receptionPhoto, receptionMapUrl,
+      parentsInfo, sponsorsInfo, giftsInfo, instagramHandle,
     },
   })
   R.created(res, normalizeInvitation(invitation))
@@ -568,6 +574,9 @@ export async function updateInvitation(req: AuthRequest, res: Response): Promise
     message, quote, hashtag, template, primaryColor, textColor, fontStyle,
     isDark, dressCode, rsvpLabel, rsvpValue, rsvpContact, heroImage, gallery,
     isPublished, rsvpDeadline, guestGreeting, defaultGuestName,
+    ceremonyVenue, ceremonyAddress, ceremonyTime, ceremonyPhoto, ceremonyMapUrl,
+    receptionVenue, receptionAddress, receptionTime, receptionPhoto, receptionMapUrl,
+    parentsInfo, sponsorsInfo, giftsInfo, instagramHandle,
   } = req.body
 
   const resolvedRsvpValue = rsvpValue || rsvpContact || undefined
@@ -577,6 +586,9 @@ export async function updateInvitation(req: AuthRequest, res: Response): Promise
     message, quote, hashtag, template, primaryColor, textColor, fontStyle,
     isDark, dressCode, rsvpLabel, rsvpValue: resolvedRsvpValue, heroImage,
     isPublished, guestGreeting, defaultGuestName,
+    ceremonyVenue, ceremonyAddress, ceremonyTime, ceremonyPhoto, ceremonyMapUrl,
+    receptionVenue, receptionAddress, receptionTime, receptionPhoto, receptionMapUrl,
+    parentsInfo, sponsorsInfo, giftsInfo, instagramHandle,
   }
 
   if (gallery !== undefined) {
