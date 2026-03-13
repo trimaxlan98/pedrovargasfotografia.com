@@ -168,57 +168,51 @@ async function applyMigrations(prisma: import('@prisma/client').PrismaClient, mi
 
       console.log(`[startup] Aplicando migración: ${dir}`)
 
-      // Run all statements in a transaction — if any statement fails the whole migration rolls back
+      // Run each statement individually with precise error classification.
+      // Only skip errors that are genuinely safe to ignore (idempotent DDL).
+      // Any other failure aborts the migration and prevents the server from starting.
       const statements = sql.split(/;\s*\n/).map((s: string) => s.trim()).filter(Boolean)
-      await prisma.$executeRawUnsafe('BEGIN')
-      try {
-        for (const stmt of statements) {
-          try {
-            await prisma.$executeRawUnsafe(stmt)
-          } catch (stmtErr: unknown) {
-            const msg = (stmtErr as Error).message ?? ''
-            const normalized = stmt.trimStart().toUpperCase()
+      for (const stmt of statements) {
+        try {
+          await prisma.$executeRawUnsafe(stmt)
+        } catch (stmtErr: unknown) {
+          const msg = (stmtErr as Error).message ?? ''
+          const normalized = stmt.trimStart().toUpperCase()
 
-            // Only ignore errors that are genuinely idempotent:
-            // • CREATE TABLE / CREATE [UNIQUE] INDEX that already exists
-            // • ALTER TABLE ... ADD COLUMN with a column that already exists
-            // Any other error (INSERT, DROP, RENAME, etc.) must abort the migration.
-            const isCreateAlreadyExists =
-              (normalized.startsWith('CREATE TABLE') ||
-               normalized.startsWith('CREATE UNIQUE INDEX') ||
-               normalized.startsWith('CREATE INDEX')) &&
-              /already exists/i.test(msg)
+          // Only ignore errors that are genuinely idempotent:
+          // • CREATE TABLE / CREATE [UNIQUE] INDEX that already exists
+          // • ALTER TABLE ... ADD COLUMN with a column that already exists
+          // Any other error (INSERT, DROP, RENAME, UPDATE, etc.) must abort the migration.
+          const isCreateAlreadyExists =
+            (normalized.startsWith('CREATE TABLE') ||
+             normalized.startsWith('CREATE UNIQUE INDEX') ||
+             normalized.startsWith('CREATE INDEX')) &&
+            /already exists/i.test(msg)
 
-            const isAddColumnDuplicate =
-              normalized.startsWith('ALTER TABLE') &&
-              normalized.includes('ADD COLUMN') &&
-              /duplicate column name/i.test(msg)
+          const isAddColumnDuplicate =
+            normalized.startsWith('ALTER TABLE') &&
+            normalized.includes('ADD COLUMN') &&
+            /duplicate column name/i.test(msg)
 
-            if (isCreateAlreadyExists || isAddColumnDuplicate) {
-              console.warn(`[startup] Statement ya aplicado, omitiendo: ${msg.split('\n')[0]}`)
-              continue
-            }
-
-            // Any other error: rollback and propagate — do NOT silently skip
-            throw stmtErr
+          if (isCreateAlreadyExists || isAddColumnDuplicate) {
+            console.warn(`[startup] Statement ya aplicado, omitiendo: ${msg.split('\n')[0]}`)
+            continue
           }
-        }
 
-        // Record migration as applied
-        const id = crypto.randomUUID()
-        await prisma.$executeRawUnsafe(
-          `INSERT INTO "_prisma_migrations" (id, checksum, migration_name, finished_at, applied_steps_count)
-           VALUES (?, ?, ?, datetime('now'), 1)`,
-          id, checksum, dir,
-        )
-        await prisma.$executeRawUnsafe('COMMIT')
-        console.log(`[startup] Migración aplicada: ${dir}`)
-        applied++
-      } catch (migrationErr: unknown) {
-        await prisma.$executeRawUnsafe('ROLLBACK').catch(() => {})
-        // Re-throw so the server does NOT start with an unknown schema state
-        throw migrationErr
+          // Any other error: propagate — do NOT silently skip destructive statements
+          throw stmtErr
+        }
       }
+
+      // Record migration as applied
+      const id = crypto.randomUUID()
+      await prisma.$executeRawUnsafe(
+        `INSERT INTO "_prisma_migrations" (id, checksum, migration_name, finished_at, applied_steps_count)
+         VALUES (?, ?, ?, datetime('now'), 1)`,
+        id, checksum, dir,
+      )
+      console.log(`[startup] Migración aplicada: ${dir}`)
+      applied++
     }
 
     if (applied === 0) {
