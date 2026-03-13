@@ -166,31 +166,59 @@ async function applyMigrations(prisma: import('@prisma/client').PrismaClient, mi
       )
       if (rows.length > 0) continue
 
-      // Run each statement individually
-      const statements = sql.split(/;\s*\n/).map((s: string) => s.trim()).filter(Boolean)
-      for (const stmt of statements) {
-        try {
-          await prisma.$executeRawUnsafe(stmt)
-        } catch (stmtErr: unknown) {
-          const msg = (stmtErr as Error).message ?? ''
-          // Ignore benign idempotency errors (column/table already exists or doesn't exist)
-          if (/duplicate column name|already exists|no such column|no such table/i.test(msg)) {
-            console.warn(`[startup] Skipping already-applied statement: ${msg.split('\n')[0]}`)
-            continue
-          }
-          throw stmtErr
-        }
-      }
+      console.log(`[startup] Aplicando migración: ${dir}`)
 
-      // Record migration as applied
-      const id = crypto.randomUUID()
-      await prisma.$executeRawUnsafe(
-        `INSERT INTO "_prisma_migrations" (id, checksum, migration_name, finished_at, applied_steps_count)
-         VALUES (?, ?, ?, datetime('now'), 1)`,
-        id, checksum, dir,
-      )
-      console.log(`[startup] Migración aplicada: ${dir}`)
-      applied++
+      // Run all statements in a transaction — if any statement fails the whole migration rolls back
+      const statements = sql.split(/;\s*\n/).map((s: string) => s.trim()).filter(Boolean)
+      await prisma.$executeRawUnsafe('BEGIN')
+      try {
+        for (const stmt of statements) {
+          try {
+            await prisma.$executeRawUnsafe(stmt)
+          } catch (stmtErr: unknown) {
+            const msg = (stmtErr as Error).message ?? ''
+            const normalized = stmt.trimStart().toUpperCase()
+
+            // Only ignore errors that are genuinely idempotent:
+            // • CREATE TABLE / CREATE [UNIQUE] INDEX that already exists
+            // • ALTER TABLE ... ADD COLUMN with a column that already exists
+            // Any other error (INSERT, DROP, RENAME, etc.) must abort the migration.
+            const isCreateAlreadyExists =
+              (normalized.startsWith('CREATE TABLE') ||
+               normalized.startsWith('CREATE UNIQUE INDEX') ||
+               normalized.startsWith('CREATE INDEX')) &&
+              /already exists/i.test(msg)
+
+            const isAddColumnDuplicate =
+              normalized.startsWith('ALTER TABLE') &&
+              normalized.includes('ADD COLUMN') &&
+              /duplicate column name/i.test(msg)
+
+            if (isCreateAlreadyExists || isAddColumnDuplicate) {
+              console.warn(`[startup] Statement ya aplicado, omitiendo: ${msg.split('\n')[0]}`)
+              continue
+            }
+
+            // Any other error: rollback and propagate — do NOT silently skip
+            throw stmtErr
+          }
+        }
+
+        // Record migration as applied
+        const id = crypto.randomUUID()
+        await prisma.$executeRawUnsafe(
+          `INSERT INTO "_prisma_migrations" (id, checksum, migration_name, finished_at, applied_steps_count)
+           VALUES (?, ?, ?, datetime('now'), 1)`,
+          id, checksum, dir,
+        )
+        await prisma.$executeRawUnsafe('COMMIT')
+        console.log(`[startup] Migración aplicada: ${dir}`)
+        applied++
+      } catch (migrationErr: unknown) {
+        await prisma.$executeRawUnsafe('ROLLBACK').catch(() => {})
+        // Re-throw so the server does NOT start with an unknown schema state
+        throw migrationErr
+      }
     }
 
     if (applied === 0) {
@@ -199,7 +227,8 @@ async function applyMigrations(prisma: import('@prisma/client').PrismaClient, mi
       console.log(`[startup] ${applied} migración(es) aplicada(s) ✅`)
     }
   } catch (e: unknown) {
-    console.error('[startup] Error aplicando migraciones:', (e as Error).message)
+    console.error('[startup] FATAL: Error aplicando migraciones:', (e as Error).message)
+    throw e  // Propagate so the server fails to start instead of running with corrupt schema
   }
 }
 
