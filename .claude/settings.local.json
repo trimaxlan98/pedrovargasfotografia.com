@@ -29,7 +29,12 @@
       "Bash(git checkout:*)",
       "Bash(git merge:*)",
       "Bash(git stash:*)",
-      "Bash(DATABASE_URL=\"file:./server/prisma/dev.db\" npx prisma generate --schema=server/prisma/schema.prisma 2>&1 | tail -10)"
+      "Bash(DATABASE_URL=\"file:./server/prisma/dev.db\" npx prisma generate --schema=server/prisma/schema.prisma 2>&1 | tail -10)",
+      "Bash(cd C:/Users/GIRTEC/Documents/GitHub/pedrovargasfotografia.com/server && node -e \"\nconst { PrismaClient } = require\\('../node_modules/@prisma/client'\\);\nconst p = new PrismaClient\\(\\);\nPromise.all\\([\n  p.activityLog.count\\(\\),\n  p.\\\\$queryRaw\\\\`PRAGMA table_info\\(digital_invitations\\)\\\\`.then\\(r => r.map\\(c => c.name\\).filter\\(n => ['ceremonyVenue','instagramHandle','parentsInfo'].includes\\(n\\)\\)\\)\n]\\).then\\(\\([logs, cols]\\) => {\n  console.log\\('activityLog count:', logs\\);\n  console.log\\('new columns:', cols\\);\n  process.exit\\(0\\);\n}\\).catch\\(e => { console.error\\(e.message\\); process.exit\\(1\\); }\\);\n\" 2>&1)",
+      "Bash(cd C:/Users/GIRTEC/Documents/GitHub/pedrovargasfotografia.com/server && DATABASE_URL=\"file:./dev.db\" npx prisma db execute --stdin <<'EOF'\nSELECT name FROM sqlite_master WHERE type='table' AND name IN \\('activity_logs','_prisma_migrations'\\);\nSELECT name FROM pragma_table_info\\('digital_invitations'\\) WHERE name IN \\('ceremonyVenue','instagramHandle','parentsInfo'\\);\nEOF)",
+      "Bash(cd C:/Users/GIRTEC/Documents/GitHub/pedrovargasfotografia.com/server && node -e \"\nconst sqlite3 = require\\('sqlite3'\\);\nconst db = new sqlite3.Database\\('./dev.db'\\);\ndb.all\\(\\\\\"SELECT name FROM sqlite_master WHERE type='table'\\\\\", \\(e,r\\) => {\n  console.log\\('tables:', r.map\\(x=>x.name\\).join\\(', '\\)\\);\n  db.all\\(\\\\\"SELECT name FROM pragma_table_info\\('digital_invitations'\\)\\\\\", \\(e2,r2\\) => {\n    console.log\\('di cols:', r2.map\\(x=>x.name\\).join\\(', '\\)\\);\n    db.close\\(\\);\n  }\\);\n}\\);\n\" 2>&1)",
+      "Bash(cd C:/Users/GIRTEC/Documents/GitHub/pedrovargasfotografia.com/server && DATABASE_URL=\"file:./dev.db\" npx prisma migrate status 2>&1 | tail -15)",
+      "Bash(cd \"C:/Users/GIRTEC/Documents/GitHub/pedrovargasfotografia.com/server\" && node -e \"\nconst { PrismaClient } = require\\('@prisma/client'\\);\nconst prisma = new PrismaClient\\(\\);\nprisma.user.findMany\\({ select: { email: true, role: true, isActive: true } }\\)\n  .then\\(users => { console.log\\(JSON.stringify\\(users, null, 2\\)\\); return prisma.\\\\$disconnect\\(\\); }\\)\n  .catch\\(e => { console.error\\('Error:', e.message\\); return prisma.\\\\$disconnect\\(\\); }\\);\n\" 2>&1)"
     ]
   }
 }

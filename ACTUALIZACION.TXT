@@ -1,0 +1,66 @@
+Contexto del Proyecto:
+Necesito desarrollar un sistema de "Invitaciones Digitales Premium" basado en Node.js para ser desplegado en un servidor de Hostinger. El diseño debe abandonar el concepto de "tarjeta estática" y convertirse en una experiencia de scroll vertical (storytelling) tipo revista editorial o landing page moderna.
+
+Especificaciones Técnicas:
+
+Backend: Node.js con Express.
+
+Frontend: HTML5, CSS3 (usando Tailwind CSS para diseño elegante y responsivo) y JavaScript vanilla o Vue/React para la interactividad.
+
+Base de Datos: MySQL o MongoDB (compatible con Hostinger).
+
+Estética: Elegante, femenina, minimalista, tipografía con jerarquía clara, espacios amplios (padding/margins) y animaciones sutiles (Fade-in on scroll).
+
+Estructura de la Invitación (Frontend):
+Genera el código para una visualización tipo "Single Page" con las siguientes 14 secciones modulares:
+
+Portada (Hero): Nombre grande (elemento principal), "Mis XV Años", Fecha y un Countdown funcional. Fondo con animación sutil de partículas o brillo.
+
+Foto Principal: Imagen estilo editorial, centrada, bordes suaves y mucho aire alrededor.
+
+Mensaje Emocional: Bloque de texto con tipografía elegante (serif).
+
+Dónde y Cuándo: Título de sección destacado.
+
+Ceremonia: Tarjeta visual con foto del lugar, datos y botón "VER MAPA" (Google Maps).
+
+Recepción: Misma estructura visual que la ceremonia.
+
+Dress Code: Iconografía sutil, tipo de vestimenta y paleta de colores sugerida.
+
+Galería: Grid elegante con bordes redondeados y efecto Lightbox al hacer clic.
+
+Mis Personas Favoritas: Sección dedicada a Padres y Padrinos con diseño jerárquico.
+
+Regalos: Información de "Lluvia de sobres" o cuenta bancaria con diseño minimalista.
+
+Instagram: Hashtag del evento y botón para abrir la app.
+
+Confirmación (RSVP): Botón flotante o destacado que redirija a WhatsApp con un mensaje pre-llenado.
+
+Mensaje de Invitados: Formulario simple para dejar una dedicatoria.
+
+Cierre: Despedida con el nombre del festejado nuevamente.
+
+Funcionalidades del Panel de Administración (Backend):
+Necesito un CRUD que permita:
+
+Gestión de Secciones: Switch (on/off) para activar o desactivar cualquiera de los 14 bloques.
+
+Editor de Contenido: Cambiar textos, nombres, fechas y enlaces de mapas.
+
+Gestor de Multimedia: Upload de fotos para portada, galería y tarjetas de eventos.
+
+Personalización: Selector de color principal (acentos), color de fondo y selección entre 3 combinaciones de fuentes (Elegante, Moderna, Clásica).
+
+Música: Opción para subir/activar fondo musical con botón de Play/Pause persistente.
+
+Entregables requeridos:
+
+Estructura de archivos para Node.js.
+
+Código del modelo de base de datos para almacenar la configuración de cada invitación.
+
+Plantilla CSS/Tailwind que asegure el espaciado amplio y la jerarquía visual (Títulos grandes, textos secundarios pequeños).
+
+Script del Contador Regresivo y manejo de eventos de scroll.

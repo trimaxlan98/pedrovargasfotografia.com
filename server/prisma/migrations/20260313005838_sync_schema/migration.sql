@@ -1,21 +1,5 @@
--- AlterTable
-ALTER TABLE "users" ADD COLUMN "termsAcceptedAt" DATETIME;
-
--- CreateTable
-CREATE TABLE "activity_logs" (
-    "id" TEXT NOT NULL PRIMARY KEY,
-    "userId" TEXT NOT NULL,
-    "userName" TEXT NOT NULL,
-    "userEmail" TEXT NOT NULL,
-    "action" TEXT NOT NULL,
-    "detail" TEXT,
-    "metadata" TEXT,
-    "isRead" BOOLEAN NOT NULL DEFAULT false,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT "activity_logs_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users" ("id") ON DELETE CASCADE ON UPDATE CASCADE
-);
-
--- RedefineTables
+-- RedefineTables: rebuild digital_invitations with complete schema
+-- (termsAcceptedAt and activity_logs already created in 20260309120000_add_missing_fields)
 PRAGMA defer_foreign_keys=ON;
 PRAGMA foreign_keys=OFF;
 CREATE TABLE "new_digital_invitations" (
@@ -75,9 +59,3 @@ CREATE UNIQUE INDEX "digital_invitations_shareToken_key" ON "digital_invitations
 CREATE INDEX "digital_invitations_archivedAt_idx" ON "digital_invitations"("archivedAt");
 PRAGMA foreign_keys=ON;
 PRAGMA defer_foreign_keys=OFF;
-
--- CreateIndex
-CREATE INDEX "activity_logs_isRead_idx" ON "activity_logs"("isRead");
-
--- CreateIndex
-CREATE INDEX "activity_logs_createdAt_idx" ON "activity_logs"("createdAt");

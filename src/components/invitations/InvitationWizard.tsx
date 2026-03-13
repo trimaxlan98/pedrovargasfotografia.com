@@ -64,9 +64,24 @@ interface InvitationDraft {
   rsvpDeadline: string
   guestGreeting: string
   defaultGuestName: string
+  heroImage: string
   ownerName?: string
   ownerEmail?: string
   clientId?: string
+  ceremonyVenue: string
+  ceremonyAddress: string
+  ceremonyTime: string
+  ceremonyPhoto: string
+  ceremonyMapUrl: string
+  receptionVenue: string
+  receptionAddress: string
+  receptionTime: string
+  receptionPhoto: string
+  receptionMapUrl: string
+  parentsInfo: string
+  sponsorsInfo: string
+  giftsInfo: string
+  instagramHandle: string
   data: {
     title: string
     names: string
@@ -98,6 +113,21 @@ const emptyDraft: InvitationDraft = {
   rsvpDeadline: '',
   guestGreeting: 'Hola',
   defaultGuestName: 'Familia y Amigos',
+  heroImage: '',
+  ceremonyVenue: '',
+  ceremonyAddress: '',
+  ceremonyTime: '',
+  ceremonyPhoto: '',
+  ceremonyMapUrl: '',
+  receptionVenue: '',
+  receptionAddress: '',
+  receptionTime: '',
+  receptionPhoto: '',
+  receptionMapUrl: '',
+  parentsInfo: '',
+  sponsorsInfo: '',
+  giftsInfo: '',
+  instagramHandle: '',
   data: {
     title: 'Estas invitado a nuestra boda',
     names: '', eventType: 'Boda', date: '', time: '',
@@ -123,9 +153,24 @@ function draftFromApi(inv: ApiInvitation, ownerName?: string, ownerEmail?: strin
     rsvpDeadline: inv.rsvpDeadline ? inv.rsvpDeadline.slice(0, 16) : '',
     guestGreeting: inv.guestGreeting || 'Hola',
     defaultGuestName: inv.defaultGuestName || 'Familia y Amigos',
+    heroImage: inv.heroImage || '',
     ownerName,
     ownerEmail,
     clientId: inv.clientId,
+    ceremonyVenue: inv.ceremonyVenue || '',
+    ceremonyAddress: inv.ceremonyAddress || '',
+    ceremonyTime: inv.ceremonyTime || '',
+    ceremonyPhoto: inv.ceremonyPhoto || '',
+    ceremonyMapUrl: inv.ceremonyMapUrl || '',
+    receptionVenue: inv.receptionVenue || '',
+    receptionAddress: inv.receptionAddress || '',
+    receptionTime: inv.receptionTime || '',
+    receptionPhoto: inv.receptionPhoto || '',
+    receptionMapUrl: inv.receptionMapUrl || '',
+    parentsInfo: inv.parentsInfo || '',
+    sponsorsInfo: inv.sponsorsInfo || '',
+    giftsInfo: inv.giftsInfo || '',
+    instagramHandle: inv.instagramHandle || '',
     data: {
       title: inv.title,
       names: inv.names,
@@ -334,14 +379,29 @@ export default function InvitationWizard({
         quote: draft.data.quote || undefined,
         hashtag: draft.data.hashtag || undefined,
         template: `${draft.template}${effectSuffix}`,
-        dressCode: draft.data.dressCode || undefined,
-        rsvpLabel: draft.data.rsvpLabel || undefined,
-        rsvpValue: draft.data.rsvpValue || undefined,
-        rsvpDeadline: draft.rsvpDeadline ? new Date(draft.rsvpDeadline).toISOString() : null,
-        isPublished: draft.isPublished,
-        guestGreeting: draft.guestGreeting,
-        defaultGuestName: draft.defaultGuestName,
-      }
+      dressCode: draft.data.dressCode || undefined,
+      rsvpLabel: draft.data.rsvpLabel || undefined,
+      rsvpValue: draft.data.rsvpValue || undefined,
+      rsvpDeadline: draft.rsvpDeadline ? new Date(draft.rsvpDeadline).toISOString() : null,
+      isPublished: draft.isPublished,
+      guestGreeting: draft.guestGreeting,
+      defaultGuestName: draft.defaultGuestName,
+      heroImage: draft.heroImage || undefined,
+      ceremonyVenue: draft.ceremonyVenue || undefined,
+      ceremonyAddress: draft.ceremonyAddress || undefined,
+      ceremonyTime: draft.ceremonyTime || undefined,
+      ceremonyPhoto: draft.ceremonyPhoto || undefined,
+      ceremonyMapUrl: draft.ceremonyMapUrl || undefined,
+      receptionVenue: draft.receptionVenue || undefined,
+      receptionAddress: draft.receptionAddress || undefined,
+      receptionTime: draft.receptionTime || undefined,
+      receptionPhoto: draft.receptionPhoto || undefined,
+      receptionMapUrl: draft.receptionMapUrl || undefined,
+      parentsInfo: draft.parentsInfo || undefined,
+      sponsorsInfo: draft.sponsorsInfo || undefined,
+      giftsInfo: draft.giftsInfo || undefined,
+      instagramHandle: draft.instagramHandle || undefined,
+    }
 
       if (mode === 'admin') payload.clientId = draft.clientId
 
@@ -670,6 +730,91 @@ export default function InvitationWizard({
                 <label className="block text-ivory/80 text-xs font-dm mb-1.5">Nota de ubicacion</label>
                 <input value={draft.data.locationNote} onChange={e => setData('locationNote')(e.target.value)} className={ic} placeholder="Ciudad, Pais" />
               </div>
+              <div className="md:col-span-2">
+                <label className="block text-ivory/80 text-xs font-dm mb-1.5">Foto principal (URL)</label>
+                <input value={draft.heroImage} onChange={e => setField('heroImage')(e.target.value)} className={ic} placeholder="https://... o /uploads/archivo.jpg" />
+                <p className="text-ivory/30 text-[0.65rem] mt-1">Tip: puedes reutilizar una foto ya subida a galeria y copiar su URL.</p>
+              </div>
+
+              <div className="md:col-span-2 border border-white/10 rounded-xl p-4 space-y-3 bg-white/5">
+                <p className="label-caps text-ivory/40 text-[0.6rem]">Ceremonia</p>
+                <div className="grid md:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-ivory/80 text-xs font-dm mb-1.5">Lugar</label>
+                    <input value={draft.ceremonyVenue} onChange={e => setField('ceremonyVenue')(e.target.value)} className={ic} placeholder="Parroquia San Juan" />
+                  </div>
+                  <div>
+                    <label className="block text-ivory/80 text-xs font-dm mb-1.5">Hora</label>
+                    <input value={draft.ceremonyTime} onChange={e => setField('ceremonyTime')(e.target.value)} className={ic} placeholder="17:00" />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-ivory/80 text-xs font-dm mb-1.5">Direccion</label>
+                    <input value={draft.ceremonyAddress} onChange={e => setField('ceremonyAddress')(e.target.value)} className={ic} placeholder="Calle, Colonia, Ciudad" />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-ivory/80 text-xs font-dm mb-1.5">Foto ceremonia (URL)</label>
+                    <input value={draft.ceremonyPhoto} onChange={e => setField('ceremonyPhoto')(e.target.value)} className={ic} placeholder="https://... o /uploads/archivo.jpg" />
+                    <p className="text-ivory/30 text-[0.65rem] mt-1">Tip: sube la foto en el paso Galería y copia su URL aquí.</p>
+                  </div>
+                  <div className="md:col-span-2">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="block text-ivory/80 text-xs font-dm">Enlace Google Maps</label>
+                      {(draft.ceremonyVenue || draft.ceremonyAddress) && (
+                        <a
+                          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([draft.ceremonyVenue, draft.ceremonyAddress].filter(Boolean).join(', '))}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-gold text-[0.65rem] font-dm hover:underline flex items-center gap-0.5"
+                        >
+                          Buscar en Maps →
+                        </a>
+                      )}
+                    </div>
+                    <input value={draft.ceremonyMapUrl} onChange={e => setField('ceremonyMapUrl')(e.target.value)} className={ic} placeholder="https://maps.google.com/..." />
+                    <p className="text-ivory/30 text-[0.65rem] mt-1">Clic en "Buscar en Maps", luego copia el enlace de tu navegador y pégalo aquí.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="md:col-span-2 border border-white/10 rounded-xl p-4 space-y-3 bg-white/5">
+                <p className="label-caps text-ivory/40 text-[0.6rem]">Recepcion</p>
+                <div className="grid md:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-ivory/80 text-xs font-dm mb-1.5">Lugar</label>
+                    <input value={draft.receptionVenue} onChange={e => setField('receptionVenue')(e.target.value)} className={ic} placeholder="Salon Magnolia" />
+                  </div>
+                  <div>
+                    <label className="block text-ivory/80 text-xs font-dm mb-1.5">Hora</label>
+                    <input value={draft.receptionTime} onChange={e => setField('receptionTime')(e.target.value)} className={ic} placeholder="19:00" />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-ivory/80 text-xs font-dm mb-1.5">Direccion</label>
+                    <input value={draft.receptionAddress} onChange={e => setField('receptionAddress')(e.target.value)} className={ic} placeholder="Calle, Colonia, Ciudad" />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-ivory/80 text-xs font-dm mb-1.5">Foto recepcion (URL)</label>
+                    <input value={draft.receptionPhoto} onChange={e => setField('receptionPhoto')(e.target.value)} className={ic} placeholder="https://... o /uploads/archivo.jpg" />
+                    <p className="text-ivory/30 text-[0.65rem] mt-1">Tip: sube la foto en el paso Galería y copia su URL aquí.</p>
+                  </div>
+                  <div className="md:col-span-2">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="block text-ivory/80 text-xs font-dm">Enlace Google Maps</label>
+                      {(draft.receptionVenue || draft.receptionAddress) && (
+                        <a
+                          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([draft.receptionVenue, draft.receptionAddress].filter(Boolean).join(', '))}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-gold text-[0.65rem] font-dm hover:underline flex items-center gap-0.5"
+                        >
+                          Buscar en Maps →
+                        </a>
+                      )}
+                    </div>
+                    <input value={draft.receptionMapUrl} onChange={e => setField('receptionMapUrl')(e.target.value)} className={ic} placeholder="https://maps.google.com/..." />
+                    <p className="text-ivory/30 text-[0.65rem] mt-1">Clic en "Buscar en Maps", luego copia el enlace de tu navegador y pégalo aquí.</p>
+                  </div>
+                </div>
+              </div>
 
               {mode === 'admin' && (
                 <div className="md:col-span-2 relative">
@@ -759,6 +904,49 @@ export default function InvitationWizard({
                   />
                 </div>
               ))}
+              <div className="md:col-span-2">
+                <label className="block text-ivory/80 text-xs font-dm mb-1.5">Papás (uno por linea)</label>
+                <textarea
+                  rows={3}
+                  value={draft.parentsInfo}
+                  onChange={e => setField('parentsInfo')(e.target.value)}
+                  className="inv-wizard-field w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-ivory text-sm focus:border-gold/50 focus:outline-none resize-none"
+                  placeholder="Sra. Maria Lopez & Sr. Juan Perez"
+                />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-ivory/80 text-xs font-dm mb-1.5">Padrinos (uno por linea)</label>
+                <textarea
+                  rows={3}
+                  value={draft.sponsorsInfo}
+                  onChange={e => setField('sponsorsInfo')(e.target.value)}
+                  className="inv-wizard-field w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-ivory text-sm focus:border-gold/50 focus:outline-none resize-none"
+                  placeholder="Padrinos de brindis: Ana & Luis"
+                />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-ivory/80 text-xs font-dm mb-1.5">Regalos / Mesa de regalos</label>
+                <textarea
+                  rows={3}
+                  value={draft.giftsInfo}
+                  onChange={e => setField('giftsInfo')(e.target.value)}
+                  className="inv-wizard-field w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-ivory text-sm focus:border-gold/50 focus:outline-none resize-none"
+                  placeholder="Lluvia de sobres o cuenta bancaria..."
+                />
+              </div>
+              <div>
+                <label className="block text-ivory/80 text-xs font-dm mb-1.5">Instagram del evento</label>
+                <input
+                  value={draft.instagramHandle}
+                  onChange={e => {
+                    const val = e.target.value
+                    setField('instagramHandle')(val.startsWith('@') || val === '' ? val : `@${val}`)
+                  }}
+                  className={ic}
+                  placeholder="@nombre_del_evento"
+                />
+                <p className="text-ivory/30 text-[0.65rem] mt-1">Se mostrara en la invitacion como boton para abrir Instagram.</p>
+              </div>
             </div>
           )}
 

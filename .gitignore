@@ -7,3 +7,4 @@ server/prisma/*.db
 server/prisma/*.db-journal
 server/prisma/*.db-wal
 server/prisma/*.db-shm
+CAMBIOS_HOSTINGER.txt
