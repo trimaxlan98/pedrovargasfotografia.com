@@ -26,7 +26,10 @@
       "Bash(git commit:*)",
       "Bash(git push:*)",
       "Bash(git rm:*)",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "Bash(git merge:*)",
+      "Bash(git stash:*)",
+      "Bash(DATABASE_URL=\"file:./server/prisma/dev.db\" npx prisma generate --schema=server/prisma/schema.prisma 2>&1 | tail -10)"
     ]
   }
 }
