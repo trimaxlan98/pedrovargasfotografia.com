@@ -165,7 +165,7 @@ export function getDemoGalleryForTemplate(template?: string): string[] {
   return DEMO_GALLERY_BY_TEMPLATE[template as InvitationTemplate] ?? DEMO_GALLERY_BY_TEMPLATE.warm
 }
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
+const API_URL = import.meta.env.VITE_API_URL || '/api'
 const API_ORIGIN = API_URL.replace(/\/api\/?$/, '')
 
 export function resolveInvitationImageUrl(url?: string): string {
