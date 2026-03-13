@@ -30,7 +30,7 @@
 
 \begin{document}
 
-% Portada
+% Portada j
 \begin{titlepage}
     \centering
     \vspace*{2cm}
