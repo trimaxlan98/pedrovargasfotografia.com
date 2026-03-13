@@ -20,7 +20,10 @@
       "Bash(xargs ls:*)",
       "Bash(find /c/Users/GIRTEC/Documents/GitHub/code_fotografiaprofesional_01 -type f \\\\\\( -name \"*nvitation*\" -o -name \"*invitation*\" \\\\\\) 2>/dev/null | head -50)",
       "Bash(find /c/Users/GIRTEC/Documents/GitHub/code_fotografiaprofesional_01/server -type f -name \"*.ts\" -o -name \"*.js\" 2>/dev/null | grep -E \"\\(route|invitation|api\\)\" | head -50)",
-      "Bash(cd \"C:\\\\Users\\\\GIRTEC\\\\Documents\\\\GitHub\\\\code_fotografiaprofesional_01\\\\server\" && set FORCE_COLOR=0 && npx prisma db push 2>&1)"
+      "Bash(cd \"C:\\\\Users\\\\GIRTEC\\\\Documents\\\\GitHub\\\\code_fotografiaprofesional_01\\\\server\" && set FORCE_COLOR=0 && npx prisma db push 2>&1)",
+      "Bash(cd \"C:/Users/GIRTEC/Documents/GitHub/pedrovargasfotografia.com\" && npx vite build 2>&1 | tail -20)",
+      "Bash(find \"C:/Users/GIRTEC/Documents/GitHub/pedrovargasfotografia.com/server/src\" -name \"*.ts\" | xargs grep -l \"public.*invitation\\\\|invitation.*public\\\\|shareToken\" 2>/dev/null)",
+      "Bash(cd \"C:/Users/GIRTEC/Documents/GitHub/pedrovargasfotografia.com\" && npx vite build 2>&1 | tail -5)"
     ]
   }
 }

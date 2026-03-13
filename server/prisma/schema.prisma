@@ -172,10 +172,30 @@ model DigitalInvitation {
   archivedAt   DateTime?
   archiveReason String?
   
-  // Nuevos campos para personalización por defecto
+  // Personalización por defecto
   guestGreeting    String?  @default("Hola")
   defaultGuestName String?  @default("Familia y Amigos")
-  
+
+  // Sección Ceremonia
+  ceremonyVenue    String?
+  ceremonyAddress  String?
+  ceremonyTime     String?
+  ceremonyPhoto    String?
+  ceremonyMapUrl   String?
+
+  // Sección Recepción
+  receptionVenue   String?
+  receptionAddress String?
+  receptionTime    String?
+  receptionPhoto   String?
+  receptionMapUrl  String?
+
+  // Secciones adicionales
+  parentsInfo      String?  // JSON array de strings o texto libre
+  sponsorsInfo     String?  // JSON array de strings o texto libre
+  giftsInfo        String?
+  instagramHandle  String?
+
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 

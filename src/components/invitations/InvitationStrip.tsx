@@ -1,5 +1,6 @@
-﻿import { useMemo, useState } from 'react'
-import { Copy, Check, MessageCircle } from 'lucide-react'
+import { useMemo, useState, useEffect, useCallback } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Copy, Check, MessageCircle, MapPin, X, Gift, Instagram } from 'lucide-react'
 import {
   ApiInvitation,
   getDemoGalleryForTemplate,
@@ -7,6 +8,7 @@ import {
 } from './invitationTypes'
 import QrCodeImage from './QrCodeImage'
 
+// ── Template styles ────────────────────────────────────────────────────────────
 type TemplateStyle = {
   isDark: boolean
   bg: string
@@ -175,44 +177,322 @@ const TEMPLATE_STYLES: Record<string, TemplateStyle> = {
   },
 }
 
-const PAD = 'px-7 sm:px-10'
+// ── Countdown helpers ─────────────────────────────────────────────────────────
+const ES_MONTHS: Record<string, number> = {
+  enero: 1, febrero: 2, marzo: 3, abril: 4, mayo: 5, junio: 6,
+  julio: 7, agosto: 8, septiembre: 9, octubre: 10, noviembre: 11, diciembre: 12,
+}
 
+function parseEventDate(raw: string): Date | null {
+  if (!raw) return null
+  const native = new Date(raw)
+  if (!isNaN(native.getTime())) return native
+  const parts = raw.toLowerCase().replace(/ de /g, ' ').split(/\s+/)
+  if (parts.length >= 3) {
+    const day = parseInt(parts[0], 10)
+    const month = ES_MONTHS[parts[1]]
+    const year = parseInt(parts[parts.length - 1], 10)
+    if (day && month && year) return new Date(year, month - 1, day)
+  }
+  return null
+}
+
+function getCountdownUnits(target: Date) {
+  const diff = Math.max(0, target.getTime() - Date.now())
+  const total = Math.floor(diff / 1000)
+  return [
+    { label: 'Días',  value: Math.floor(total / 86400) },
+    { label: 'Horas', value: Math.floor((total % 86400) / 3600) },
+    { label: 'Min',   value: Math.floor((total % 3600) / 60) },
+    { label: 'Seg',   value: total % 60 },
+  ]
+}
+
+function HeroCountdown({ eventDate, s }: { eventDate: string; s: TemplateStyle }) {
+  const target = useMemo(() => parseEventDate(eventDate), [eventDate])
+  const [units, setUnits] = useState(() => (target ? getCountdownUnits(target) : null))
+
+  useEffect(() => {
+    if (!target || target.getTime() <= Date.now()) return
+    setUnits(getCountdownUnits(target))
+    const id = setInterval(() => setUnits(getCountdownUnits(target)), 1000)
+    return () => clearInterval(id)
+  }, [target])
+
+  if (!target || !units) return null
+
+  if (target.getTime() <= Date.now()) {
+    return (
+      <p className="text-xs font-dm uppercase tracking-widest" style={{ color: s.accent }}>
+        ¡El evento es hoy!
+      </p>
+    )
+  }
+
+  return (
+    <div className="flex flex-col items-center gap-3">
+      <p className="text-[0.55rem] uppercase tracking-[0.4em] font-dm" style={{ color: `${s.accent}88` }}>
+        Cuenta regresiva
+      </p>
+      <div className="flex items-end gap-5 sm:gap-7">
+        {units.map((u, i) => (
+          <motion.div
+            key={u.label}
+            className="flex flex-col items-center"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.07, duration: 0.4 }}
+          >
+            <span
+              className="font-cormorant font-semibold tabular-nums leading-none"
+              style={{ fontSize: 'clamp(2rem, 8vw, 3rem)', color: s.accent }}
+            >
+              {String(u.value).padStart(2, '0')}
+            </span>
+            <span
+              className="text-[0.48rem] uppercase tracking-widest font-dm mt-1.5"
+              style={{ color: `${s.accent}66` }}
+            >
+              {u.label}
+            </span>
+          </motion.div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ── Scroll fade-in wrapper ─────────────────────────────────────────────────────
+function FadeIn({
+  children,
+  delay = 0,
+  className = '',
+}: {
+  children: React.ReactNode
+  delay?: number
+  className?: string
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 32 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: '-48px' }}
+      transition={{ duration: 0.65, ease: [0.25, 0.46, 0.45, 0.94], delay }}
+      className={className}
+    >
+      {children}
+    </motion.div>
+  )
+}
+
+// ── Shared UI ─────────────────────────────────────────────────────────────────
 function Ornament({ s }: { s: TemplateStyle }) {
   return (
-    <div className="flex items-center justify-center gap-3">
-      <div className="h-px w-10 flex-none" style={{ background: s.accent, opacity: 0.35 }} />
-      <span className="text-xs flex-none" style={{ color: s.accent, opacity: 0.65 }}>
+    <div className="flex items-center justify-center gap-4">
+      <div className="h-px w-12 flex-none" style={{ background: s.accent, opacity: 0.28 }} />
+      <span className="text-sm flex-none" style={{ color: s.accent, opacity: 0.5 }}>
         {s.ornament}
       </span>
-      <div className="h-px w-10 flex-none" style={{ background: s.accent, opacity: 0.35 }} />
+      <div className="h-px w-12 flex-none" style={{ background: s.accent, opacity: 0.28 }} />
     </div>
   )
 }
 
 function SectionLabel({ children, s }: { children: string; s: TemplateStyle }) {
   return (
-    <p className="text-[0.6rem] uppercase tracking-[0.38em]" style={{ color: s.accent }}>
+    <p className="text-[0.58rem] uppercase tracking-[0.42em] font-dm" style={{ color: s.accent }}>
       {children}
     </p>
   )
 }
 
-function ThinDivider({ s }: { s: TemplateStyle }) {
-  return <div className="h-px w-8 mx-auto" style={{ background: s.divider }} />
+function SectionDivider({ s }: { s: TemplateStyle }) {
+  return (
+    <div className="py-10 flex items-center justify-center">
+      <Ornament s={s} />
+    </div>
+  )
 }
 
+// ── Lightbox ──────────────────────────────────────────────────────────────────
+function Lightbox({
+  images,
+  initialIndex,
+  onClose,
+}: {
+  images: string[]
+  initialIndex: number
+  onClose: () => void
+}) {
+  const [current, setCurrent] = useState(initialIndex)
+  const prev = useCallback(() => setCurrent(i => (i - 1 + images.length) % images.length), [images.length])
+  const next = useCallback(() => setCurrent(i => (i + 1) % images.length), [images.length])
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+      if (e.key === 'ArrowLeft') prev()
+      if (e.key === 'ArrowRight') next()
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [onClose, prev, next])
+
+  return (
+    <motion.div
+      className="fixed inset-0 z-50 bg-black/92 flex items-center justify-center p-4"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      onClick={onClose}
+    >
+      <button
+        className="absolute top-4 right-4 p-2 rounded-full bg-white/10 text-white/70 hover:text-white hover:bg-white/20 transition-colors"
+        onClick={onClose}
+      >
+        <X size={18} />
+      </button>
+
+      {images.length > 1 && (
+        <>
+          <button
+            className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/10 text-white/70 hover:text-white hover:bg-white/20 transition-colors flex items-center justify-center text-xl"
+            onClick={e => { e.stopPropagation(); prev() }}
+          >
+            ‹
+          </button>
+          <button
+            className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/10 text-white/70 hover:text-white hover:bg-white/20 transition-colors flex items-center justify-center text-xl"
+            onClick={e => { e.stopPropagation(); next() }}
+          >
+            ›
+          </button>
+        </>
+      )}
+
+      <AnimatePresence mode="wait">
+        <motion.img
+          key={current}
+          src={images[current]}
+          alt={`Foto ${current + 1}`}
+          className="max-h-[82vh] max-w-full object-contain rounded-2xl shadow-2xl"
+          initial={{ opacity: 0, scale: 0.96 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.96 }}
+          transition={{ duration: 0.22 }}
+          onClick={e => e.stopPropagation()}
+        />
+      </AnimatePresence>
+
+      {images.length > 1 && (
+        <div className="absolute bottom-5 flex gap-1.5">
+          {images.map((_, i) => (
+            <button
+              key={i}
+              className={`h-1.5 rounded-full transition-all duration-300 ${i === current ? 'w-5 bg-white' : 'w-1.5 bg-white/35'}`}
+              onClick={e => { e.stopPropagation(); setCurrent(i) }}
+            />
+          ))}
+        </div>
+      )}
+    </motion.div>
+  )
+}
+
+// ── Event card (Ceremony / Reception) ────────────────────────────────────────
+function EventCard({
+  label,
+  venue,
+  address,
+  time,
+  photo,
+  mapUrl,
+  s,
+  embossPanel,
+}: {
+  label: string
+  venue: string
+  address?: string
+  time?: string
+  photo?: string
+  mapUrl?: string
+  s: TemplateStyle
+  embossPanel: React.CSSProperties
+}) {
+  const resolvedMap =
+    mapUrl ||
+    (address
+      ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`
+      : null)
+
+  return (
+    <div
+      className="rounded-3xl overflow-hidden"
+      style={{
+        background: s.glass,
+        border: `1px solid ${s.glassBorder}`,
+        ...embossPanel,
+      }}
+    >
+      {photo && (
+        <div className="aspect-video overflow-hidden">
+          <img src={photo} alt={venue} className="w-full h-full object-cover" loading="lazy" />
+        </div>
+      )}
+      <div className="px-6 py-7 text-center space-y-2">
+        <SectionLabel s={s}>{label}</SectionLabel>
+        <h3 className="font-cormorant text-2xl sm:text-3xl leading-tight" style={{ color: s.text }}>
+          {venue}
+        </h3>
+        {time && (
+          <p className="text-sm font-dm font-medium" style={{ color: s.accent }}>
+            {time}
+          </p>
+        )}
+        {address && (
+          <p className="text-xs font-dm leading-relaxed" style={{ color: s.textMuted }}>
+            {address}
+          </p>
+        )}
+        {resolvedMap && (
+          <div className="pt-3">
+            <a
+              href={resolvedMap}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-[0.6rem] uppercase tracking-[0.25em] font-dm transition-all hover:opacity-75 active:scale-95"
+              style={{
+                background: s.rsvpBg,
+                color: s.rsvpText,
+                border: `1px solid ${s.glassBorder}`,
+              }}
+            >
+              <MapPin size={11} />
+              Ver mapa
+            </a>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ── RSVP href helper ──────────────────────────────────────────────────────────
 function getRsvpHref(rsvpValue: string): string {
   const clean = rsvpValue.replace(/^WhatsApp:\s*/i, '').trim()
   if (/^https?:\/\//i.test(clean)) return clean
-
   const digits = clean.replace(/\D/g, '')
   if (/^\d{7,}$/.test(digits)) {
     return `https://wa.me/${digits}?text=${encodeURIComponent('Hola, confirmo mi asistencia.')}`
   }
-
   return `https://wa.me/?text=${encodeURIComponent(`RSVP: ${clean}`)}`
 }
 
+// ── Layout constants ──────────────────────────────────────────────────────────
+const PAD = 'px-7 sm:px-10'
+const SECTION = `${PAD} py-16 sm:py-20`
+
+// ── Main component ────────────────────────────────────────────────────────────
 export default function InvitationStrip({
   invitation,
   shareUrl,
@@ -229,29 +509,36 @@ export default function InvitationStrip({
   const hasFoil   = templateStr.endsWith('-foil')
   const baseTemplateId = templateStr.replace(/-emboss$|-foil$/, '')
   const s = TEMPLATE_STYLES[baseTemplateId] ?? TEMPLATE_STYLES.warm
+
   const [copied, setCopied] = useState(false)
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
 
-  // Relief effect helpers
-  const embossText = hasEmboss
-    ? { textShadow: s.isDark
-        ? '1px 1px 3px rgba(0,0,0,0.65), -0.5px -0.5px 2px rgba(255,255,255,0.1)'
-        : '1px 1px 2.5px rgba(0,0,0,0.16), -0.5px -0.5px 1.5px rgba(255,255,255,0.75)' }
+  const embossText: React.CSSProperties = hasEmboss
+    ? {
+        textShadow: s.isDark
+          ? '1px 1px 3px rgba(0,0,0,0.65), -0.5px -0.5px 2px rgba(255,255,255,0.1)'
+          : '1px 1px 2.5px rgba(0,0,0,0.16), -0.5px -0.5px 1.5px rgba(255,255,255,0.75)',
+      }
     : {}
-  const embossPanel = hasEmboss
-    ? { boxShadow: s.isDark
-        ? '4px 4px 10px rgba(0,0,0,0.55), -2px -2px 6px rgba(255,255,255,0.06)'
-        : '4px 4px 10px rgba(0,0,0,0.1), -3px -3px 8px rgba(255,255,255,0.75)' }
-    : {}
-  const foilGradient = `linear-gradient(135deg, ${s.accent} 0%, ${s.isDark ? 'rgba(255,232,140,0.92)' : 'rgba(255,255,255,0.88)'} 38%, ${s.accent} 56%, ${s.isDark ? 'rgba(245,210,100,0.85)' : 'rgba(230,215,165,0.9)'} 78%, ${s.accent} 100%)`
 
+  const embossPanel: React.CSSProperties = hasEmboss
+    ? {
+        boxShadow: s.isDark
+          ? '4px 4px 10px rgba(0,0,0,0.55), -2px -2px 6px rgba(255,255,255,0.06)'
+          : '4px 4px 10px rgba(0,0,0,0.1), -3px -3px 8px rgba(255,255,255,0.75)',
+      }
+    : {}
+
+  const foilGradient = `linear-gradient(135deg, ${s.accent} 0%, ${
+    s.isDark ? 'rgba(255,232,140,0.92)' : 'rgba(255,255,255,0.88)'
+  } 38%, ${s.accent} 56%, ${
+    s.isDark ? 'rgba(245,210,100,0.85)' : 'rgba(230,215,165,0.9)'
+  } 78%, ${s.accent} 100%)`
+
+  // Gallery
   const fallbackGallery = getDemoGalleryForTemplate(baseTemplateId)
-
   const normalizedGallery = useMemo(() => {
-    const userPhotos = (invitation.gallery ?? [])
-      .map(resolveInvitationImageUrl)
-      .filter(Boolean)
-
-    // Use only user photos if any exist; fall back to demo gallery otherwise
+    const userPhotos = (invitation.gallery ?? []).map(resolveInvitationImageUrl).filter(Boolean)
     const source = userPhotos.length > 0 ? userPhotos : fallbackGallery.map(resolveInvitationImageUrl)
     return source.slice(0, 8)
   }, [invitation.gallery, invitation.template])
@@ -263,289 +550,559 @@ export default function InvitationStrip({
     return resolveInvitationImageUrl(fallbackGallery[0])
   }, [invitation.heroImage, normalizedGallery, fallbackGallery])
 
-  const title = invitation.title
-  const names = invitation.names
-  const eventType = invitation.eventType
-  const date = invitation.eventDate
-  const time = invitation.eventTime || ''
-  const venue = invitation.venue || ''
-  const locationNote = invitation.locationNote || ''
-  const message = invitation.message || ''
-  const quote = invitation.quote || ''
-  const hashtag = invitation.hashtag || ''
-  const dressCode = invitation.dressCode || ''
-  const rsvpLabel = invitation.rsvpLabel || 'Confirmar asistencia'
-  const rsvpValue = invitation.rsvpValue || ''
+  // Field shortcuts
+  const { title, names, eventType, eventDate } = invitation
+  const time           = invitation.eventTime || ''
+  const venue          = invitation.venue || ''
+  const locationNote   = invitation.locationNote || ''
+  const message        = invitation.message || ''
+  const quote          = invitation.quote || ''
+  const hashtag        = invitation.hashtag || ''
+  const dressCode      = invitation.dressCode || ''
+  const rsvpLabel      = invitation.rsvpLabel || 'Confirmar asistencia'
+  const rsvpValue      = invitation.rsvpValue || ''
+
+  // New section fields
+  const ceremonyVenue   = invitation.ceremonyVenue || ''
+  const ceremonyAddress = invitation.ceremonyAddress || ''
+  const ceremonyTime    = invitation.ceremonyTime || ''
+  const ceremonyPhoto   = resolveInvitationImageUrl(invitation.ceremonyPhoto)
+  const ceremonyMapUrl  = invitation.ceremonyMapUrl || ''
+  const receptionVenue   = invitation.receptionVenue || ''
+  const receptionAddress = invitation.receptionAddress || ''
+  const receptionTime    = invitation.receptionTime || ''
+  const receptionPhoto   = resolveInvitationImageUrl(invitation.receptionPhoto)
+  const receptionMapUrl  = invitation.receptionMapUrl || ''
+  const giftsInfo        = invitation.giftsInfo || ''
+  const instagramHandle  = invitation.instagramHandle || ''
+
+  const parsedParents = useMemo(() => {
+    const raw = invitation.parentsInfo || ''
+    if (!raw) return []
+    try { return JSON.parse(raw) as string[] } catch { return raw.split('\n').filter(Boolean) }
+  }, [invitation.parentsInfo])
+
+  const parsedSponsors = useMemo(() => {
+    const raw = invitation.sponsorsInfo || ''
+    if (!raw) return []
+    try { return JSON.parse(raw) as string[] } catch { return raw.split('\n').filter(Boolean) }
+  }, [invitation.sponsorsInfo])
+
+  // Layout flags
+  const hasEventCards = !!(ceremonyVenue || receptionVenue)
+  const showWhereWhen = !hasEventCards && !!(venue || time || eventDate)
 
   const handleCopy = () => {
     navigator.clipboard.writeText(shareUrl).catch(() => {})
     setCopied(true)
     setTimeout(() => setCopied(false), 2500)
   }
-
-  const whatsappShare = `https://wa.me/?text=${encodeURIComponent(`Mira mi invitación digital: ${shareUrl}`)}`
+  const whatsappShare = `https://wa.me/?text=${encodeURIComponent(`Mira mi invitación: ${shareUrl}`)}`
 
   return (
     <div className="w-full text-sm leading-relaxed" style={{ background: s.bg, color: s.text }}>
-      <section className={`min-h-[90vh] ${PAD} pt-14 pb-12 text-center relative overflow-hidden`}>
+
+      {/* ══ 1. HERO ══════════════════════════════════════════════════════════════ */}
+      <section className="relative min-h-screen flex flex-col items-center justify-center text-center px-7 py-20 overflow-hidden">
+        {/* Gradient overlay */}
         <div className="absolute inset-0 pointer-events-none" style={{ background: s.heroOverlay }} />
-        <div className="relative z-10 flex flex-col items-center">
-          <div className="mb-8">
+
+        <div className="relative z-10 flex flex-col items-center gap-5 w-full max-w-xs mx-auto">
+          {/* Top ornament */}
+          <motion.div
+            initial={{ opacity: 0, y: -12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
             <Ornament s={s} />
-          </div>
+          </motion.div>
 
-          <SectionLabel s={s}>{eventType}</SectionLabel>
+          {/* Event type */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+          >
+            <SectionLabel s={s}>{eventType}</SectionLabel>
+          </motion.div>
 
-          <h1
-            className={`font-cormorant text-4xl sm:text-5xl leading-tight mt-4 mb-8${hasFoil ? ' inv-foil-text' : ''}`}
-            style={hasFoil
-              ? { background: foilGradient }
-              : { color: s.text, ...embossText }
-            }
+          {/* Main name — H1, most dominant element */}
+          <motion.h1
+            className={`font-cormorant font-light leading-[1.04] tracking-wide${hasFoil ? ' inv-foil-text' : ''}`}
+            style={{
+              fontSize: 'clamp(2.8rem, 13vw, 5.5rem)',
+              ...(hasFoil
+                ? { background: foilGradient }
+                : { color: s.text, ...embossText }),
+            }}
+            initial={{ opacity: 0, y: 22 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.15 }}
+          >
+            {names}
+          </motion.h1>
+
+          {/* Subtitle / title */}
+          <motion.p
+            className="font-cormorant text-lg italic"
+            style={{ color: s.accent }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.28 }}
           >
             {title}
-          </h1>
+          </motion.p>
 
-          <div
-            className="w-40 h-56 sm:w-48 sm:h-64 rounded-[999px] overflow-hidden shadow-2xl"
-            style={{ border: `1px solid ${s.accent}28` }}
+          {/* Date & venue */}
+          <motion.div
+            className="flex flex-col items-center gap-0.5"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.38 }}
           >
-            {heroPhoto ? (
-              <img src={heroPhoto} alt={names} className="w-full h-full object-cover" />
-            ) : (
-              <div className="w-full h-full" style={{ background: 'linear-gradient(135deg, #2b2017 0%, #3d2b1d 100%)' }} />
+            <p
+              className="text-[0.62rem] uppercase tracking-[0.35em] font-dm"
+              style={{ color: s.textMuted }}
+            >
+              {eventDate}{time ? ` · ${time}` : ''}
+            </p>
+            {(venue || locationNote) && (
+              <p
+                className="text-[0.58rem] uppercase tracking-[0.25em] font-dm"
+                style={{ color: s.textMuted, opacity: 0.7 }}
+              >
+                {[venue, locationNote].filter(Boolean).join(' · ')}
+              </p>
             )}
-          </div>
+          </motion.div>
 
-          <p className="mt-6 text-2xl font-cormorant tracking-wide" style={{ color: s.text, ...embossText }}>
-            {names}
-          </p>
-          <p className="text-[0.65rem] uppercase tracking-[0.3em] mt-2" style={{ color: s.accent }}>
-            {date}
-            {time ? ` · ${time}` : ''}
-          </p>
+          {/* Countdown */}
+          <motion.div
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.48 }}
+            className="pt-2"
+          >
+            <HeroCountdown eventDate={eventDate} s={s} />
+          </motion.div>
 
-          <div className="mt-8">
+          {/* Bottom ornament */}
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.58 }}
+          >
             <Ornament s={s} />
-          </div>
+          </motion.div>
         </div>
       </section>
 
-      {/* ── Sección personalizada por invitado ── */}
-      {guestName && (
-        <section className={`${PAD} py-10 text-center`}>
-          <div
-            className="px-6 py-8 rounded-[20px]"
-            style={{
-              background: s.glass,
-              border: `1px solid ${s.glassBorder}`,
-              ...(hasEmboss ? embossPanel : {}),
-            }}
-          >
-            <SectionLabel s={s}>Esta invitación es para ti</SectionLabel>
-            <ThinDivider s={s} />
-            <p
-              className={`font-cormorant text-3xl sm:text-4xl mt-5 leading-snug${hasFoil ? ' inv-foil-text' : ''}`}
-              style={hasFoil ? { background: foilGradient } : { color: s.text, ...embossText }}
+      {/* ══ 2. FOTO PRINCIPAL ════════════════════════════════════════════════════ */}
+      {heroPhoto && (
+        <FadeIn>
+          <section className={`${PAD} pb-16`}>
+            <div
+              className="w-full overflow-hidden shadow-2xl"
+              style={{
+                borderRadius: '28px',
+                border: `1px solid ${s.glassBorder}`,
+                aspectRatio: '3 / 4',
+              }}
             >
-              {invitation.guestGreeting || 'Con cariño te invitamos'},
-            </p>
-            <p
-              className="font-cormorant text-3xl sm:text-4xl mt-1 leading-snug"
-              style={{ color: s.accent, ...embossText }}
-            >
-              {guestName}
-            </p>
-            {guestMessage && (
-              <>
-                <div className="mt-5 mb-4">
-                  <Ornament s={s} />
-                </div>
-                <p
-                  className="text-base font-cormorant italic leading-relaxed"
-                  style={{ color: s.text, opacity: 0.82 }}
+              <img src={heroPhoto} alt={names} className="w-full h-full object-cover" />
+            </div>
+          </section>
+        </FadeIn>
+      )}
+
+      {/* ══ 3. MENSAJE DE INVITACIÓN ═════════════════════════════════════════════ */}
+      {(quote || message) && (
+        <FadeIn>
+          <section className={`${SECTION} text-center`}>
+            <SectionLabel s={s}>Con mucho amor</SectionLabel>
+            <div className="mt-8 space-y-7">
+              {quote && (
+                <blockquote
+                  className="font-cormorant text-2xl sm:text-3xl italic leading-relaxed"
+                  style={{ color: s.text, ...embossText }}
                 >
-                  {guestMessage}
+                  "{quote}"
+                </blockquote>
+              )}
+              {message && (
+                <p
+                  className="font-cormorant text-lg sm:text-xl leading-relaxed max-w-[280px] mx-auto"
+                  style={{ color: s.text, opacity: 0.85 }}
+                >
+                  {message}
                 </p>
-              </>
+              )}
+            </div>
+          </section>
+        </FadeIn>
+      )}
+
+      {/* ══ 4. DÓNDE Y CUÁNDO (fallback si no hay ceremony/reception split) ════ */}
+      {showWhereWhen && (
+        <FadeIn>
+          <section className={`${SECTION} text-center`}>
+            <SectionLabel s={s}>Dónde y cuándo</SectionLabel>
+            <div className="mt-10 grid gap-10">
+              {[
+                { label: 'Fecha', value: eventDate },
+                { label: 'Hora', value: time },
+                { label: 'Lugar', value: venue, note: locationNote },
+              ]
+                .filter(item => item.value)
+                .map(item => (
+                  <div key={item.label}>
+                    <p
+                      className="text-[0.55rem] uppercase tracking-[0.38em] font-dm"
+                      style={{ color: s.accent }}
+                    >
+                      {item.label}
+                    </p>
+                    <div className="h-px w-6 mx-auto my-2.5" style={{ background: s.divider }} />
+                    <p className="font-cormorant text-2xl" style={{ color: s.text }}>
+                      {item.value}
+                    </p>
+                    {item.note && (
+                      <p className="text-xs mt-1 font-dm" style={{ color: s.textMuted }}>
+                        {item.note}
+                      </p>
+                    )}
+                  </div>
+                ))}
+            </div>
+          </section>
+        </FadeIn>
+      )}
+
+      {/* ══ 5 & 6. CEREMONIA / RECEPCIÓN ════════════════════════════════════════ */}
+      {hasEventCards && (
+        <section className={`${SECTION}`}>
+          <FadeIn>
+            <div className="text-center mb-10">
+              <SectionLabel s={s}>El gran día</SectionLabel>
+              <p className="font-cormorant text-lg mt-2" style={{ color: s.textMuted }}>
+                {eventDate}{time ? ` · ${time}` : ''}
+              </p>
+            </div>
+          </FadeIn>
+          <div className="grid gap-6">
+            {ceremonyVenue && (
+              <FadeIn delay={0.08}>
+                <EventCard
+                  label="Ceremonia"
+                  venue={ceremonyVenue}
+                  address={ceremonyAddress}
+                  time={ceremonyTime}
+                  photo={ceremonyPhoto}
+                  mapUrl={ceremonyMapUrl}
+                  s={s}
+                  embossPanel={embossPanel}
+                />
+              </FadeIn>
+            )}
+            {receptionVenue && (
+              <FadeIn delay={0.18}>
+                <EventCard
+                  label="Recepción"
+                  venue={receptionVenue}
+                  address={receptionAddress}
+                  time={receptionTime}
+                  photo={receptionPhoto}
+                  mapUrl={receptionMapUrl}
+                  s={s}
+                  embossPanel={embossPanel}
+                />
+              </FadeIn>
             )}
           </div>
         </section>
       )}
 
-      {quote ? (
-        <section className={`${PAD} py-12`}>
-          <div
-            className="px-6 py-8 text-center"
-            style={{
-              background: s.glass,
-              border: `1px solid ${s.glassBorder}`,
-              boxShadow: hasEmboss
-                ? embossPanel.boxShadow
-                : s.isDark ? '0 8px 32px rgba(0,0,0,0.3)' : '0 8px 32px rgba(0,0,0,0.05)',
-            }}
-          >
-            <p className="text-base font-cormorant italic leading-relaxed" style={{ color: s.text, ...embossText }}>
-              "{quote}"
-            </p>
-          </div>
-        </section>
-      ) : null}
-
-      {message ? (
-        <section className={`${PAD} pb-12 text-center`}>
-          <SectionLabel s={s}>Con mucho amor</SectionLabel>
-          <ThinDivider s={s} />
-          <p className="mt-5 text-base font-cormorant leading-relaxed" style={{ color: s.text, opacity: 0.85 }}>
-            {message}
-          </p>
-        </section>
-      ) : null}
-
-      <section className={`${PAD} pb-12`}>
-        <div className="grid gap-8">
-          {[
-            { label: 'Fecha', value: date },
-            { label: 'Hora', value: time },
-            { label: 'Lugar', value: venue, note: locationNote },
-          ]
-            .filter(item => item.value)
-            .map(item => (
-              <div key={item.label} className="text-center">
-                <SectionLabel s={s}>{item.label}</SectionLabel>
-                <ThinDivider s={s} />
-                <p className="font-cormorant text-xl mt-3" style={{ color: s.text }}>
-                  {item.value}
-                </p>
-                {item.note ? (
-                  <p className="text-xs mt-1" style={{ color: s.textMuted }}>
-                    {item.note}
-                  </p>
-                ) : null}
-              </div>
-            ))}
-        </div>
-      </section>
-
-      <section className={`${PAD} pb-12`}>
-        <div className="text-center mb-6">
-          <SectionLabel s={s}>Nuestra historia</SectionLabel>
-          <p className="font-cormorant text-lg mt-2" style={{ color: s.text }}>
-            Un vistazo a nuestro camino juntos
-          </p>
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          {normalizedGallery.map((url, idx) => (
+      {/* ══ 7. CÓDIGO DE VESTIMENTA ══════════════════════════════════════════════ */}
+      {dressCode && (
+        <FadeIn>
+          <section className={`${SECTION} text-center`}>
             <div
-              key={`gallery-${idx}`}
-              className={`overflow-hidden ${idx % 3 === 0 ? 'aspect-[3/4]' : 'aspect-square'}`}
+              className="px-7 py-9 rounded-3xl"
               style={{
-                borderRadius: s.isDark ? '4px' : '18px',
-                border: `1px solid ${s.divider}`,
+                background: s.glass,
+                border: `1px solid ${s.glassBorder}`,
+                ...embossPanel,
               }}
             >
-              <img src={url} alt={`Galería ${idx + 1}`} className="w-full h-full object-cover" loading="lazy" />
+              <SectionLabel s={s}>Código de vestimenta</SectionLabel>
+              <div className="h-px w-6 mx-auto my-3" style={{ background: s.divider }} />
+              <p className="font-cormorant text-2xl mt-1" style={{ color: s.text }}>
+                {dressCode}
+              </p>
             </div>
-          ))}
-        </div>
-      </section>
+          </section>
+        </FadeIn>
+      )}
 
-      {dressCode ? (
-        <section className={`${PAD} pb-12`}>
-          <div className="px-6 py-6 text-center" style={{ background: s.glass, border: `1px solid ${s.glassBorder}` }}>
-            <SectionLabel s={s}>Código de vestimenta</SectionLabel>
-            <p className="font-cormorant text-lg mt-3" style={{ color: s.text }}>
-              {dressCode}
+      {/* ══ 8. GALERÍA ═══════════════════════════════════════════════════════════ */}
+      {normalizedGallery.length > 0 && (
+        <FadeIn>
+          <section className={`${SECTION}`}>
+            <div className="text-center mb-9">
+              <SectionLabel s={s}>Galería</SectionLabel>
+              <p className="font-cormorant text-lg mt-2" style={{ color: s.textMuted }}>
+                Momentos especiales
+              </p>
+            </div>
+            <div className="grid grid-cols-2 gap-2.5">
+              {normalizedGallery.map((url, idx) => (
+                <motion.button
+                  key={`gallery-${idx}`}
+                  className="overflow-hidden w-full block focus:outline-none"
+                  style={{
+                    borderRadius: s.isDark ? '10px' : '18px',
+                    border: `1px solid ${s.divider}`,
+                    aspectRatio: idx % 3 === 0 ? '3 / 4' : '1 / 1',
+                  }}
+                  onClick={() => setLightboxIndex(idx)}
+                  whileHover={{ scale: 1.025 }}
+                  whileTap={{ scale: 0.975 }}
+                  transition={{ duration: 0.18 }}
+                >
+                  <img
+                    src={url}
+                    alt={`Galería ${idx + 1}`}
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                </motion.button>
+              ))}
+            </div>
+          </section>
+        </FadeIn>
+      )}
+
+      <AnimatePresence>
+        {lightboxIndex !== null && (
+          <Lightbox
+            images={normalizedGallery}
+            initialIndex={lightboxIndex}
+            onClose={() => setLightboxIndex(null)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* ══ 9. PADRES Y PADRINOS ════════════════════════════════════════════════ */}
+      {(parsedParents.length > 0 || parsedSponsors.length > 0) && (
+        <FadeIn>
+          <section className={`${SECTION} text-center`}>
+            <SectionDivider s={s} />
+            {parsedParents.length > 0 && (
+              <div className="mb-12">
+                <SectionLabel s={s}>Papás</SectionLabel>
+                <div className="mt-6 space-y-2">
+                  {parsedParents.map((name, i) => (
+                    <p key={i} className="font-cormorant text-xl leading-snug" style={{ color: s.text }}>
+                      {name}
+                    </p>
+                  ))}
+                </div>
+              </div>
+            )}
+            {parsedSponsors.length > 0 && (
+              <div>
+                <SectionLabel s={s}>Padrinos</SectionLabel>
+                <div className="mt-6 space-y-2">
+                  {parsedSponsors.map((name, i) => (
+                    <p key={i} className="font-cormorant text-xl leading-snug" style={{ color: s.text }}>
+                      {name}
+                    </p>
+                  ))}
+                </div>
+              </div>
+            )}
+          </section>
+        </FadeIn>
+      )}
+
+      {/* ══ 10. REGALOS ══════════════════════════════════════════════════════════ */}
+      {giftsInfo && (
+        <FadeIn>
+          <section className={`${SECTION}`}>
+            <div
+              className="px-7 py-9 rounded-3xl text-center"
+              style={{ background: s.glass, border: `1px solid ${s.glassBorder}` }}
+            >
+              <div className="flex justify-center mb-4">
+                <Gift size={22} style={{ color: s.accent, opacity: 0.75 }} />
+              </div>
+              <SectionLabel s={s}>Mesa de regalos</SectionLabel>
+              <div className="h-px w-6 mx-auto my-3" style={{ background: s.divider }} />
+              <p
+                className="font-cormorant text-lg leading-relaxed whitespace-pre-line"
+                style={{ color: s.text }}
+              >
+                {giftsInfo}
+              </p>
+            </div>
+          </section>
+        </FadeIn>
+      )}
+
+      {/* ══ 11. INSTAGRAM ════════════════════════════════════════════════════════ */}
+      {(instagramHandle || hashtag) && (
+        <FadeIn>
+          <section className={`${SECTION} text-center`}>
+            <SectionLabel s={s}>Comparte tu experiencia</SectionLabel>
+            <div className="mt-7 flex flex-col items-center gap-3">
+              {instagramHandle && (
+                <a
+                  href={`https://instagram.com/${instagramHandle.replace(/^@/, '')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 text-base font-dm transition-opacity hover:opacity-65"
+                  style={{ color: s.accent }}
+                >
+                  <Instagram size={17} />
+                  {instagramHandle.startsWith('@') ? instagramHandle : `@${instagramHandle}`}
+                </a>
+              )}
+              {hashtag && (
+                <p className="text-sm font-dm" style={{ color: s.textMuted }}>
+                  {hashtag}
+                </p>
+              )}
+            </div>
+          </section>
+        </FadeIn>
+      )}
+
+      {/* ══ 12. CONFIRMACIÓN DE ASISTENCIA ══════════════════════════════════════ */}
+      {rsvpValue && (
+        <FadeIn>
+          <section className={`${SECTION} text-center`}>
+            <SectionLabel s={s}>{rsvpLabel}</SectionLabel>
+            <p className="font-cormorant text-xl mt-3 mb-8" style={{ color: s.text }}>
+              {rsvpValue}
+            </p>
+            <a
+              href={getRsvpHref(rsvpValue)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-2 px-10 py-4 rounded-full text-[0.62rem] uppercase tracking-[0.3em] font-dm transition-all hover:opacity-75 active:scale-95"
+              style={{ background: s.rsvpBg, color: s.rsvpText }}
+            >
+              <MessageCircle size={13} />
+              Confirmar asistencia
+            </a>
+          </section>
+        </FadeIn>
+      )}
+
+      {/* ══ 13. MENSAJE PERSONALIZADO AL INVITADO ═══════════════════════════════ */}
+      {guestName && (
+        <FadeIn>
+          <section className={`${SECTION}`}>
+            <div
+              className="px-7 py-10 rounded-3xl text-center"
+              style={{
+                background: s.glass,
+                border: `1px solid ${s.glassBorder}`,
+                ...embossPanel,
+              }}
+            >
+              <SectionLabel s={s}>Esta invitación es para ti</SectionLabel>
+              <p
+                className="font-cormorant italic mt-3 mb-1"
+                style={{ fontSize: '1.1rem', color: s.textMuted }}
+              >
+                {invitation.guestGreeting || 'Con mucho cariño te invitamos'},
+              </p>
+              <p
+                className={`font-cormorant leading-snug mt-2${hasFoil ? ' inv-foil-text' : ''}`}
+                style={{
+                  fontSize: 'clamp(2.2rem, 9vw, 3rem)',
+                  ...(hasFoil ? { background: foilGradient } : { color: s.accent, ...embossText }),
+                }}
+              >
+                {guestName}
+              </p>
+              {guestMessage && (
+                <>
+                  <div className="my-6">
+                    <Ornament s={s} />
+                  </div>
+                  <p
+                    className="text-base font-cormorant italic leading-relaxed"
+                    style={{ color: s.text, opacity: 0.82 }}
+                  >
+                    {guestMessage}
+                  </p>
+                </>
+              )}
+            </div>
+          </section>
+        </FadeIn>
+      )}
+
+      {/* ══ 14. CIERRE / COMPARTIR ══════════════════════════════════════════════ */}
+      <FadeIn>
+        <section className={`${PAD} pt-8 pb-20 text-center`}>
+          <SectionDivider s={s} />
+          <SectionLabel s={s}>Compartir invitación</SectionLabel>
+
+          {/* QR code */}
+          <div
+            className="mt-7 mx-auto w-36 h-36 grid place-items-center rounded-2xl shadow-lg"
+            style={{
+              background: s.isDark ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.9)',
+              border: `1px solid ${s.glassBorder}`,
+            }}
+          >
+            <QrCodeImage value={shareUrl} size={100} className="w-24 h-24" />
+          </div>
+
+          {/* Share buttons */}
+          <div className="mt-6 flex items-center justify-center gap-3">
+            <button
+              onClick={handleCopy}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-full text-[0.58rem] uppercase tracking-[0.22em] font-dm transition-all active:scale-95"
+              style={{
+                background: s.glass,
+                border: `1px solid ${s.glassBorder}`,
+                color: copied ? s.accent : s.textMuted,
+              }}
+            >
+              {copied ? <Check size={11} /> : <Copy size={11} />}
+              {copied ? 'Copiado' : 'Copiar enlace'}
+            </button>
+            <a
+              href={whatsappShare}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-full text-[0.58rem] uppercase tracking-[0.22em] font-dm transition-all hover:opacity-75 active:scale-95"
+              style={{
+                background: s.glass,
+                border: `1px solid ${s.glassBorder}`,
+                color: s.textMuted,
+              }}
+            >
+              <MessageCircle size={11} />
+              WhatsApp
+            </a>
+          </div>
+
+          {/* Branding */}
+          <div className="mt-14 pt-6" style={{ borderTop: `1px solid ${s.divider}` }}>
+            <p
+              className="text-[0.48rem] uppercase tracking-[0.32em]"
+              style={{ color: s.textMuted, opacity: 0.38 }}
+            >
+              Invitación creada por Pedro Vargas Fotografía
             </p>
           </div>
         </section>
-      ) : null}
-
-      {rsvpValue ? (
-        <section className={`${PAD} pb-12 text-center`}>
-          <SectionLabel s={s}>{rsvpLabel}</SectionLabel>
-          <p className="font-cormorant text-lg mb-6 mt-2" style={{ color: s.text }}>
-            {rsvpValue}
-          </p>
-          <a
-            href={getRsvpHref(rsvpValue)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center justify-center gap-2 px-8 py-3 text-[0.65rem] uppercase tracking-[0.25em] font-dm transition-opacity duration-200 hover:opacity-80"
-            style={{ background: s.rsvpBg, color: s.rsvpText, border: `1px solid ${s.glassBorder}` }}
-          >
-            <MessageCircle size={13} />
-            Confirmar asistencia
-          </a>
-        </section>
-      ) : null}
-
-      <section className={`${PAD} pb-16 text-center`}>
-        <div className="flex items-center gap-3 mb-8">
-          <div className="flex-1 h-px" style={{ background: s.divider }} />
-          <span className="text-[0.55rem] uppercase tracking-[0.3em]" style={{ color: s.accent, opacity: 0.5 }}>
-            Compartir
-          </span>
-          <div className="flex-1 h-px" style={{ background: s.divider }} />
-        </div>
-
-        <SectionLabel s={s}>Comparte esta invitación</SectionLabel>
-
-        <div
-          className="mt-6 mx-auto w-32 h-32 grid place-items-center shadow-xl"
-          style={{
-            background: s.isDark ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.85)',
-            border: `1px solid ${s.glassBorder}`,
-          }}
-        >
-          <QrCodeImage value={shareUrl} size={96} className="w-24 h-24" />
-        </div>
-
-        {hashtag ? (
-          <p className="mt-5 text-[0.6rem] uppercase tracking-[0.25em]" style={{ color: s.textMuted }}>
-            {hashtag}
-          </p>
-        ) : null}
-
-        <div className="mt-6 flex items-center justify-center gap-3">
-          <button
-            onClick={handleCopy}
-            className="flex items-center gap-2 px-4 py-2 text-[0.6rem] uppercase tracking-[0.2em] font-dm transition-all duration-200"
-            style={{
-              background: s.glass,
-              border: `1px solid ${s.glassBorder}`,
-              color: copied ? s.accent : s.textMuted,
-            }}
-            title="Copiar enlace"
-          >
-            {copied ? <Check size={12} /> : <Copy size={12} />}
-            {copied ? 'Copiado' : 'Copiar enlace'}
-          </button>
-
-          <a
-            href={whatsappShare}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 px-4 py-2 text-[0.6rem] uppercase tracking-[0.2em] font-dm transition-all duration-200 hover:opacity-80"
-            style={{
-              background: s.glass,
-              border: `1px solid ${s.glassBorder}`,
-              color: s.textMuted,
-            }}
-            title="Compartir por WhatsApp"
-          >
-            <MessageCircle size={12} />
-            WhatsApp
-          </a>
-        </div>
-
-        <div className="mt-10 pt-6" style={{ borderTop: `1px solid ${s.divider}` }}>
-          <p className="text-[0.5rem] uppercase tracking-[0.3em]" style={{ color: s.textMuted, opacity: 0.45 }}>
-            Invitación creada por Pedro Vargas Fotografía
-          </p>
-        </div>
-      </section>
+      </FadeIn>
     </div>
   )
 }
-
