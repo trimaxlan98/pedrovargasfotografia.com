@@ -1,13 +1,14 @@
 {
   "name": "fotografia-profesional",
   "private": true,
-  "version": "1.1.2.7.1",
+  "version": "1.1.2.7.2",
   "type": "module",
   "engines": {
     "node": ">=18.0.0",
     "npm": ">=9.0.0"
   },
   "scripts": {
+    "dev:install": "npm install --prefix server",
     "dev": "concurrently \"npm run dev:client\" \"npm run dev:server\"",
     "dev:client": "vite",
     "dev:server": "npm run dev --prefix server",
