@@ -153,7 +153,18 @@ async function applyMigrations(prisma, migrationsDir) {
             // Run each statement individually
             const statements = sql.split(/;\s*\n/).map((s) => s.trim()).filter(Boolean);
             for (const stmt of statements) {
-                await prisma.$executeRawUnsafe(stmt);
+                try {
+                    await prisma.$executeRawUnsafe(stmt);
+                }
+                catch (stmtErr) {
+                    const msg = stmtErr.message ?? '';
+                    // Ignore benign idempotency errors (column/table already exists or doesn't exist)
+                    if (/duplicate column name|already exists|no such column|no such table/i.test(msg)) {
+                        console.warn(`[startup] Skipping already-applied statement: ${msg.split('\n')[0]}`);
+                        continue;
+                    }
+                    throw stmtErr;
+                }
             }
             // Record migration as applied
             const id = crypto.randomUUID();

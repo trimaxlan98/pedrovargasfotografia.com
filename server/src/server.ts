@@ -169,7 +169,17 @@ async function applyMigrations(prisma: import('@prisma/client').PrismaClient, mi
       // Run each statement individually
       const statements = sql.split(/;\s*\n/).map((s: string) => s.trim()).filter(Boolean)
       for (const stmt of statements) {
-        await prisma.$executeRawUnsafe(stmt)
+        try {
+          await prisma.$executeRawUnsafe(stmt)
+        } catch (stmtErr: unknown) {
+          const msg = (stmtErr as Error).message ?? ''
+          // Ignore benign idempotency errors (column/table already exists or doesn't exist)
+          if (/duplicate column name|already exists|no such column|no such table/i.test(msg)) {
+            console.warn(`[startup] Skipping already-applied statement: ${msg.split('\n')[0]}`)
+            continue
+          }
+          throw stmtErr
+        }
       }
 
       // Record migration as applied
