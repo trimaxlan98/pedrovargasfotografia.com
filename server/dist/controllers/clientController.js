@@ -248,7 +248,7 @@ async function createInvitation(req, res) {
         R.badRequest(res, 'Datos inválidos', errors.array().map(e => e.msg).join(', '));
         return;
     }
-    const { invitationType, eventType, title, names, eventDate, eventTime, venue, locationNote, message, quote, hashtag, template, primaryColor, textColor, fontStyle, isDark, dressCode, rsvpLabel, rsvpValue, rsvpContact, heroImage, gallery, isPublished, rsvpDeadline, guestGreeting, defaultGuestName, } = req.body;
+    const { invitationType, eventType, title, names, eventDate, eventTime, venue, locationNote, message, quote, hashtag, template, primaryColor, textColor, fontStyle, isDark, dressCode, rsvpLabel, rsvpValue, rsvpContact, heroImage, gallery, isPublished, rsvpDeadline, guestGreeting, defaultGuestName, ceremonyVenue, ceremonyAddress, ceremonyTime, ceremonyPhoto, ceremonyMapUrl, receptionVenue, receptionAddress, receptionTime, receptionPhoto, receptionMapUrl, parentsInfo, sponsorsInfo, giftsInfo, instagramHandle, } = req.body;
     const shareToken = (0, uuid_1.v4)();
     const resolvedRsvp = rsvpValue || rsvpContact;
     const invitation = await prisma_1.default.digitalInvitation.create({
@@ -272,6 +272,9 @@ async function createInvitation(req, res) {
             shareToken,
             guestGreeting,
             defaultGuestName,
+            ceremonyVenue, ceremonyAddress, ceremonyTime, ceremonyPhoto, ceremonyMapUrl,
+            receptionVenue, receptionAddress, receptionTime, receptionPhoto, receptionMapUrl,
+            parentsInfo, sponsorsInfo, giftsInfo, instagramHandle,
         },
     });
     const invUser = await prisma_1.default.user.findUnique({ where: { id: req.user.userId }, select: { name: true, email: true } });
@@ -294,7 +297,7 @@ async function updateInvitation(req, res) {
         R.notFound(res, 'Invitación no encontrada');
         return;
     }
-    const { invitationType, eventType, title, names, eventDate, eventTime, venue, locationNote, message, quote, hashtag, template, primaryColor, textColor, fontStyle, isDark, dressCode, rsvpLabel, rsvpValue, rsvpContact, heroImage, gallery, isPublished, rsvpDeadline, guestGreeting, defaultGuestName, } = req.body;
+    const { invitationType, eventType, title, names, eventDate, eventTime, venue, locationNote, message, quote, hashtag, template, primaryColor, textColor, fontStyle, isDark, dressCode, rsvpLabel, rsvpValue, rsvpContact, heroImage, gallery, isPublished, rsvpDeadline, guestGreeting, defaultGuestName, ceremonyVenue, ceremonyAddress, ceremonyTime, ceremonyPhoto, ceremonyMapUrl, receptionVenue, receptionAddress, receptionTime, receptionPhoto, receptionMapUrl, parentsInfo, sponsorsInfo, giftsInfo, instagramHandle, } = req.body;
     // rsvpContact is a legacy alias — map it to rsvpValue, never send to Prisma directly
     const resolvedRsvpValue = rsvpValue || rsvpContact || undefined;
     const payload = {
@@ -302,6 +305,9 @@ async function updateInvitation(req, res) {
         message, quote, hashtag, template, primaryColor, textColor, fontStyle,
         isDark, dressCode, rsvpLabel, rsvpValue: resolvedRsvpValue, heroImage,
         isPublished, guestGreeting, defaultGuestName,
+        ceremonyVenue, ceremonyAddress, ceremonyTime, ceremonyPhoto, ceremonyMapUrl,
+        receptionVenue, receptionAddress, receptionTime, receptionPhoto, receptionMapUrl,
+        parentsInfo, sponsorsInfo, giftsInfo, instagramHandle,
     };
     if (gallery !== undefined) {
         payload.gallery = serializeGallery(gallery);

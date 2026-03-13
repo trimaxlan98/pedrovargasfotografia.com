@@ -539,7 +539,7 @@ async function getInvitation(req, res) {
     R.success(res, withStats);
 }
 async function createInvitation(req, res) {
-    const { clientId, invitationType, eventType, title, names, eventDate, eventTime, venue, locationNote, message, quote, hashtag, template, primaryColor, textColor, fontStyle, isDark, dressCode, rsvpLabel, rsvpValue, rsvpContact, heroImage, gallery, isPublished, rsvpDeadline, guestGreeting, defaultGuestName, } = req.body;
+    const { clientId, invitationType, eventType, title, names, eventDate, eventTime, venue, locationNote, message, quote, hashtag, template, primaryColor, textColor, fontStyle, isDark, dressCode, rsvpLabel, rsvpValue, rsvpContact, heroImage, gallery, isPublished, rsvpDeadline, guestGreeting, defaultGuestName, ceremonyVenue, ceremonyAddress, ceremonyTime, ceremonyPhoto, ceremonyMapUrl, receptionVenue, receptionAddress, receptionTime, receptionPhoto, receptionMapUrl, parentsInfo, sponsorsInfo, giftsInfo, instagramHandle, } = req.body;
     if (!clientId) {
         R.badRequest(res, 'Se requiere clientId');
         return;
@@ -572,6 +572,9 @@ async function createInvitation(req, res) {
             shareToken,
             guestGreeting,
             defaultGuestName,
+            ceremonyVenue, ceremonyAddress, ceremonyTime, ceremonyPhoto, ceremonyMapUrl,
+            receptionVenue, receptionAddress, receptionTime, receptionPhoto, receptionMapUrl,
+            parentsInfo, sponsorsInfo, giftsInfo, instagramHandle,
         },
     });
     R.created(res, normalizeInvitation(invitation));
@@ -585,13 +588,16 @@ async function updateInvitation(req, res) {
         R.notFound(res, 'Invitación no encontrada');
         return;
     }
-    const { invitationType, eventType, title, names, eventDate, eventTime, venue, locationNote, message, quote, hashtag, template, primaryColor, textColor, fontStyle, isDark, dressCode, rsvpLabel, rsvpValue, rsvpContact, heroImage, gallery, isPublished, rsvpDeadline, guestGreeting, defaultGuestName, } = req.body;
+    const { invitationType, eventType, title, names, eventDate, eventTime, venue, locationNote, message, quote, hashtag, template, primaryColor, textColor, fontStyle, isDark, dressCode, rsvpLabel, rsvpValue, rsvpContact, heroImage, gallery, isPublished, rsvpDeadline, guestGreeting, defaultGuestName, ceremonyVenue, ceremonyAddress, ceremonyTime, ceremonyPhoto, ceremonyMapUrl, receptionVenue, receptionAddress, receptionTime, receptionPhoto, receptionMapUrl, parentsInfo, sponsorsInfo, giftsInfo, instagramHandle, } = req.body;
     const resolvedRsvpValue = rsvpValue || rsvpContact || undefined;
     const payload = {
         invitationType, eventType, title, names, eventDate, eventTime, venue, locationNote,
         message, quote, hashtag, template, primaryColor, textColor, fontStyle,
         isDark, dressCode, rsvpLabel, rsvpValue: resolvedRsvpValue, heroImage,
         isPublished, guestGreeting, defaultGuestName,
+        ceremonyVenue, ceremonyAddress, ceremonyTime, ceremonyPhoto, ceremonyMapUrl,
+        receptionVenue, receptionAddress, receptionTime, receptionPhoto, receptionMapUrl,
+        parentsInfo, sponsorsInfo, giftsInfo, instagramHandle,
     };
     if (gallery !== undefined) {
         payload.gallery = serializeGallery(gallery);
