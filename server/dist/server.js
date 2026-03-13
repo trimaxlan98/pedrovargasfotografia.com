@@ -46,6 +46,8 @@ async function loadApp() {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const { hashPassword } = require('./utils/password');
     console.log('[startup] Iniciando motor de base de datos...');
+    // Backup the DB before applying migrations so data can be recovered if something goes wrong
+    backupDatabase();
     // Apply pending SQL migrations directly — no CLI needed, no permissions issues.
     await applyMigrations(prisma, require('path').join(__dirname, '..', 'prisma', 'migrations'));
     // Install Express as the request handler
@@ -112,6 +114,32 @@ async function loadApp() {
     }
     catch (e) {
         console.error('initServices error:', e.message);
+    }
+}
+/**
+ * Copies the SQLite DB file to a timestamped .backup file before migrations run.
+ * Gives a recovery point if a deploy goes wrong.
+ */
+function backupDatabase() {
+    const fs = require('fs');
+    const dbUrl = process.env.DATABASE_URL || '';
+    // Only handle file: SQLite URLs
+    const match = dbUrl.match(/^file:(.+)$/);
+    if (!match)
+        return;
+    const dbPath = match[1];
+    if (!fs.existsSync(dbPath)) {
+        console.log('[startup] DB no encontrada aún, no se hace backup');
+        return;
+    }
+    try {
+        const backupPath = dbPath + '.backup';
+        fs.copyFileSync(dbPath, backupPath);
+        const size = (fs.statSync(dbPath).size / 1024).toFixed(1);
+        console.log(`[startup] Backup de DB creado: ${backupPath} (${size} KB)`);
+    }
+    catch (e) {
+        console.warn('[startup] No se pudo crear backup de DB:', e.message);
     }
 }
 /**
