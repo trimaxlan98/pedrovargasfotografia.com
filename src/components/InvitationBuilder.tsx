@@ -361,8 +361,6 @@ export default function InvitationBuilder() {
   const { ref, inView } = useInView()
   const { isAuthenticated, isAdmin } = useAuth()
 
-  if (!isAdmin) return <InvitationBuilderTeaser />
-
   const [tab, setTab] = useState<Tab>('estilo')
   const [template, setTemplate] = useState<Template>('warm')
   const [primaryColor, setPrimaryColor] = useState<PrimaryColor>('gold')
@@ -390,6 +388,8 @@ export default function InvitationBuilder() {
   const [photos, setPhotos] = useState<File[]>([])
   const [saveError, setSaveError] = useState('')
   const [copied, setCopied] = useState(false)
+
+  if (!isAdmin) return <InvitationBuilderTeaser />
 
   const set = (field: keyof InviteData) => (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
