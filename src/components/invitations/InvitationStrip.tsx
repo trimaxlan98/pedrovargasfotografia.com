@@ -185,8 +185,16 @@ const ES_MONTHS: Record<string, number> = {
 
 function parseEventDate(raw: string): Date | null {
   if (!raw) return null
+  // Try native parse (handles ISO 8601 and many other formats)
   const native = new Date(raw)
   if (!isNaN(native.getTime())) return native
+  // Try DD/MM/YYYY or DD-MM-YYYY
+  const slashMatch = raw.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/)
+  if (slashMatch) {
+    const d = new Date(Number(slashMatch[3]), Number(slashMatch[2]) - 1, Number(slashMatch[1]))
+    if (!isNaN(d.getTime())) return d
+  }
+  // Try Spanish: "28 junio 2026" or "28 de junio de 2026"
   const parts = raw.toLowerCase().replace(/ de /g, ' ').split(/\s+/)
   if (parts.length >= 3) {
     const day = parseInt(parts[0], 10)

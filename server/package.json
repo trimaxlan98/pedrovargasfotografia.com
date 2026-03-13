@@ -12,7 +12,9 @@
     "db:generate": "prisma generate",
     "db:seed": "ts-node prisma/seed.ts",
     "db:studio": "prisma studio",
-    "db:reset": "prisma migrate reset --force && ts-node prisma/seed.ts"
+    "db:reset": "prisma migrate reset --force && ts-node prisma/seed.ts",
+    "inject:invitations": "ts-node scripts/inject-invitations.ts",
+    "inject:invitations:dry": "ts-node scripts/inject-invitations.ts --dry-run"
   },
   "dependencies": {
     "@prisma/client": "^5.10.2",
