@@ -39,7 +39,8 @@
       "Bash(ls \"C:/Users/GIRTEC/Documents/GitHub/pedrovargasfotografia.com/\"*.csv 2>/dev/null || echo \"No CSV files found\")",
       "Bash(find C:/Users/GIRTEC/Documents/GitHub/pedrovargasfotografia.com -name *.xlsx)",
       "Read(//c/Users/GIRTEC/Documents/**)",
-      "Bash(cd \"C:/Users/GIRTEC/Documents/GitHub/pedrovargasfotografia.com\" && node -e \"\nconst xlsx = require\\('xlsx'\\);\nconst wb = xlsx.readFile\\('LISTA INVITADOS XV AÑOS GRETHEL-1.xlsx'\\);\nconsole.log\\('Hojas:', wb.SheetNames\\);\nconst ws = wb.Sheets[wb.SheetNames[0]];\nconst data = xlsx.utils.sheet_to_json\\(ws, { header: 1 }\\);\ndata.slice\\(0, 10\\).forEach\\(\\(row, i\\) => console.log\\('Fila', i+1, ':', JSON.stringify\\(row\\)\\)\\);\n\" 2>&1 || echo \"xlsx no disponible, intentando con python...\")"
+      "Bash(cd \"C:/Users/GIRTEC/Documents/GitHub/pedrovargasfotografia.com\" && node -e \"\nconst xlsx = require\\('xlsx'\\);\nconst wb = xlsx.readFile\\('LISTA INVITADOS XV AÑOS GRETHEL-1.xlsx'\\);\nconsole.log\\('Hojas:', wb.SheetNames\\);\nconst ws = wb.Sheets[wb.SheetNames[0]];\nconst data = xlsx.utils.sheet_to_json\\(ws, { header: 1 }\\);\ndata.slice\\(0, 10\\).forEach\\(\\(row, i\\) => console.log\\('Fila', i+1, ':', JSON.stringify\\(row\\)\\)\\);\n\" 2>&1 || echo \"xlsx no disponible, intentando con python...\")",
+      "Bash(git fetch:*)"
     ]
   }
 }
