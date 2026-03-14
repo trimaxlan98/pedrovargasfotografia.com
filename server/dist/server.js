@@ -115,6 +115,164 @@ async function loadApp() {
     catch (e) {
         console.error('initServices error:', e.message);
     }
+    // Seed: XV Años de Grethel — one-time, idempotent
+    try {
+        const GRETHEL_EMAIL = 'grethel.huerta@gmail.com';
+        const GRETHEL_TITLE = 'XV Años de Grethel';
+        // Check if already seeded
+        const existingClient = await prisma.user.findUnique({ where: { email: GRETHEL_EMAIL }, select: { id: true } });
+        const alreadySeeded = existingClient
+            ? (await prisma.digitalInvitation.count({ where: { clientId: existingClient.id, title: GRETHEL_TITLE } })) > 0
+            : false;
+        if (!alreadySeeded) {
+            console.log('[startup] Sembrando invitaciones XV Grethel...');
+            // Create or find client
+            let clientId;
+            if (existingClient) {
+                clientId = existingClient.id;
+            }
+            else {
+                const hashed = await hashPassword('Grethel2026!');
+                const user = await prisma.user.create({
+                    data: { name: 'Grethel Huerta', email: GRETHEL_EMAIL, phone: '527681000000', password: hashed, role: 'CLIENT', isActive: true },
+                    select: { id: true },
+                });
+                clientId = user.id;
+            }
+            // Create master invitation
+            const inv = await prisma.digitalInvitation.create({
+                data: {
+                    clientId,
+                    invitationType: 'individual',
+                    title: GRETHEL_TITLE,
+                    names: 'Grethel',
+                    eventType: 'XV Años',
+                    eventDate: '2026-05-02',
+                    eventTime: '18:00 hrs',
+                    template: 'floral',
+                    quote: '"Hoy comienzan los mejores años de mi vida"',
+                    dressCode: 'Formal',
+                    hashtag: '#XVGrethel',
+                    parentsInfo: JSON.stringify(['Ramón Rojas González', 'Grissel Huerta Méndez']),
+                    sponsorsInfo: JSON.stringify(['Rogelio Huerta Méndez', 'Erika Michel Zepeda Vicencio']),
+                    giftsInfo: 'Lluvia de sobres',
+                    rsvpLabel: 'Confirmar asistencia',
+                    rsvpValue: '527681000000',
+                    rsvpDeadline: new Date('2026-04-14T12:00:00.000Z'),
+                    ceremonyVenue: 'Hotel Royal Garden',
+                    ceremonyAddress: 'Hotel Royal Garden',
+                    ceremonyTime: '18:00 hrs',
+                    receptionVenue: 'Hotel Royal Garden',
+                    receptionAddress: 'Hotel Royal Garden',
+                    receptionTime: '19:00 hrs',
+                    guestGreeting: 'Con mucho cariño te invitamos',
+                    defaultGuestName: 'Familia y Amigos',
+                    isPublished: true,
+                },
+                select: { id: true },
+            });
+            // Build guests list
+            const buildMsg = (name, passes) => {
+                const firstName = name.split(' ')[0];
+                return passes === 1
+                    ? `Esta invitación es personal para ti, ${firstName}. ¡Te esperamos con mucho cariño! 🎀`
+                    : `Esta invitación es válida para ${passes} personas. ¡Los esperamos a todos, ${firstName}! 🎀`;
+            };
+            const GUESTS = [
+                { name: 'DENNISE HERRERA Y FAMILIA', passes: 3 }, { name: 'MARISOL GARCIA Y FAMILIA', passes: 5 },
+                { name: 'ERIKA VICENCIO Y FAMILIA', passes: 4 }, { name: 'BIANCA LANDA Y FAMILIA', passes: 4 },
+                { name: 'MANUEL HUERTA LOPEZ Y FAMILIA', passes: 2 }, { name: 'ALMA HUERTA LOPEZ Y FAMILIA', passes: 4 },
+                { name: 'RAUL HUERTA LOPEZ Y FAMILIA', passes: 4 }, { name: 'DAVID HUERTA LOPEZ Y FAMILIA', passes: 2 },
+                { name: 'DANIEL HUERTA LOPEZ Y FAMILIA', passes: 2 }, { name: 'OMAR HUERTA MENDEZ', passes: 3 },
+                { name: 'FANY HUERTA MENDEZ', passes: 3 }, { name: 'ALEIYI HUERTA MENDEZ', passes: 1 },
+                { name: 'MANUEL HUERTA MENDEZ', passes: 2 }, { name: 'DANIEL HUERTA ESPINOZA Y FAMILIA', passes: 4 },
+                { name: 'PERSIS HUERTA ESPINOZA', passes: 1 }, { name: 'ARIEL HERNANDEZ ESPINOZA', passes: 2 },
+                { name: 'JONATHAN HERNANDEZ', passes: 1 }, { name: 'OSIRIS HERNANDEZ', passes: 1 },
+                { name: 'DAVID HUERTA RAMOS', passes: 1 }, { name: 'CRISTINA HUERTA RAMOS', passes: 5 },
+                { name: 'CELESTINO CUERVO Y FAMILIA', passes: 2 }, { name: 'IVAN DEL RIO', passes: 2 },
+                { name: 'NAYELI FLORES Y FAMILIA', passes: 4 }, { name: 'DAFNE SOBREVILLA', passes: 2 },
+                { name: 'SARAI PEREZ CISNEROS', passes: 2 }, { name: 'CRISTINA HUERTA GOMEZ', passes: 5 },
+                { name: 'ESPERANZA HUERTA GOMEZ', passes: 2 }, { name: 'MICHEL ZEPEDA', passes: 10 },
+                { name: 'JORGE ROJAS', passes: 5 }, { name: 'PEPE ROJAS', passes: 2 },
+                { name: 'BEATRIZ ROJAS LARIOS Y FAMILIA', passes: 7 }, { name: 'MARCOS ROJAS Y FAMILIA', passes: 2 },
+                { name: 'ANA REYES', passes: 2 }, { name: 'JOEL SIERRA Y FAMILIA', passes: 5 },
+                { name: 'JORGE SIERRA Y FAMILIA', passes: 3 }, { name: 'JAIME ROJAS Y FAMILIA', passes: 4 },
+                { name: 'VERONICA ROJAS Y FAMILIA', passes: 4 }, { name: 'CELINA Y FAMILIA', passes: 5 },
+                { name: 'ITZEL Y FAMILIA', passes: 3 }, { name: 'ITZEL MENDEZ', passes: 1 },
+                { name: 'CELINA Y FAMILIA (2)', passes: 2 }, { name: 'FAMILIA', passes: 4 },
+                { name: 'KASTENI', passes: 1 }, { name: 'ANGEL', passes: 2 },
+                { name: 'HUGO RODRIGUEZ Y FAMILIA', passes: 6 }, { name: 'HUGO RODRIGUEZ TREJO Y FAMILIA', passes: 3 },
+                { name: 'ALBERTO RODRIGUEZ CAMACHO Y FAMILIA', passes: 6 }, { name: 'MARCE', passes: 2 },
+                { name: 'MARICONCHIS', passes: 2 }, { name: 'NORA', passes: 2 },
+                { name: 'PEDRO MALERVA', passes: 2 }, { name: 'LIZ', passes: 3 },
+                { name: 'YELVI', passes: 2 }, { name: 'ROCIO VALDEZ', passes: 3 },
+                { name: 'FLOR HERNANDEZ', passes: 3 }, { name: 'ROCIO LARA', passes: 2 },
+                { name: 'EDUARDO SOLIS', passes: 2 }, { name: 'HERBERT REYES', passes: 2 },
+                { name: 'ANY PATIÑO Y FAMILIA', passes: 3 }, { name: 'FELIPA ROJAS', passes: 2 },
+                { name: 'MIGUEL VIDAL Y FAMILIA', passes: 3 }, { name: 'JOSE ROJAS Y FAMILIA', passes: 4 },
+                { name: 'ROXANA MENDEZ', passes: 2 }, { name: 'MAMA AXEL', passes: 2 },
+                { name: 'PSICOLOGO NARCISO', passes: 1 }, { name: 'MAESTRA ROSA', passes: 2 },
+                { name: 'MAESTRA FLORA', passes: 1 }, { name: 'MAESTRA TAMARA', passes: 1 },
+                { name: 'MAESTRO FRANCISCO', passes: 1 }, { name: 'MAESTRA MICHEL', passes: 1 },
+                { name: 'MAESTRA TERESITA', passes: 1 }, { name: 'MAESTRA ADRY', passes: 4 },
+                { name: 'MAESTRO MARIO', passes: 1 }, { name: 'MAESTRA SILVIA', passes: 2 },
+                { name: 'MAESTRA BETTY', passes: 1 }, { name: 'ALVIS MAYA', passes: 2 },
+                { name: 'YILIANA Y FAMILIA', passes: 4 }, { name: 'PADRE JUAN', passes: 2 },
+                { name: 'VIKY EURO', passes: 1 }, { name: 'ISA EURO', passes: 1 },
+                { name: 'REBECA SOTO TORRES', passes: 2 }, { name: 'IVETTE', passes: 2 },
+                { name: 'BRUNO', passes: 2 }, { name: 'CARLOS PINEDA PULIDO', passes: 2 },
+                { name: 'ESDEYNE ALEJANDRE HUERTA', passes: 1 }, { name: 'GUSTAVO ALEJANDRE HUERTA', passes: 2 },
+                { name: 'VALERIA', passes: 1 }, { name: 'ALONDRA', passes: 1 },
+                { name: 'DANIA', passes: 1 }, { name: 'BLANCA', passes: 1 },
+                { name: 'RENATA', passes: 1 }, { name: 'DAFNE', passes: 1 },
+                { name: 'LOHANY', passes: 1 }, { name: 'ZAIRA', passes: 1 },
+                { name: 'FRIDA', passes: 1 }, { name: 'FATIMA', passes: 1 },
+                { name: 'ROBERTO', passes: 1 }, { name: 'AKBAL', passes: 1 },
+                { name: 'MATEO TAPIA', passes: 1 }, { name: 'DEAN', passes: 1 },
+                { name: 'JOSE MIGUEL', passes: 1 }, { name: 'BRUNO (AMIGO)', passes: 1 },
+                { name: 'CALIXTO', passes: 1 }, { name: 'SEBASTIAN', passes: 1 },
+                { name: 'KAYLEIGH', passes: 1 }, { name: 'TANIA', passes: 1 },
+                { name: 'IVAN DEL RIO (AMIGO)', passes: 1 }, { name: 'ARTURO', passes: 1 },
+                { name: 'DERECK', passes: 1 }, { name: 'AARON', passes: 1 },
+                { name: 'MILAN', passes: 1 }, { name: 'ADAL', passes: 1 },
+                { name: 'EMILIANO P', passes: 1 }, { name: 'DAVID', passes: 1 },
+                { name: 'KARLA', passes: 1 }, { name: 'DANNA', passes: 1 },
+                { name: 'SOFIA SOTO', passes: 1 }, { name: 'ANA BETANCOURT', passes: 1 },
+                { name: 'MAITE', passes: 1 }, { name: 'CLEMENTINA', passes: 1 },
+                { name: 'HANIA', passes: 1 }, { name: 'JIMENA', passes: 1 },
+                { name: 'ALEXA RAMOS', passes: 1 }, { name: 'CRISTELL', passes: 1 },
+                { name: 'MAJO', passes: 1 }, { name: 'MELO', passes: 1 },
+                { name: 'SOFIA SALAS', passes: 1 }, { name: 'KENNYA', passes: 1 },
+                { name: 'ITALIA', passes: 1 }, { name: 'MARIANO', passes: 1 },
+                { name: 'MANANNE', passes: 1 }, { name: 'VALENTINA', passes: 1 },
+                { name: 'ZAKY', passes: 1 }, { name: 'TABATA', passes: 1 },
+                { name: 'REGINA', passes: 1 }, { name: 'MONICA', passes: 1 },
+                { name: 'JULIETTA', passes: 1 }, { name: 'IVANNA', passes: 1 },
+                { name: 'JOSUE', passes: 1 }, { name: 'BASTIAN', passes: 1 },
+                { name: 'CAMILA', passes: 1 }, { name: 'KAMILE', passes: 1 },
+                { name: 'OMAR', passes: 1 }, { name: 'ROGELIO', passes: 1 },
+                { name: 'VALERIA (AMIGA)', passes: 1 }, { name: 'LLUVIA', passes: 1 },
+                { name: 'ANA SOFIA', passes: 1 }, { name: 'KAREN', passes: 1 },
+                { name: 'AXEL', passes: 1 }, { name: 'MATEO VAZQUEZ', passes: 1 },
+                { name: 'MAX', passes: 1 }, { name: 'DOMINICA', passes: 1 },
+                { name: 'MAURICIO', passes: 1 },
+            ];
+            await prisma.invitationGuest.createMany({
+                data: GUESTS.map(({ name, passes }) => ({
+                    invitationId: inv.id,
+                    name,
+                    personalizedMessage: buildMsg(name, passes),
+                })),
+            });
+            console.log(`[startup] XV Grethel: 1 invitación + ${GUESTS.length} invitados creados ✅`);
+        }
+        else {
+            console.log('[startup] XV Grethel: ya sembrado, omitiendo ✅');
+        }
+    }
+    catch (e) {
+        console.error('initGrethelXV error:', e.message);
+    }
 }
 /**
  * Copies the SQLite DB file to a timestamped .backup file before migrations run.
