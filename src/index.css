@@ -279,15 +279,15 @@ html:not(.dark) .nav-transparent .user-dropdown .text-ivory\/50 { color: rgba(42
 
 /* ── Section spacing ────────────────────────────────────── */
 .section-padding {
-  padding: 96px 24px;
+  padding: 56px 24px;
 }
 
 @media (min-width: 768px) {
-  .section-padding { padding: 120px 48px; }
+  .section-padding { padding: 80px 48px; }
 }
 
 @media (min-width: 1280px) {
-  .section-padding { padding: 140px 80px; }
+  .section-padding { padding: 120px 80px; }
 }
 
 /* ── Gold divider line ──────────────────────────────────── */

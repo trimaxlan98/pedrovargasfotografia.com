@@ -193,9 +193,9 @@ export default function Navbar() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="fixed inset-0 z-[999] bg-black flex flex-col items-center justify-center"
+            className="fixed inset-0 z-[999] bg-black flex flex-col items-center justify-center overflow-y-auto"
           >
-            <nav className="flex flex-col items-center gap-8">
+            <nav className="flex flex-col items-center gap-5 sm:gap-8 py-8">
               {navLinks.map((link, i) => (
                 <motion.button
                   key={link.href}
@@ -204,7 +204,7 @@ export default function Navbar() {
                   exit={{ opacity: 0, y: 20 }}
                   transition={{ delay: i * 0.07, duration: 0.4 }}
                   onClick={() => handleLink(link.href)}
-                  className="font-cormorant text-4xl font-light text-ivory hover:text-gold transition-colors"
+                  className="font-cormorant text-3xl sm:text-4xl font-light text-ivory hover:text-gold transition-colors"
                 >
                   {link.label}
                 </motion.button>
@@ -220,11 +220,25 @@ export default function Navbar() {
                 Reservar Sesión
               </motion.button>
 
+              {!isAuthenticated && (
+                <motion.button
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ delay: navLinks.length * 0.07 + 0.15 }}
+                  onClick={() => { setMenuOpen(false); setShowLogin(true) }}
+                  className="flex items-center gap-2 text-ivory/60 hover:text-ivory font-dm text-sm transition-colors"
+                >
+                  <User size={16} />
+                  Iniciar Sesión
+                </motion.button>
+              )}
+
               <motion.button
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
-                transition={{ delay: navLinks.length * 0.07 + 0.15 }}
+                transition={{ delay: navLinks.length * 0.07 + 0.2 }}
                 onClick={() => setDark(d => !d)}
                 aria-label="Cambiar modo"
                 className="flex items-center gap-2 text-ivory/50 hover:text-gold font-dm text-sm mt-1 transition-colors"
@@ -232,19 +246,6 @@ export default function Navbar() {
                 {dark ? <Sun size={16} /> : <Moon size={16} />}
                 {dark ? 'Modo claro' : 'Modo oscuro'}
               </motion.button>
-              {!isAuthenticated && (
-                <motion.button
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ delay: navLinks.length * 0.07 + 0.2 }}
-                  onClick={() => { setMenuOpen(false); setShowLogin(true) }}
-                  className="flex items-center gap-2 text-ivory/60 hover:text-ivory font-dm text-sm mt-2 transition-colors"
-                >
-                  <User size={16} />
-                  Iniciar Sesión
-                </motion.button>
-              )}
             </nav>
           </motion.div>
         )}

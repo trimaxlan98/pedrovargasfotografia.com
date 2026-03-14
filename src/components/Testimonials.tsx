@@ -81,7 +81,7 @@ export default function Testimonials() {
       className="section-padding bg-[#EDE8DE] dark:bg-[#0D0D0C] overflow-hidden"
       ref={ref as React.RefObject<HTMLElement>}
     >
-      <div className="max-w-[1400px] mx-auto mb-14">
+      <div className="max-w-[1400px] mx-auto mb-8 md:mb-12">
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}

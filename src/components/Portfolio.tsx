@@ -36,7 +36,7 @@ export default function Portfolio() {
           initial={{ opacity: 0, y: 40 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.8 }}
-          className="mb-16"
+          className="mb-8 md:mb-14"
         >
           <p className="label-caps text-gold mb-4">Seleccion</p>
           <div className="flex items-end gap-6 mb-3">

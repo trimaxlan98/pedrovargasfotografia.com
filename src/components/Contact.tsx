@@ -59,7 +59,7 @@ export default function Contact() {
       ref={ref as React.RefObject<HTMLElement>}
     >
       <div className="max-w-[1400px] mx-auto">
-        <div className="grid lg:grid-cols-[1fr_1.3fr] gap-16 xl:gap-24">
+        <div className="grid lg:grid-cols-[1fr_1.3fr] gap-10 lg:gap-16 xl:gap-24">
           {/* Left — Info */}
           <motion.div
             initial={{ opacity: 0, x: -40 }}

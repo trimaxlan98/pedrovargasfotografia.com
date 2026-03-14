@@ -17,7 +17,7 @@ export default function Events() {
           initial={{ opacity: 0, y: 40 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.8 }}
-          className="mb-16"
+          className="mb-8 md:mb-14"
         >
           <p className="label-caps text-gold mb-4">Nuestro Trabajo</p>
           <h2 className="font-cormorant text-fluid-section text-ivory font-light mb-2">Eventos Realizados</h2>
@@ -25,17 +25,17 @@ export default function Events() {
           <div className="gold-line mt-5" />
         </motion.div>
 
-        <div className="lg:overflow-x-auto lg:pb-6">
-          <div className="flex flex-col lg:flex-row gap-5 lg:w-max">
+        <div className="overflow-x-auto pb-4 -mx-6 px-6 md:-mx-12 md:px-12 lg:mx-0 lg:px-0">
+          <div className="flex gap-4 lg:gap-5 w-max">
             {eventsData.map((event, index) => (
               <motion.div
                 key={event.title}
                 initial={{ opacity: 0, x: 40 }}
                 animate={inView ? { opacity: 1, x: 0 } : {}}
                 transition={{ duration: 0.6, delay: index * 0.1 }}
-                className="group lg:w-[340px] flex-shrink-0 relative overflow-hidden"
+                className="group w-[260px] sm:w-[300px] lg:w-[340px] flex-shrink-0 relative overflow-hidden"
               >
-                <div className="w-full h-52 lg:h-48 relative overflow-hidden">
+                <div className="w-full h-44 sm:h-48 relative overflow-hidden">
                   <img
                     src={event.src}
                     alt={event.alt}
