@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { Users, Copy, Check, Trash2, Plus, X, Pencil, Save, MessageSquare } from 'lucide-react'
+import { Users, Copy, Check, Trash2, Plus, X, Pencil, Save, MessageSquare, ExternalLink } from 'lucide-react'
 import api from '../../api/client'
 import { ApiInvitationGuest } from '../invitations/invitationTypes'
 
@@ -8,30 +8,29 @@ interface Props {
   invitationId: string
   invitationTitle: string
   onClose: () => void
+  mode?: 'client' | 'admin'
 }
 
 const RESPONSE_CONFIG = {
-  ACCEPTED: { label: 'Confirmó',  color: 'text-green-400', bg: 'bg-green-400/10' },
-  DECLINED: { label: 'Declinó',   color: 'text-red-400',   bg: 'bg-red-400/10'   },
-  PENDING:  { label: 'Pendiente', color: 'text-ivory/50',  bg: 'bg-white/5'      },
+  ACCEPTED: { label: 'Confirmó',  color: 'text-green-600 dark:text-green-400', bg: 'bg-green-100 dark:bg-green-400/10' },
+  DECLINED: { label: 'Declinó',   color: 'text-red-600 dark:text-red-400',     bg: 'bg-red-100 dark:bg-red-400/10'    },
+  PENDING:  { label: 'Pendiente', color: 'text-gray-500 dark:text-gray-400',   bg: 'bg-gray-100 dark:bg-white/5'      },
 }
 
-export default function GuestListPanel({ invitationId, invitationTitle, onClose }: Props) {
-  const [guests, setGuests] = useState<ApiInvitationGuest[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [guestInput, setGuestInput] = useState('')
-  const [msgInput, setMsgInput] = useState('')
-  const [isAdding, setIsAdding] = useState(false)
-  const [isSeeding, setIsSeeding] = useState(false)
-  const [copied, setCopied] = useState<string | null>(null)
+export default function GuestListPanel({ invitationId, invitationTitle, onClose, mode = 'client' }: Props) {
+  const [guests, setGuests]               = useState<ApiInvitationGuest[]>([])
+  const [isLoading, setIsLoading]         = useState(true)
+  const [guestInput, setGuestInput]       = useState('')
+  const [msgInput, setMsgInput]           = useState('')
+  const [isAdding, setIsAdding]           = useState(false)
+  const [isSeeding, setIsSeeding]         = useState(false)
+  const [copied, setCopied]               = useState<string | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
+  const [editingId, setEditingId]         = useState<string | null>(null)
+  const [editMsg, setEditMsg]             = useState('')
+  const [savingId, setSavingId]           = useState<string | null>(null)
 
-  // Edición inline de mensaje personalizado
-  const [editingId, setEditingId] = useState<string | null>(null)
-  const [editMsg, setEditMsg] = useState('')
-  const [savingId, setSavingId] = useState<string | null>(null)
-
-  const base = `/client/invitations/${invitationId}`
+  const base = `/${mode === 'admin' ? 'admin' : 'client'}/invitations/${invitationId}`
 
   async function loadGuests() {
     setIsLoading(true)
@@ -50,10 +49,7 @@ export default function GuestListPanel({ invitationId, invitationTitle, onClose 
     setIsAdding(true)
     try {
       await api.post(`${base}/guests`, {
-        guests: [{
-          name: guestInput.trim(),
-          personalizedMessage: msgInput.trim() || undefined,
-        }],
+        guests: [{ name: guestInput.trim(), personalizedMessage: msgInput.trim() || undefined }],
       })
       setGuestInput('')
       setMsgInput('')
@@ -111,41 +107,61 @@ export default function GuestListPanel({ invitationId, invitationTitle, onClose 
   const declined = guests.filter(g => g.response === 'DECLINED').length
   const pending  = guests.filter(g => g.response === 'PENDING').length
 
-  const ic = 'flex-1 bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-ivory text-sm placeholder-ivory/20 focus:border-gold/50 focus:outline-none'
+  // input: fondo y texto que funciona en ambos modos
+  const ic = [
+    'flex-1 rounded-lg px-4 py-2.5 text-sm font-dm',
+    'bg-gray-100 dark:bg-[#2a2a2a]',
+    'border border-gray-300 dark:border-white/10',
+    'text-gray-900 dark:text-gray-100',
+    'placeholder-gray-400 dark:placeholder-gray-500',
+    'focus:border-gold/50 focus:outline-none',
+  ].join(' ')
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/70 backdrop-blur-sm">
       <motion.div
-        className="w-full max-w-2xl glass rounded-2xl border border-white/10 overflow-hidden flex flex-col"
+        className="w-full max-w-2xl rounded-2xl overflow-hidden flex flex-col shadow-2xl
+                   bg-white dark:bg-[#181818]
+                   border border-gray-200 dark:border-white/10"
         style={{ maxHeight: '92vh' }}
         initial={{ opacity: 0, scale: 0.97 }}
         animate={{ opacity: 1, scale: 1 }}
       >
         {/* Header */}
-        <div className="px-6 py-5 border-b border-white/5 flex items-center justify-between flex-shrink-0">
+        <div className="px-6 py-5 flex items-center justify-between flex-shrink-0
+                        border-b border-gray-200 dark:border-white/8">
           <div className="flex items-center gap-3">
             <Users size={18} className="text-gold" />
             <div>
               <p className="label-caps text-gold text-xs">Lista de invitados</p>
-              <h3 className="font-cormorant text-lg text-ivory truncate max-w-[340px]">{invitationTitle}</h3>
+              <h3 className="font-cormorant text-lg text-gray-900 dark:text-gray-100 truncate max-w-[340px]">
+                {invitationTitle}
+              </h3>
             </div>
           </div>
-          <button onClick={onClose} className="text-ivory/40 hover:text-ivory transition-colors">
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-700 dark:text-gray-500 dark:hover:text-gray-200 transition-colors"
+          >
             <X size={18} />
           </button>
         </div>
 
         {/* Stats */}
-        <div className="px-6 py-2.5 border-b border-white/5 flex gap-4 text-xs font-dm flex-shrink-0">
-          <span className="text-green-400">{accepted} Confirmados</span>
-          <span className="text-ivory/40">{pending} En espera</span>
-          <span className="text-red-400">{declined} No asistirán</span>
-          <span className="text-ivory/25 ml-auto">{guests.length} total</span>
+        <div className="px-6 py-2.5 flex gap-4 text-xs font-dm flex-shrink-0
+                        border-b border-gray-200 dark:border-white/8">
+          <span className="text-green-600 dark:text-green-400">{accepted} Confirmados</span>
+          <span className="text-gray-500 dark:text-gray-400">{pending} En espera</span>
+          <span className="text-red-500 dark:text-red-400">{declined} No asistirán</span>
+          <span className="text-gray-400 dark:text-gray-500 ml-auto">{guests.length} total</span>
         </div>
 
         {/* Agregar invitado */}
-        <div className="px-6 py-4 border-b border-white/5 space-y-2 flex-shrink-0">
-          <p className="text-ivory/40 text-xs font-dm uppercase tracking-wider mb-2">Agregar invitado</p>
+        <div className="px-6 py-4 space-y-2 flex-shrink-0
+                        border-b border-gray-200 dark:border-white/8">
+          <p className="text-gray-500 dark:text-gray-400 text-xs font-dm uppercase tracking-wider mb-2">
+            Agregar invitado
+          </p>
           <div className="flex gap-2">
             <input
               value={guestInput}
@@ -164,7 +180,7 @@ export default function GuestListPanel({ invitationId, invitationTitle, onClose 
             </button>
           </div>
           <div className="flex gap-2 items-start">
-            <MessageSquare size={14} className="text-ivory/30 mt-2.5 flex-shrink-0" />
+            <MessageSquare size={14} className="text-gray-400 dark:text-gray-500 mt-2.5 flex-shrink-0" />
             <input
               value={msgInput}
               onChange={e => setMsgInput(e.target.value)}
@@ -172,15 +188,17 @@ export default function GuestListPanel({ invitationId, invitationTitle, onClose 
               placeholder="Mensaje personalizado para este invitado (opcional)"
             />
           </div>
-          <div className="flex justify-end pt-1">
-            <button
-              onClick={handleSeedGuests}
-              disabled={isSeeding}
-              className="text-xs font-dm text-ivory/35 hover:text-gold transition-colors disabled:opacity-40"
-            >
-              {isSeeding ? 'Creando pruebas…' : 'Crear 5 invitados de prueba'}
-            </button>
-          </div>
+          {mode !== 'admin' && (
+            <div className="flex justify-end pt-1">
+              <button
+                onClick={handleSeedGuests}
+                disabled={isSeeding}
+                className="text-xs font-dm text-gray-400 dark:text-gray-500 hover:text-gold transition-colors disabled:opacity-40"
+              >
+                {isSeeding ? 'Creando pruebas…' : 'Crear 5 invitados de prueba'}
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Lista de invitados */}
@@ -191,31 +209,34 @@ export default function GuestListPanel({ invitationId, invitationTitle, onClose 
             </div>
           ) : guests.length === 0 ? (
             <div className="text-center py-12">
-              <Users size={32} className="mx-auto text-ivory/20 mb-3" />
-              <p className="text-ivory/40 text-sm font-dm">Sin invitados aún</p>
-              <p className="text-ivory/30 text-xs font-dm mt-1">
+              <Users size={32} className="mx-auto text-gray-300 dark:text-gray-600 mb-3" />
+              <p className="text-gray-500 dark:text-gray-400 text-sm font-dm">Sin invitados aún</p>
+              <p className="text-gray-400 dark:text-gray-500 text-xs font-dm mt-1">
                 Agrega nombres y comparte los links individuales para que cada invitado vea su invitación personalizada.
               </p>
             </div>
           ) : (
-            <div className="divide-y divide-white/5">
+            <div className="divide-y divide-gray-100 dark:divide-white/5">
               {guests.map(g => {
-                const cfg = RESPONSE_CONFIG[g.response as keyof typeof RESPONSE_CONFIG] ?? RESPONSE_CONFIG.PENDING
+                const cfg       = RESPONSE_CONFIG[g.response as keyof typeof RESPONSE_CONFIG] ?? RESPONSE_CONFIG.PENDING
                 const isEditing = editingId === g.id
                 const isSaving  = savingId === g.id
 
                 return (
-                  <div key={g.id} className="px-6 py-3 hover:bg-white/[0.02] transition-colors">
+                  <div
+                    key={g.id}
+                    className="px-6 py-3 hover:bg-gray-50 dark:hover:bg-white/[0.03] transition-colors"
+                  >
                     <div className="flex items-center gap-3">
                       {/* Nombre + estado */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-ivory text-sm font-dm">{g.name}</span>
+                          <span className="text-gray-900 dark:text-gray-100 text-sm font-dm">{g.name}</span>
                           <span className={`text-xs px-2 py-0.5 rounded-full font-dm ${cfg.color} ${cfg.bg}`}>
                             {cfg.label}
                           </span>
                           {g.respondedAt && (
-                            <span className="text-ivory/25 text-[10px] font-dm">
+                            <span className="text-gray-400 dark:text-gray-500 text-[10px] font-dm">
                               {new Date(g.respondedAt).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })}
                             </span>
                           )}
@@ -233,7 +254,12 @@ export default function GuestListPanel({ invitationId, invitationTitle, onClose 
                                 if (e.key === 'Escape') setEditingId(null)
                               }}
                               placeholder="Escribe un mensaje para este invitado…"
-                              className="flex-1 bg-white/5 border border-gold/40 rounded-lg px-3 py-1.5 text-ivory text-xs placeholder-ivory/25 focus:border-gold/70 focus:outline-none"
+                              className="flex-1 rounded-lg px-3 py-1.5 text-xs
+                                         bg-gray-100 dark:bg-[#2a2a2a]
+                                         border border-gold/40
+                                         text-gray-900 dark:text-gray-100
+                                         placeholder-gray-400 dark:placeholder-gray-500
+                                         focus:border-gold/70 focus:outline-none"
                             />
                             <button
                               onClick={() => handleSaveMsg(g.id)}
@@ -245,19 +271,19 @@ export default function GuestListPanel({ invitationId, invitationTitle, onClose 
                             </button>
                             <button
                               onClick={() => setEditingId(null)}
-                              className="text-ivory/30 hover:text-ivory p-1 rounded"
+                              className="text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 p-1 rounded"
                             >
                               <X size={12} />
                             </button>
                           </div>
                         ) : (
                           <div className="flex items-center gap-2 mt-1">
-                            <p className="text-ivory/35 text-xs font-dm italic min-w-0 truncate">
+                            <p className="text-gray-400 dark:text-gray-500 text-xs font-dm italic min-w-0 truncate">
                               {g.personalizedMessage || '— sin mensaje personalizado'}
                             </p>
                             <button
                               onClick={() => startEdit(g)}
-                              className="text-ivory/25 hover:text-gold transition-colors flex-shrink-0"
+                              className="text-gray-300 dark:text-gray-600 hover:text-gold transition-colors flex-shrink-0"
                               title="Editar mensaje"
                             >
                               <Pencil size={11} />
@@ -266,12 +292,29 @@ export default function GuestListPanel({ invitationId, invitationTitle, onClose 
                         )}
                       </div>
 
-                      {/* Acciones */}
+                      {/* Acciones: Ver · Link · Eliminar */}
                       <div className="flex items-center gap-1 flex-shrink-0">
+
+                        {/* Ver invitación individual */}
+                        <a
+                          href={`/g/${g.token}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1 text-xs px-2 py-1 rounded transition-colors
+                                     text-gray-400 dark:text-gray-500 hover:text-gold dark:hover:text-gold"
+                          title="Ver invitación personalizada"
+                        >
+                          <ExternalLink size={11} />
+                          Ver
+                        </a>
+
+                        {/* Copiar link */}
                         <button
                           onClick={() => copyLink(g.token)}
                           className={`flex items-center gap-1 text-xs px-2 py-1 rounded transition-colors ${
-                            copied === g.token ? 'text-green-400' : 'text-ivory/40 hover:text-ivory'
+                            copied === g.token
+                              ? 'text-green-500 dark:text-green-400'
+                              : 'text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-200'
                           }`}
                           title="Copiar link personal"
                         >
@@ -279,17 +322,18 @@ export default function GuestListPanel({ invitationId, invitationTitle, onClose 
                           Link
                         </button>
 
+                        {/* Eliminar */}
                         {deleteConfirm === g.id ? (
                           <div className="flex items-center gap-1">
                             <button
                               onClick={() => handleDelete(g.id)}
-                              className="text-red-400 text-xs font-dm hover:text-red-300"
+                              className="text-red-500 dark:text-red-400 text-xs font-dm hover:text-red-700 dark:hover:text-red-300"
                             >
                               ¿Eliminar?
                             </button>
                             <button
                               onClick={() => setDeleteConfirm(null)}
-                              className="text-ivory/30 hover:text-ivory"
+                              className="text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-200"
                             >
                               <X size={12} />
                             </button>
@@ -297,7 +341,7 @@ export default function GuestListPanel({ invitationId, invitationTitle, onClose 
                         ) : (
                           <button
                             onClick={() => setDeleteConfirm(g.id)}
-                            className="text-ivory/25 hover:text-danger transition-colors p-1"
+                            className="text-gray-300 dark:text-gray-600 hover:text-red-500 dark:hover:text-red-400 transition-colors p-1"
                             title="Eliminar invitado"
                           >
                             <Trash2 size={12} />
@@ -313,9 +357,10 @@ export default function GuestListPanel({ invitationId, invitationTitle, onClose 
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-white/5 flex items-center justify-between flex-shrink-0">
-          <p className="text-ivory/25 text-xs font-dm">
-            Cada link lleva al invitado a su invitación personalizada con su nombre y mensaje
+        <div className="px-6 py-4 flex items-center justify-between flex-shrink-0
+                        border-t border-gray-200 dark:border-white/8">
+          <p className="text-gray-400 dark:text-gray-500 text-xs font-dm">
+            Cada link lleva al invitado a su invitación personalizada
           </p>
           <button onClick={onClose} className="btn-outline px-5 py-2 text-xs">
             Cerrar

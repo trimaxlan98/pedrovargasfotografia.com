@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Mail, Eye, Plus, Pencil, Copy, Check, ExternalLink, ToggleLeft, ToggleRight, Archive, RotateCcw, Users } from 'lucide-react'
 import InvitationWizard from '../invitations/InvitationWizard'
+import GuestListPanel from '../client/GuestListPanel'
 import api from '../../api/client'
 import { ApiInvitation } from '../invitations/invitationTypes'
 
@@ -17,6 +18,7 @@ export default function AdminInvitations() {
   const [confirmArchive, setConfirmArchive] = useState<ApiInvitation | null>(null)
   const [archiveReason, setArchiveReason] = useState('')
   const [isArchiving, setIsArchiving] = useState(false)
+  const [guestPanelInv, setGuestPanelInv] = useState<ApiInvitation | null>(null)
 
   useEffect(() => { refresh() }, [viewMode])
 
@@ -240,6 +242,15 @@ export default function AdminInvitations() {
                       >
                         <Pencil size={13} /> Editar
                       </button>
+                      {isIndividual && (
+                        <button
+                          onClick={() => setGuestPanelInv(inv)}
+                          className="flex-1 inline-flex items-center justify-center gap-1.5 text-gold/70 border border-gold/20 rounded-lg px-2 py-2 text-xs"
+                          title="Ver invitados"
+                        >
+                          <Users size={13} /> Invitados
+                        </button>
+                      )}
                       <button
                         onClick={() => copyLink(inv.shareToken)}
                         className={`flex-1 inline-flex items-center justify-center gap-1.5 border border-white/10 rounded-lg px-2 py-2 text-xs ${
@@ -370,6 +381,16 @@ export default function AdminInvitations() {
                                 <Pencil size={14} />
                               </button>
 
+                              {isIndividual && (
+                                <button
+                                  onClick={() => setGuestPanelInv(inv)}
+                                  className="text-ivory/40 hover:text-gold transition-colors"
+                                  title="Ver invitados"
+                                >
+                                  <Users size={14} />
+                                </button>
+                              )}
+
                               <button
                                 onClick={() => copyLink(inv.shareToken)}
                                 className={`transition-colors ${
@@ -427,6 +448,15 @@ export default function AdminInvitations() {
           onSave={handleSave}
           mode="admin"
           initialData={editTarget}
+        />
+      )}
+
+      {guestPanelInv && (
+        <GuestListPanel
+          invitationId={guestPanelInv.id}
+          invitationTitle={guestPanelInv.title}
+          onClose={() => setGuestPanelInv(null)}
+          mode="admin"
         />
       )}
 

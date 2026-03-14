@@ -111,7 +111,7 @@ export default function AdminTutorial() {
       tourKey="admin_tour_done"
       steps={STEPS}
       selectorAttr="data-tutorial"
-      brandLabel="Pedro Vargas Fotografía · v1.1.2.7.1"
+      brandLabel="Pedro Vargas Fotografía · v1.1.2.9"
       onStepChange={() => {
         window.dispatchEvent(new CustomEvent('tutorial:open-sidebar'))
       }}

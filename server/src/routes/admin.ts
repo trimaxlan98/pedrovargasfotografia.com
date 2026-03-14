@@ -68,6 +68,7 @@ router.patch('/invitations/:id/toggle-published', admin.toggleInvitationPublishe
 router.post('/invitations/:id/photos', uploadImage.array('images', 8), admin.addInvitationPhotos)
 router.get('/invitations/:id/guests', admin.listGuestsByInvitation)
 router.post('/invitations/:id/guests', admin.addGuestsByInvitation)
+router.patch('/invitations/:id/guests/:gid', admin.updateGuestByInvitation)
 router.delete('/invitations/:id/guests/:gid', admin.deleteGuestByInvitation)
 
 // Configuración del sitio
