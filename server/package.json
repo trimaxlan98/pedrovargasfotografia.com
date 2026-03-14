@@ -1,6 +1,6 @@
 {
   "name": "pedro-vargas-fotografia-api",
-  "version": "1.1.2.7.2",
+  "version": "1.1.2.9",
   "description": "Backend API para Pedro Vargas Fotografía",
   "main": "dist/server.js",
   "type": "commonjs",
@@ -14,7 +14,9 @@
     "db:studio": "prisma studio",
     "db:reset": "prisma migrate reset --force && ts-node prisma/seed.ts",
     "inject:invitations": "ts-node scripts/inject-invitations.ts",
-    "inject:invitations:dry": "ts-node scripts/inject-invitations.ts --dry-run"
+    "inject:invitations:dry": "ts-node scripts/inject-invitations.ts --dry-run",
+    "inject:grethel": "ts-node scripts/inject-grethel-xv.ts",
+    "inject:grethel:dry": "ts-node scripts/inject-grethel-xv.ts --dry-run"
   },
   "dependencies": {
     "@prisma/client": "^5.10.2",

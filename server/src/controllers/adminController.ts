@@ -688,6 +688,25 @@ export async function addGuestsByInvitation(req: AuthRequest, res: Response): Pr
   R.created(res, guests, 'Invitados agregados')
 }
 
+export async function updateGuestByInvitation(req: AuthRequest, res: Response): Promise<void> {
+  const invitation = await prisma.digitalInvitation.findFirst({
+    where: { id: req.params.id, archivedAt: null },
+  })
+  if (!invitation) { R.notFound(res, 'Invitación no encontrada'); return }
+
+  const guest = await prisma.invitationGuest.findFirst({
+    where: { id: req.params.gid, invitationId: invitation.id },
+  })
+  if (!guest) { R.notFound(res, 'Invitado no encontrado'); return }
+
+  const { personalizedMessage } = req.body
+  const updated = await prisma.invitationGuest.update({
+    where: { id: guest.id },
+    data: { personalizedMessage: personalizedMessage !== undefined ? (personalizedMessage || null) : undefined },
+  })
+  R.success(res, updated, 'Mensaje actualizado')
+}
+
 export async function deleteGuestByInvitation(req: AuthRequest, res: Response): Promise<void> {
   const invitation = await prisma.digitalInvitation.findFirst({
     where: { id: req.params.id, archivedAt: null },
