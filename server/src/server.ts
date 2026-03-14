@@ -204,21 +204,26 @@ async function applyMigrations(prisma: import('@prisma/client').PrismaClient, mi
           await prisma.$executeRawUnsafe(stmt)
         } catch (stmtErr: unknown) {
           const msg = (stmtErr as Error).message ?? ''
-          const normalized = stmt.trimStart().toUpperCase()
+
+          // Skip leading SQL comment lines to find the actual statement type
+          const firstCode = stmt.split('\n')
+            .map((l: string) => l.trim())
+            .find((l: string) => l.length > 0 && !l.startsWith('--'))
+            ?.toUpperCase() ?? ''
 
           // Only ignore errors that are genuinely idempotent:
           // • CREATE TABLE / CREATE [UNIQUE] INDEX that already exists
           // • ALTER TABLE ... ADD COLUMN with a column that already exists
           // Any other error (INSERT, DROP, RENAME, UPDATE, etc.) must abort the migration.
           const isCreateAlreadyExists =
-            (normalized.startsWith('CREATE TABLE') ||
-             normalized.startsWith('CREATE UNIQUE INDEX') ||
-             normalized.startsWith('CREATE INDEX')) &&
+            (firstCode.startsWith('CREATE TABLE') ||
+             firstCode.startsWith('CREATE UNIQUE INDEX') ||
+             firstCode.startsWith('CREATE INDEX')) &&
             /already exists/i.test(msg)
 
           const isAddColumnDuplicate =
-            normalized.startsWith('ALTER TABLE') &&
-            normalized.includes('ADD COLUMN') &&
+            firstCode.startsWith('ALTER TABLE') &&
+            firstCode.includes('ADD COLUMN') &&
             /duplicate column name/i.test(msg)
 
           if (isCreateAlreadyExists || isAddColumnDuplicate) {
