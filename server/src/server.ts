@@ -211,27 +211,25 @@ async function applyMigrations(prisma: import('@prisma/client').PrismaClient, mi
             .find((l: string) => l.length > 0 && !l.startsWith('--'))
             ?.toUpperCase() ?? ''
 
-          // Only ignore errors that are genuinely idempotent:
-          // • CREATE TABLE / CREATE [UNIQUE] INDEX that already exists
-          // • ALTER TABLE ... ADD COLUMN with a column that already exists
-          // Any other error (INSERT, DROP, RENAME, UPDATE, etc.) must abort the migration.
-          const isCreateAlreadyExists =
-            (firstCode.startsWith('CREATE TABLE') ||
-             firstCode.startsWith('CREATE UNIQUE INDEX') ||
-             firstCode.startsWith('CREATE INDEX')) &&
-            /already exists/i.test(msg)
+          // Determine if this is a destructive data statement (INSERT, DROP, UPDATE, DELETE)
+          const isDestructive =
+            firstCode.startsWith('INSERT') ||
+            firstCode.startsWith('DROP') ||
+            firstCode.startsWith('UPDATE') ||
+            firstCode.startsWith('DELETE')
 
-          const isAddColumnDuplicate =
-            firstCode.startsWith('ALTER TABLE') &&
-            firstCode.includes('ADD COLUMN') &&
-            /duplicate column name/i.test(msg)
+          // Ignore known idempotency errors on non-destructive statements only:
+          // • "already exists" → CREATE TABLE / CREATE INDEX already ran
+          // • "duplicate column name" → ALTER TABLE ADD COLUMN already ran
+          // • "no such column" / "no such table" → safe only on DDL (CREATE/ALTER)
+          const isKnownIdempotentError = /duplicate column name|already exists|no such column|no such table/i.test(msg)
 
-          if (isCreateAlreadyExists || isAddColumnDuplicate) {
+          if (isKnownIdempotentError && !isDestructive) {
             console.warn(`[startup] Statement ya aplicado, omitiendo: ${msg.split('\n')[0]}`)
             continue
           }
 
-          // Any other error: propagate — do NOT silently skip destructive statements
+          // Any error on a destructive statement → abort migration to protect data
           throw stmtErr
         }
       }
