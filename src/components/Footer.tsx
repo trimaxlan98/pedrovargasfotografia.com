@@ -26,7 +26,7 @@ export default function Footer() {
       ref={ref as React.RefObject<HTMLElement>}
     >
       <div className="max-w-[1400px] mx-auto px-6 md:px-10 pt-20 pb-10">
-        <div className="grid md:grid-cols-[1fr_2fr] gap-16 mb-16">
+        <div className="grid md:grid-cols-[1fr_2fr] gap-10 md:gap-16 mb-10 md:mb-16">
           {/* Brand */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -51,7 +51,7 @@ export default function Footer() {
           </motion.div>
 
           {/* Nav columns */}
-          <div className="grid sm:grid-cols-3 gap-10">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-8 sm:gap-10">
             {navCols.map((col, i) => (
               <motion.div
                 key={col.heading}

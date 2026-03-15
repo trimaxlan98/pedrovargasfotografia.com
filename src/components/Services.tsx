@@ -63,7 +63,7 @@ export default function Services() {
           initial={{ opacity: 0, y: 40 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.8 }}
-          className="mb-16"
+          className="mb-8 md:mb-14"
         >
           <p className="label-caps text-gold mb-4">Lo que ofrecemos</p>
           <h2 className="font-cormorant text-fluid-section text-ivory font-light mb-2">Servicios</h2>

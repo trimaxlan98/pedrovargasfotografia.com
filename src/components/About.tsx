@@ -20,7 +20,7 @@ export default function About() {
       ref={ref as React.RefObject<HTMLElement>}
     >
       <div className="max-w-[1400px] mx-auto">
-        <div className="grid lg:grid-cols-2 gap-16 xl:gap-24 items-center">
+        <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 xl:gap-24 items-center">
           {/* Left — Portrait */}
           <motion.div
             initial={{ opacity: 0, x: -50 }}
@@ -29,7 +29,7 @@ export default function About() {
             className="relative"
           >
             <div
-              className="w-full max-w-[480px] h-[580px] relative overflow-hidden"
+              className="w-full max-w-[480px] h-[360px] sm:h-[460px] lg:h-[580px] relative overflow-hidden"
               style={{
                 boxShadow: '40px 40px 80px rgba(0,0,0,0.6)',
               }}

@@ -135,7 +135,7 @@ export default function Hero() {
           </div>
 
           {/* "Contado en Luz" */}
-          <div className="overflow-hidden mb-9">
+          <div className="overflow-hidden mb-4 md:mb-9">
             <div className="flex flex-wrap gap-x-[0.3em]">
               {words2.map((word, i) => (
                 <motion.span
@@ -158,7 +158,7 @@ export default function Hero() {
             initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.95 }}
-            className="font-cormorant italic text-[#F5F0E8]/85 text-xl md:text-2xl mb-10 tracking-wide"
+            className="font-cormorant italic text-[#F5F0E8]/85 text-base sm:text-xl md:text-2xl mb-6 md:mb-10 tracking-wide"
             style={{ textShadow: '0 1px 10px rgba(0,0,0,0.5)' }}
           >
             Bodas · Corporativo · Retratos · Eventos Sociales
@@ -199,13 +199,16 @@ export default function Hero() {
           WebkitBackdropFilter: 'blur(16px)',
         }}
       >
-        <div className="max-w-[1400px] mx-auto px-6 md:px-12 lg:px-16 py-5 flex items-center justify-between md:justify-start gap-8 md:gap-16 overflow-x-auto">
+        <div className="max-w-[1400px] mx-auto px-6 md:px-12 lg:px-16 py-4 md:py-5 flex items-center gap-4 sm:gap-8 md:gap-16 overflow-x-auto">
           {stats.map(stat => (
             <div key={stat.label} className="flex-shrink-0 text-center md:text-left">
               <p className="font-cormorant text-2xl font-semibold text-[#F5F0E8]">{stat.value}</p>
               <p className="label-caps text-[#F5F0E8]/38 text-[0.6rem] mt-0.5">{stat.label}</p>
             </div>
           ))}
+          <p className="ml-auto flex-shrink-0 label-caps text-[0.52rem] hidden sm:block" style={{ color: '#F5F0E880' }}>
+            © Pedro Vargas Fotografía — 2026
+          </p>
         </div>
       </motion.div>
 
@@ -231,10 +234,6 @@ export default function Hero() {
         <ChevronDown className="w-4 h-4 bounce-slow" style={{ color: '#F5F0E899' }} />
       </motion.div>
 
-      {/* ── Photo credit ── */}
-      <p className="absolute bottom-4 right-6 z-20 label-caps text-[0.52rem]" style={{ color: '#F5F0E880' }}>
-        © Pedro Vargas Fotografía — 2026
-      </p>
 
     </section>
   )
