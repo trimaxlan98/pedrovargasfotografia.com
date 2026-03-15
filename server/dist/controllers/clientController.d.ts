@@ -18,5 +18,6 @@ export declare function listGuests(req: AuthRequest, res: Response): Promise<voi
 export declare function updateGuest(req: AuthRequest, res: Response): Promise<void>;
 export declare function deleteGuest(req: AuthRequest, res: Response): Promise<void>;
 export declare function addInvitationPhotos(req: AuthRequest, res: Response): Promise<void>;
+export declare function addInvitationMusic(req: AuthRequest, res: Response): Promise<void>;
 export declare function archiveInvitation(req: AuthRequest, res: Response): Promise<void>;
 //# sourceMappingURL=clientController.d.ts.map

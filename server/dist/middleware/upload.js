@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.uploadImage = void 0;
+exports.uploadAudio = exports.uploadImage = void 0;
 const multer_1 = __importDefault(require("multer"));
 const path_1 = __importDefault(require("path"));
 const uuid_1 = require("uuid");
@@ -37,5 +37,22 @@ exports.uploadImage = (0, multer_1.default)({
     storage,
     fileFilter,
     limits: { fileSize: Number(process.env.MAX_FILE_SIZE) || 10 * 1024 * 1024 },
+});
+const audioFilter = (_req, file, cb) => {
+    const allowedExt = /mp3|m4a|ogg|opus|webm|aac/;
+    const allowedMime = /audio\/(mpeg|mp4|ogg|opus|webm|aac|x-m4a)|video\/webm/;
+    const ext = allowedExt.test(path_1.default.extname(file.originalname).toLowerCase());
+    const mime = allowedMime.test(file.mimetype);
+    if (ext || mime) {
+        cb(null, true);
+    }
+    else {
+        cb(new Error('Solo se permiten archivos de audio (mp3, m4a, ogg, opus, webm, aac)'));
+    }
+};
+exports.uploadAudio = (0, multer_1.default)({
+    storage,
+    fileFilter: audioFilter,
+    limits: { fileSize: 15 * 1024 * 1024 }, // 15 MB max para audio
 });
 //# sourceMappingURL=upload.js.map

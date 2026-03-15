@@ -33,8 +33,10 @@ export declare function updateInvitation(req: AuthRequest, res: Response): Promi
 export declare function deleteInvitation(req: AuthRequest, res: Response): Promise<void>;
 export declare function toggleInvitationPublished(req: AuthRequest, res: Response): Promise<void>;
 export declare function addInvitationPhotos(req: AuthRequest, res: Response): Promise<void>;
+export declare function addInvitationMusic(req: AuthRequest, res: Response): Promise<void>;
 export declare function listGuestsByInvitation(req: AuthRequest, res: Response): Promise<void>;
 export declare function addGuestsByInvitation(req: AuthRequest, res: Response): Promise<void>;
+export declare function updateGuestByInvitation(req: AuthRequest, res: Response): Promise<void>;
 export declare function deleteGuestByInvitation(req: AuthRequest, res: Response): Promise<void>;
 export declare function getSettings(_req: AuthRequest, res: Response): Promise<void>;
 export declare function updateSettings(req: AuthRequest, res: Response): Promise<void>;

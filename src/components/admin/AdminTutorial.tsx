@@ -151,14 +151,19 @@ const STEPS: TourStep[] = [
         </span>
         <br /><br />
         <b style={{ color: IVORY }}>Galería:</b>{' '}
-        <span style={{ color: DIM }}>Sube hasta 8 fotos que se mostrarán dentro de la invitación.</span>
+        <span style={{ color: DIM }}>
+          Sube hasta 8 fotos. También puedes adjuntar{' '}
+          <b style={{ color: IVORY }}>música de fondo</b> (MP3 / M4A / OGG — máx. 15 MB)
+          que suena automáticamente al abrir la invitación.
+        </span>
         <br /><br />
         <b style={{ color: IVORY }}>Publicar:</b>{' '}
         <span style={{ color: DIM }}>
           Etiqueta RSVP · Contacto RSVP (teléfono o URL) · Fecha límite de confirmación.
         </span>{' '}
-        Activa el toggle <span style={{ color: GOLD }}>Publicar</span> para generar el enlace y
-        código QR compartibles.
+        Activa <span style={{ color: GOLD }}>Publicar</span> para generar el enlace y QR.
+        Con el toggle <span style={{ color: GOLD }}>Número de mesa</span> puedes mostrar
+        la mesa asignada en cada invitación individual.
       </>
     ),
     tip: 'La invitación no es visible hasta que actives "Publicar". Puedes editarla cuantas veces necesites antes.',
@@ -184,7 +189,7 @@ export default function AdminTutorial() {
       tourKey="admin_tour_done"
       steps={STEPS}
       selectorAttr="data-tutorial"
-      brandLabel="Pedro Vargas Fotografía · v1.1.3"
+      brandLabel="Pedro Vargas Fotografía · v1.1.3.1"
       onStepChange={() => {
         window.dispatchEvent(new CustomEvent('tutorial:open-sidebar'))
       }}

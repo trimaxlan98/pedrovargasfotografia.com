@@ -69,8 +69,10 @@ exports.updateInvitation = updateInvitation;
 exports.deleteInvitation = deleteInvitation;
 exports.toggleInvitationPublished = toggleInvitationPublished;
 exports.addInvitationPhotos = addInvitationPhotos;
+exports.addInvitationMusic = addInvitationMusic;
 exports.listGuestsByInvitation = listGuestsByInvitation;
 exports.addGuestsByInvitation = addGuestsByInvitation;
+exports.updateGuestByInvitation = updateGuestByInvitation;
 exports.deleteGuestByInvitation = deleteGuestByInvitation;
 exports.getSettings = getSettings;
 exports.updateSettings = updateSettings;
@@ -539,7 +541,7 @@ async function getInvitation(req, res) {
     R.success(res, withStats);
 }
 async function createInvitation(req, res) {
-    const { clientId, invitationType, eventType, title, names, eventDate, eventTime, venue, locationNote, message, quote, hashtag, template, primaryColor, textColor, fontStyle, isDark, dressCode, rsvpLabel, rsvpValue, rsvpContact, heroImage, gallery, isPublished, rsvpDeadline, guestGreeting, defaultGuestName, ceremonyVenue, ceremonyAddress, ceremonyTime, ceremonyPhoto, ceremonyMapUrl, receptionVenue, receptionAddress, receptionTime, receptionPhoto, receptionMapUrl, parentsInfo, sponsorsInfo, giftsInfo, instagramHandle, } = req.body;
+    const { clientId, invitationType, eventType, title, names, eventDate, eventTime, venue, locationNote, message, quote, hashtag, template, primaryColor, textColor, fontStyle, isDark, dressCode, rsvpLabel, rsvpValue, rsvpContact, heroImage, gallery, isPublished, rsvpDeadline, guestGreeting, defaultGuestName, ceremonyVenue, ceremonyAddress, ceremonyTime, ceremonyPhoto, ceremonyMapUrl, receptionVenue, receptionAddress, receptionTime, receptionPhoto, receptionMapUrl, parentsInfo, sponsorsInfo, giftsInfo, instagramHandle, enableTableNumber, backgroundMusic, } = req.body;
     if (!clientId) {
         R.badRequest(res, 'Se requiere clientId');
         return;
@@ -575,6 +577,8 @@ async function createInvitation(req, res) {
             ceremonyVenue, ceremonyAddress, ceremonyTime, ceremonyPhoto, ceremonyMapUrl,
             receptionVenue, receptionAddress, receptionTime, receptionPhoto, receptionMapUrl,
             parentsInfo, sponsorsInfo, giftsInfo, instagramHandle,
+            enableTableNumber: enableTableNumber === true,
+            backgroundMusic: backgroundMusic || null,
         },
     });
     R.created(res, normalizeInvitation(invitation));
@@ -588,8 +592,9 @@ async function updateInvitation(req, res) {
         R.notFound(res, 'Invitación no encontrada');
         return;
     }
-    const { invitationType, eventType, title, names, eventDate, eventTime, venue, locationNote, message, quote, hashtag, template, primaryColor, textColor, fontStyle, isDark, dressCode, rsvpLabel, rsvpValue, rsvpContact, heroImage, gallery, isPublished, rsvpDeadline, guestGreeting, defaultGuestName, ceremonyVenue, ceremonyAddress, ceremonyTime, ceremonyPhoto, ceremonyMapUrl, receptionVenue, receptionAddress, receptionTime, receptionPhoto, receptionMapUrl, parentsInfo, sponsorsInfo, giftsInfo, instagramHandle, } = req.body;
-    const resolvedRsvpValue = rsvpValue || rsvpContact || undefined;
+    const { invitationType, eventType, title, names, eventDate, eventTime, venue, locationNote, message, quote, hashtag, template, primaryColor, textColor, fontStyle, isDark, dressCode, rsvpLabel, rsvpValue, rsvpContact, heroImage, gallery, isPublished, rsvpDeadline, guestGreeting, defaultGuestName, ceremonyVenue, ceremonyAddress, ceremonyTime, ceremonyPhoto, ceremonyMapUrl, receptionVenue, receptionAddress, receptionTime, receptionPhoto, receptionMapUrl, parentsInfo, sponsorsInfo, giftsInfo, instagramHandle, enableTableNumber, backgroundMusic, } = req.body;
+    // rsvpContact is a legacy alias — null must be allowed to clear the field
+    const resolvedRsvpValue = rsvpValue !== undefined ? rsvpValue : (rsvpContact !== undefined ? rsvpContact : undefined);
     const payload = {
         invitationType, eventType, title, names, eventDate, eventTime, venue, locationNote,
         message, quote, hashtag, template, primaryColor, textColor, fontStyle,
@@ -599,6 +604,12 @@ async function updateInvitation(req, res) {
         receptionVenue, receptionAddress, receptionTime, receptionPhoto, receptionMapUrl,
         parentsInfo, sponsorsInfo, giftsInfo, instagramHandle,
     };
+    if (enableTableNumber !== undefined) {
+        payload.enableTableNumber = enableTableNumber === true;
+    }
+    if (backgroundMusic !== undefined) {
+        payload.backgroundMusic = backgroundMusic || null;
+    }
     if (gallery !== undefined) {
         payload.gallery = serializeGallery(gallery);
     }
@@ -662,6 +673,26 @@ async function addInvitationPhotos(req, res) {
     });
     R.success(res, normalizeInvitation(updated));
 }
+async function addInvitationMusic(req, res) {
+    const existing = await prisma_1.default.digitalInvitation.findFirst({
+        where: { id: req.params.id, archivedAt: null },
+    });
+    if (!existing) {
+        R.notFound(res);
+        return;
+    }
+    const file = req.file;
+    if (!file) {
+        R.badRequest(res, 'Se requiere un archivo de audio');
+        return;
+    }
+    const url = `/uploads/${file.filename}`;
+    const updated = await prisma_1.default.digitalInvitation.update({
+        where: { id: existing.id },
+        data: { backgroundMusic: url },
+    });
+    R.success(res, normalizeInvitation(updated));
+}
 async function listGuestsByInvitation(req, res) {
     const invitation = await prisma_1.default.digitalInvitation.findFirst({
         where: { id: req.params.id, archivedAt: null },
@@ -694,6 +725,33 @@ async function addGuestsByInvitation(req, res) {
         .filter(Boolean)
         .map((name) => prisma_1.default.invitationGuest.create({ data: { invitationId: invitation.id, name } })));
     R.created(res, guests, 'Invitados agregados');
+}
+async function updateGuestByInvitation(req, res) {
+    const invitation = await prisma_1.default.digitalInvitation.findFirst({
+        where: { id: req.params.id, archivedAt: null },
+    });
+    if (!invitation) {
+        R.notFound(res, 'Invitación no encontrada');
+        return;
+    }
+    const guest = await prisma_1.default.invitationGuest.findFirst({
+        where: { id: req.params.gid, invitationId: invitation.id },
+    });
+    if (!guest) {
+        R.notFound(res, 'Invitado no encontrado');
+        return;
+    }
+    const { personalizedMessage, tableNumber } = req.body;
+    const data = {};
+    if (personalizedMessage !== undefined)
+        data.personalizedMessage = personalizedMessage || null;
+    if (tableNumber !== undefined)
+        data.tableNumber = tableNumber !== null ? Number(tableNumber) : null;
+    const updated = await prisma_1.default.invitationGuest.update({
+        where: { id: guest.id },
+        data,
+    });
+    R.success(res, updated, 'Invitado actualizado');
 }
 async function deleteGuestByInvitation(req, res) {
     const invitation = await prisma_1.default.digitalInvitation.findFirst({

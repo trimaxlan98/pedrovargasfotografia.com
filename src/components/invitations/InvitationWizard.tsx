@@ -4,6 +4,17 @@ import { CheckCircle, ChevronLeft, ChevronRight, Eye, Copy, Check, Trash2, Plus 
 import api from '../../api/client'
 import { ApiInvitation, ApiInvitationGuest, InvitationTemplate, resolveInvitationImageUrl } from './invitationTypes'
 
+const ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp'])
+const ALLOWED_IMAGE_EXTS = new Set(['.jpg', '.jpeg', '.png', '.webp'])
+
+const isAllowedImage = (file: File) => {
+  if (ALLOWED_IMAGE_TYPES.has(file.type)) return true
+  const name = file.name.toLowerCase()
+  const dot = name.lastIndexOf('.')
+  if (dot === -1) return false
+  return ALLOWED_IMAGE_EXTS.has(name.slice(dot))
+}
+
 const TEMPLATES: Array<{ id: InvitationTemplate; label: string; desc: string; gradient: string; isDark: boolean }> = [
   {
     id: 'warm', label: 'Calida', desc: 'Cremas suaves y dorado miel',
@@ -220,6 +231,7 @@ export default function InvitationWizard({
       : { ...emptyDraft, ownerName, ownerEmail }
   )
   const [photos, setPhotos] = useState<File[]>([])
+  const [photoWarnings, setPhotoWarnings] = useState<string[]>([])
   const [musicFile, setMusicFile] = useState<File | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState('')
@@ -985,13 +997,30 @@ export default function InvitationWizard({
                 <input
                   type="file"
                   multiple
-                  accept="image/*"
-                  onChange={e => setPhotos(Array.from(e.target.files || []))}
+                  accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
+                  onChange={e => {
+                    const incoming = Array.from(e.target.files || [])
+                    const valid = incoming.filter(isAllowedImage)
+                    const invalid = incoming.filter(file => !isAllowedImage(file))
+                    setPhotoWarnings(
+                      invalid.map(file => `Formato no permitido: ${file.name}. Usa JPG, JPEG, PNG o WEBP.`)
+                    )
+                    setPhotos(valid.slice(0, 8))
+                  }}
                   className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-ivory/60 text-sm"
                 />
                 <p className="text-ivory/30 text-xs mt-2">
                   {photos.length > 0 ? `${photos.length} foto(s) seleccionada(s)` : 'Hasta 8 fotos. Se muestran en la galeria de la invitacion.'}
                 </p>
+                {photoWarnings.length > 0 && (
+                  <div className="mt-2 space-y-1">
+                    {photoWarnings.map((msg, idx) => (
+                      <p key={`${msg}-${idx}`} className="text-amber-400/80 text-[0.65rem] font-dm">
+                        {msg}
+                      </p>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* ── Música de fondo ─────────────────────────────────────────── */}

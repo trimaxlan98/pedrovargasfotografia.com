@@ -71,6 +71,8 @@ export declare function archiveInvitation(id: string, reason?: string): Promise<
     sponsorsInfo: string | null;
     giftsInfo: string | null;
     instagramHandle: string | null;
+    enableTableNumber: boolean;
+    backgroundMusic: string | null;
 }>;
 /**
  * Unarchives a booking by clearing the archivedAt timestamp and reason.
@@ -145,6 +147,8 @@ export declare function unarchiveInvitation(id: string): Promise<{
     sponsorsInfo: string | null;
     giftsInfo: string | null;
     instagramHandle: string | null;
+    enableTableNumber: boolean;
+    backgroundMusic: string | null;
 }>;
 /**
  * Retrieves all archived bookings.
@@ -231,6 +235,8 @@ export declare function getArchivedInvitations(): Promise<({
     sponsorsInfo: string | null;
     giftsInfo: string | null;
     instagramHandle: string | null;
+    enableTableNumber: boolean;
+    backgroundMusic: string | null;
 })[]>;
 export declare function startArchivalWorkflow(intervalMs?: number): () => void;
 //# sourceMappingURL=archivalService.d.ts.map
