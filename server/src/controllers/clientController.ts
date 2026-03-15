@@ -217,7 +217,7 @@ export async function createInvitation(req: AuthRequest, res: Response): Promise
     isPublished, rsvpDeadline, guestGreeting, defaultGuestName,
     ceremonyVenue, ceremonyAddress, ceremonyTime, ceremonyPhoto, ceremonyMapUrl,
     receptionVenue, receptionAddress, receptionTime, receptionPhoto, receptionMapUrl,
-    parentsInfo, sponsorsInfo, giftsInfo, instagramHandle,
+    parentsInfo, sponsorsInfo, giftsInfo, instagramHandle, enableTableNumber,
   } = req.body
 
   const shareToken = uuidv4()
@@ -247,6 +247,7 @@ export async function createInvitation(req: AuthRequest, res: Response): Promise
       ceremonyVenue, ceremonyAddress, ceremonyTime, ceremonyPhoto, ceremonyMapUrl,
       receptionVenue, receptionAddress, receptionTime, receptionPhoto, receptionMapUrl,
       parentsInfo, sponsorsInfo, giftsInfo, instagramHandle,
+      enableTableNumber: enableTableNumber === true,
     },
   })
   const invUser = await prisma.user.findUnique({ where: { id: req.user!.userId }, select: { name: true, email: true } })
@@ -276,11 +277,11 @@ export async function updateInvitation(req: AuthRequest, res: Response): Promise
     isPublished, rsvpDeadline, guestGreeting, defaultGuestName,
     ceremonyVenue, ceremonyAddress, ceremonyTime, ceremonyPhoto, ceremonyMapUrl,
     receptionVenue, receptionAddress, receptionTime, receptionPhoto, receptionMapUrl,
-    parentsInfo, sponsorsInfo, giftsInfo, instagramHandle,
+    parentsInfo, sponsorsInfo, giftsInfo, instagramHandle, enableTableNumber,
   } = req.body
 
-  // rsvpContact is a legacy alias — map it to rsvpValue, never send to Prisma directly
-  const resolvedRsvpValue = rsvpValue || rsvpContact || undefined
+  // rsvpContact is a legacy alias — null must be allowed to clear the field
+  const resolvedRsvpValue = rsvpValue !== undefined ? rsvpValue : (rsvpContact !== undefined ? rsvpContact : undefined)
 
   const payload: any = {
     invitationType, eventType, title, names, eventDate, eventTime, venue, locationNote,
@@ -290,6 +291,10 @@ export async function updateInvitation(req: AuthRequest, res: Response): Promise
     ceremonyVenue, ceremonyAddress, ceremonyTime, ceremonyPhoto, ceremonyMapUrl,
     receptionVenue, receptionAddress, receptionTime, receptionPhoto, receptionMapUrl,
     parentsInfo, sponsorsInfo, giftsInfo, instagramHandle,
+  }
+
+  if (enableTableNumber !== undefined) {
+    payload.enableTableNumber = enableTableNumber === true
   }
 
   if (gallery !== undefined) {
@@ -451,12 +456,15 @@ export async function updateGuest(req: AuthRequest, res: Response): Promise<void
   })
   if (!guest) { R.notFound(res, 'Invitado no encontrado'); return }
 
-  const { personalizedMessage } = req.body
+  const { personalizedMessage, tableNumber } = req.body
+  const data: any = {}
+  if (personalizedMessage !== undefined) data.personalizedMessage = personalizedMessage || null
+  if (tableNumber !== undefined) data.tableNumber = tableNumber !== null ? Number(tableNumber) : null
   const updated = await prisma.invitationGuest.update({
     where: { id: guest.id },
-    data: { personalizedMessage: personalizedMessage !== undefined ? (personalizedMessage || null) : undefined },
+    data,
   })
-  R.success(res, updated, 'Mensaje actualizado')
+  R.success(res, updated, 'Invitado actualizado')
 }
 
 export async function deleteGuest(req: AuthRequest, res: Response): Promise<void> {

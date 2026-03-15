@@ -282,9 +282,9 @@ function FadeIn({
 }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 32 }}
+      initial={{ opacity: 0, y: 24 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: '-48px' }}
+      viewport={{ once: true, amount: 0.08 }}
       transition={{ duration: 0.65, ease: [0.25, 0.46, 0.45, 0.94], delay }}
       className={className}
     >
@@ -506,11 +506,13 @@ export default function InvitationStrip({
   shareUrl,
   guestName,
   guestMessage,
+  guestTableNumber,
 }: {
   invitation: ApiInvitation
   shareUrl: string
   guestName?: string
   guestMessage?: string
+  guestTableNumber?: number | null
 }) {
   const templateStr = String(invitation.template ?? 'warm')
   const hasEmboss = templateStr.endsWith('-emboss')
@@ -1045,6 +1047,26 @@ export default function InvitationStrip({
                     style={{ color: s.text, opacity: 0.82 }}
                   >
                     {guestMessage}
+                  </p>
+                </>
+              )}
+
+              {invitation.enableTableNumber && guestTableNumber != null && (
+                <>
+                  <div className="my-6">
+                    <Ornament s={s} />
+                  </div>
+                  <p
+                    className="text-[0.58rem] uppercase tracking-[0.38em] font-dm"
+                    style={{ color: s.accent }}
+                  >
+                    Tu mesa
+                  </p>
+                  <p
+                    className="font-cormorant font-light leading-none mt-2"
+                    style={{ fontSize: 'clamp(3rem, 14vw, 5rem)', color: s.accent }}
+                  >
+                    {guestTableNumber}
                   </p>
                 </>
               )}

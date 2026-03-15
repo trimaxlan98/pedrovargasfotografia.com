@@ -122,6 +122,7 @@ export default function GuestInvitationPage() {
             shareUrl={shareUrl}
             guestName={guest.name}
             guestMessage={guest.personalizedMessage || undefined}
+            guestTableNumber={guest.tableNumber}
           />
         </div>
       </main>

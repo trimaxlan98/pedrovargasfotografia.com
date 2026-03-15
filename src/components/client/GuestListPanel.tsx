@@ -28,6 +28,7 @@ export default function GuestListPanel({ invitationId, invitationTitle, onClose,
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
   const [editingId, setEditingId]         = useState<string | null>(null)
   const [editMsg, setEditMsg]             = useState('')
+  const [editTableNum, setEditTableNum]   = useState('')
   const [savingId, setSavingId]           = useState<string | null>(null)
 
   const base = `/${mode === 'admin' ? 'admin' : 'client'}/invitations/${invitationId}`
@@ -70,9 +71,17 @@ export default function GuestListPanel({ invitationId, invitationTitle, onClose,
   async function handleSaveMsg(gid: string) {
     setSavingId(gid)
     try {
-      await api.patch(`${base}/guests/${gid}`, { personalizedMessage: editMsg.trim() || null })
+      const tableNum = editTableNum.trim() !== '' ? parseInt(editTableNum.trim(), 10) : null
+      await api.patch(`${base}/guests/${gid}`, {
+        personalizedMessage: editMsg.trim() || null,
+        tableNumber: isNaN(tableNum as number) ? null : tableNum,
+      })
       setGuests(prev =>
-        prev.map(g => g.id === gid ? { ...g, personalizedMessage: editMsg.trim() || undefined } : g)
+        prev.map(g => g.id === gid ? {
+          ...g,
+          personalizedMessage: editMsg.trim() || undefined,
+          tableNumber: isNaN(tableNum as number) ? null : tableNum,
+        } : g)
       )
       setEditingId(null)
     } catch { /* silent */ } finally {
@@ -83,6 +92,7 @@ export default function GuestListPanel({ invitationId, invitationTitle, onClose,
   function startEdit(g: ApiInvitationGuest) {
     setEditingId(g.id)
     setEditMsg(g.personalizedMessage ?? '')
+    setEditTableNum(g.tableNumber != null ? String(g.tableNumber) : '')
   }
 
   async function handleSeedGuests() {
@@ -244,47 +254,68 @@ export default function GuestListPanel({ invitationId, invitationTitle, onClose,
 
                         {/* Mensaje personalizado o editor */}
                         {isEditing ? (
-                          <div className="flex items-center gap-2 mt-2">
+                          <div className="space-y-1.5 mt-2">
                             <input
                               autoFocus
                               value={editMsg}
                               onChange={e => setEditMsg(e.target.value)}
                               onKeyDown={e => {
-                                if (e.key === 'Enter') { e.preventDefault(); handleSaveMsg(g.id) }
                                 if (e.key === 'Escape') setEditingId(null)
                               }}
-                              placeholder="Escribe un mensaje para este invitado…"
-                              className="flex-1 rounded-lg px-3 py-1.5 text-xs
+                              placeholder="Mensaje personalizado (opcional)…"
+                              className="w-full rounded-lg px-3 py-1.5 text-xs
                                          bg-gray-100 dark:bg-[#2a2a2a]
                                          border border-gold/40
                                          text-gray-900 dark:text-gray-100
                                          placeholder-gray-400 dark:placeholder-gray-500
                                          focus:border-gold/70 focus:outline-none"
                             />
-                            <button
-                              onClick={() => handleSaveMsg(g.id)}
-                              disabled={isSaving}
-                              className="flex items-center gap-1 text-xs text-gold hover:text-gold/80 px-2 py-1.5 rounded-lg hover:bg-gold/5 disabled:opacity-40"
-                            >
-                              <Save size={12} />
-                              {isSaving ? '…' : 'Guardar'}
-                            </button>
-                            <button
-                              onClick={() => setEditingId(null)}
-                              className="text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 p-1 rounded"
-                            >
-                              <X size={12} />
-                            </button>
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="number"
+                                min={1}
+                                value={editTableNum}
+                                onChange={e => setEditTableNum(e.target.value)}
+                                placeholder="Mesa # (opcional)"
+                                className="w-36 rounded-lg px-3 py-1.5 text-xs
+                                           bg-gray-100 dark:bg-[#2a2a2a]
+                                           border border-gold/40
+                                           text-gray-900 dark:text-gray-100
+                                           placeholder-gray-400 dark:placeholder-gray-500
+                                           focus:border-gold/70 focus:outline-none"
+                              />
+                              <button
+                                onClick={() => handleSaveMsg(g.id)}
+                                disabled={isSaving}
+                                className="flex items-center gap-1 text-xs text-gold hover:text-gold/80 px-2 py-1.5 rounded-lg hover:bg-gold/5 disabled:opacity-40"
+                              >
+                                <Save size={12} />
+                                {isSaving ? '…' : 'Guardar'}
+                              </button>
+                              <button
+                                onClick={() => setEditingId(null)}
+                                className="text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 p-1 rounded"
+                              >
+                                <X size={12} />
+                              </button>
+                            </div>
                           </div>
                         ) : (
                           <div className="flex items-center gap-2 mt-1">
-                            <p className="text-gray-400 dark:text-gray-500 text-xs font-dm italic min-w-0 truncate">
-                              {g.personalizedMessage || '— sin mensaje personalizado'}
-                            </p>
+                            <div className="flex items-center gap-2 min-w-0 flex-1">
+                              <p className="text-gray-400 dark:text-gray-500 text-xs font-dm italic min-w-0 truncate">
+                                {g.personalizedMessage || '— sin mensaje'}
+                              </p>
+                              {g.tableNumber != null && (
+                                <span className="flex-shrink-0 text-[0.6rem] font-dm uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-gold/15 text-gold">
+                                  Mesa {g.tableNumber}
+                                </span>
+                              )}
+                            </div>
                             <button
                               onClick={() => startEdit(g)}
                               className="text-gray-300 dark:text-gray-600 hover:text-gold transition-colors flex-shrink-0"
-                              title="Editar mensaje"
+                              title="Editar mensaje y mesa"
                             >
                               <Pencil size={11} />
                             </button>

@@ -197,6 +197,9 @@ model DigitalInvitation {
   giftsInfo        String?
   instagramHandle  String?
 
+  // Número de mesa
+  enableTableNumber Boolean @default(false)
+
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -215,8 +218,11 @@ model InvitationGuest {
   response     String    @default("PENDING") // PENDING | ACCEPTED | DECLINED
   
   // Nuevo campo para mensaje personalizado por invitado
-  personalizedMessage String? 
-  
+  personalizedMessage String?
+
+  // Número de mesa asignado al invitado
+  tableNumber  Int?
+
   respondedAt  DateTime?
   createdAt    DateTime  @default(now())
 

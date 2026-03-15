@@ -61,6 +61,7 @@ interface InvitationDraft {
   template: InvitationTemplate
   reliefEffect: ReliefEffect
   isPublished: boolean
+  enableTableNumber: boolean
   rsvpDeadline: string
   guestGreeting: string
   defaultGuestName: string
@@ -110,6 +111,7 @@ const emptyDraft: InvitationDraft = {
   template: 'floral',
   reliefEffect: 'none',
   isPublished: true,
+  enableTableNumber: false,
   rsvpDeadline: '',
   guestGreeting: 'Hola',
   defaultGuestName: 'Familia y Amigos',
@@ -150,6 +152,7 @@ function draftFromApi(inv: ApiInvitation, ownerName?: string, ownerEmail?: strin
     template: baseTemplate,
     reliefEffect,
     isPublished: inv.isPublished,
+    enableTableNumber: inv.enableTableNumber || false,
     rsvpDeadline: inv.rsvpDeadline ? inv.rsvpDeadline.slice(0, 16) : '',
     guestGreeting: inv.guestGreeting || 'Hola',
     defaultGuestName: inv.defaultGuestName || 'Familia y Amigos',
@@ -384,6 +387,7 @@ export default function InvitationWizard({
         rsvpValue: draft.data.rsvpValue || null,
         rsvpDeadline: draft.rsvpDeadline ? new Date(draft.rsvpDeadline).toISOString() : null,
         isPublished: draft.isPublished,
+        enableTableNumber: draft.enableTableNumber,
         guestGreeting: draft.guestGreeting,
         defaultGuestName: draft.defaultGuestName,
         heroImage: draft.heroImage || null,
@@ -1011,6 +1015,19 @@ export default function InvitationWizard({
                 </button>
               </div>
 
+              <div className="flex items-center justify-between p-4 border border-white/10 rounded-lg bg-white/5">
+                <div>
+                  <p className="text-ivory text-sm font-dm">Número de mesa</p>
+                  <p className="text-ivory/40 text-xs">Muestra en la invitación individual la mesa asignada al invitado</p>
+                </div>
+                <button
+                  onClick={() => setDraft(p => ({ ...p, enableTableNumber: !p.enableTableNumber }))}
+                  className={`w-12 h-6 rounded-full transition-colors relative ${draft.enableTableNumber ? 'bg-gold' : 'bg-white/20'}`}
+                >
+                  <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white transition-all ${draft.enableTableNumber ? 'left-6' : 'left-0.5'}`} />
+                </button>
+              </div>
+
               <div className="border border-white/10 rounded-lg p-4 bg-white/5 flex items-start gap-3">
                 <CheckCircle size={15} className="text-gold flex-shrink-0 mt-0.5" />
                 <div className="text-ivory/60 text-xs font-dm leading-relaxed">
@@ -1044,9 +1061,16 @@ export default function InvitationWizard({
             <ChevronLeft size={14} /> Anterior
           </button>
           {step < publishStep ? (
-            <button onClick={next} className="btn-primary px-5 py-2 text-xs flex items-center gap-1">
-              Siguiente <ChevronRight size={14} />
-            </button>
+            <>
+              {isEdit && (
+                <button onClick={handleSave} disabled={isSaving} className="btn-outline px-4 py-2 text-xs disabled:opacity-60 flex items-center gap-1">
+                  {isSaving ? '...' : <><CheckCircle size={13} /> Guardar</>}
+                </button>
+              )}
+              <button onClick={next} className="btn-primary px-5 py-2 text-xs flex items-center gap-1">
+                Siguiente <ChevronRight size={14} />
+              </button>
+            </>
           ) : (
             <button onClick={handleSave} disabled={isSaving} className="btn-primary px-5 py-2 text-xs disabled:opacity-60">
               {isSaving ? 'Guardando...' : isEdit ? 'Actualizar invitacion' : 'Guardar invitacion'}
