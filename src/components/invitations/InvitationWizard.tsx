@@ -61,6 +61,7 @@ interface InvitationDraft {
   template: InvitationTemplate
   reliefEffect: ReliefEffect
   isPublished: boolean
+  enableTableNumber: boolean
   rsvpDeadline: string
   guestGreeting: string
   defaultGuestName: string
@@ -82,6 +83,7 @@ interface InvitationDraft {
   sponsorsInfo: string
   giftsInfo: string
   instagramHandle: string
+  backgroundMusic: string   // URL existente (cuando se edita)
   data: {
     title: string
     names: string
@@ -110,6 +112,7 @@ const emptyDraft: InvitationDraft = {
   template: 'floral',
   reliefEffect: 'none',
   isPublished: true,
+  enableTableNumber: false,
   rsvpDeadline: '',
   guestGreeting: 'Hola',
   defaultGuestName: 'Familia y Amigos',
@@ -128,6 +131,7 @@ const emptyDraft: InvitationDraft = {
   sponsorsInfo: '',
   giftsInfo: '',
   instagramHandle: '',
+  backgroundMusic: '',
   data: {
     title: 'Estas invitado a nuestra boda',
     names: '', eventType: 'Boda', date: '', time: '',
@@ -150,6 +154,7 @@ function draftFromApi(inv: ApiInvitation, ownerName?: string, ownerEmail?: strin
     template: baseTemplate,
     reliefEffect,
     isPublished: inv.isPublished,
+    enableTableNumber: inv.enableTableNumber || false,
     rsvpDeadline: inv.rsvpDeadline ? inv.rsvpDeadline.slice(0, 16) : '',
     guestGreeting: inv.guestGreeting || 'Hola',
     defaultGuestName: inv.defaultGuestName || 'Familia y Amigos',
@@ -171,6 +176,7 @@ function draftFromApi(inv: ApiInvitation, ownerName?: string, ownerEmail?: strin
     sponsorsInfo: inv.sponsorsInfo || '',
     giftsInfo: inv.giftsInfo || '',
     instagramHandle: inv.instagramHandle || '',
+    backgroundMusic: inv.backgroundMusic || '',
     data: {
       title: inv.title,
       names: inv.names,
@@ -214,6 +220,7 @@ export default function InvitationWizard({
       : { ...emptyDraft, ownerName, ownerEmail }
   )
   const [photos, setPhotos] = useState<File[]>([])
+  const [musicFile, setMusicFile] = useState<File | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState('')
 
@@ -384,6 +391,7 @@ export default function InvitationWizard({
         rsvpValue: draft.data.rsvpValue || null,
         rsvpDeadline: draft.rsvpDeadline ? new Date(draft.rsvpDeadline).toISOString() : null,
         isPublished: draft.isPublished,
+        enableTableNumber: draft.enableTableNumber,
         guestGreeting: draft.guestGreeting,
         defaultGuestName: draft.defaultGuestName,
         heroImage: draft.heroImage || null,
@@ -420,6 +428,14 @@ export default function InvitationWizard({
         photos.forEach(p => form.append('images', p))
         const up = await api.postForm<{ data: ApiInvitation }>(`${base}/${saved.id}/photos`, form)
         saved = up.data
+      }
+
+      if (musicFile) {
+        const form = new FormData()
+        form.append('audio', musicFile)
+        const up = await api.postForm<{ data: ApiInvitation }>(`${base}/${saved.id}/music`, form)
+        saved = up.data
+        setMusicFile(null)
       }
 
       if (!savedInvitationId && pendingGuests.length > 0) {
@@ -977,6 +993,64 @@ export default function InvitationWizard({
                   {photos.length > 0 ? `${photos.length} foto(s) seleccionada(s)` : 'Hasta 8 fotos. Se muestran en la galeria de la invitacion.'}
                 </p>
               </div>
+
+              {/* ── Música de fondo ─────────────────────────────────────────── */}
+              <div>
+                <label className="block text-ivory/80 text-xs font-dm mb-1.5">Música de fondo</label>
+                <div
+                  className="relative border-2 border-dashed rounded-xl p-5 text-center cursor-pointer transition-colors"
+                  style={{
+                    borderColor: musicFile ? 'rgba(201,169,110,0.6)' : 'rgba(255,255,255,0.12)',
+                    background: musicFile ? 'rgba(201,169,110,0.06)' : 'transparent',
+                  }}
+                  onDragOver={e => e.preventDefault()}
+                  onDrop={e => {
+                    e.preventDefault()
+                    const file = e.dataTransfer.files[0]
+                    if (file && file.type.startsWith('audio/')) setMusicFile(file)
+                  }}
+                  onClick={() => document.getElementById('music-upload-input')?.click()}
+                >
+                  <input
+                    id="music-upload-input"
+                    type="file"
+                    accept="audio/mpeg,audio/mp4,audio/ogg,audio/opus,audio/webm,audio/aac,.mp3,.m4a,.ogg,.opus,.webm,.aac"
+                    className="hidden"
+                    onChange={e => {
+                      const file = e.target.files?.[0]
+                      if (file) setMusicFile(file)
+                    }}
+                  />
+                  {musicFile ? (
+                    <div className="flex items-center justify-center gap-3">
+                      <span className="text-gold text-lg">♪</span>
+                      <div className="text-left">
+                        <p className="text-ivory text-xs font-dm truncate max-w-[200px]">{musicFile.name}</p>
+                        <p className="text-ivory/40 text-[0.65rem]">{(musicFile.size / 1024 / 1024).toFixed(1)} MB</p>
+                      </div>
+                      <button
+                        className="text-red-400/60 hover:text-red-400 transition-colors ml-2 text-xs"
+                        onClick={e => { e.stopPropagation(); setMusicFile(null) }}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ) : isEdit && draft.backgroundMusic ? (
+                    <div className="space-y-1">
+                      <p className="text-ivory/60 text-xs font-dm">♪ Música actual configurada</p>
+                      <p className="text-ivory/30 text-[0.6rem]">Arrastra o haz clic para reemplazar</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-1">
+                      <p className="text-ivory/50 text-xs font-dm">Arrastra un archivo de audio o haz clic</p>
+                      <p className="text-ivory/30 text-[0.6rem]">MP3, M4A, OGG, OPUS — máx. 15 MB</p>
+                    </div>
+                  )}
+                </div>
+                <p className="text-amber-400/70 text-[0.62rem] mt-2 font-dm leading-relaxed">
+                  ⚠ No añada música con copyright. Use únicamente pistas libres de derechos (royalty-free) o de su propia autoría.
+                </p>
+              </div>
             </div>
           )}
 
@@ -1008,6 +1082,19 @@ export default function InvitationWizard({
                   className={`w-12 h-6 rounded-full transition-colors relative ${draft.isPublished ? 'bg-gold' : 'bg-white/20'}`}
                 >
                   <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white transition-all ${draft.isPublished ? 'left-6' : 'left-0.5'}`} />
+                </button>
+              </div>
+
+              <div className="flex items-center justify-between p-4 border border-white/10 rounded-lg bg-white/5">
+                <div>
+                  <p className="text-ivory text-sm font-dm">Número de mesa</p>
+                  <p className="text-ivory/40 text-xs">Muestra en la invitación individual la mesa asignada al invitado</p>
+                </div>
+                <button
+                  onClick={() => setDraft(p => ({ ...p, enableTableNumber: !p.enableTableNumber }))}
+                  className={`w-12 h-6 rounded-full transition-colors relative ${draft.enableTableNumber ? 'bg-gold' : 'bg-white/20'}`}
+                >
+                  <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white transition-all ${draft.enableTableNumber ? 'left-6' : 'left-0.5'}`} />
                 </button>
               </div>
 
@@ -1044,9 +1131,16 @@ export default function InvitationWizard({
             <ChevronLeft size={14} /> Anterior
           </button>
           {step < publishStep ? (
-            <button onClick={next} className="btn-primary px-5 py-2 text-xs flex items-center gap-1">
-              Siguiente <ChevronRight size={14} />
-            </button>
+            <>
+              {isEdit && (
+                <button onClick={handleSave} disabled={isSaving} className="btn-outline px-4 py-2 text-xs disabled:opacity-60 flex items-center gap-1">
+                  {isSaving ? '...' : <><CheckCircle size={13} /> Guardar</>}
+                </button>
+              )}
+              <button onClick={next} className="btn-primary px-5 py-2 text-xs flex items-center gap-1">
+                Siguiente <ChevronRight size={14} />
+              </button>
+            </>
           ) : (
             <button onClick={handleSave} disabled={isSaving} className="btn-primary px-5 py-2 text-xs disabled:opacity-60">
               {isSaving ? 'Guardando...' : isEdit ? 'Actualizar invitacion' : 'Guardar invitacion'}

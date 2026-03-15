@@ -84,6 +84,12 @@ export interface ApiInvitation {
   sponsorsInfo?: string
   giftsInfo?: string
   instagramHandle?: string
+
+  // Número de mesa
+  enableTableNumber?: boolean
+
+  // Música de fondo
+  backgroundMusic?: string | null
 }
 
 export interface ApiInvitationGuest {
@@ -93,6 +99,7 @@ export interface ApiInvitationGuest {
   token: string
   response: 'PENDING' | 'ACCEPTED' | 'DECLINED'
   personalizedMessage?: string
+  tableNumber?: number | null
   respondedAt?: string | null
   createdAt: string
 }

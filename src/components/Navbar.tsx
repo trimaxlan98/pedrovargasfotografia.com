@@ -233,7 +233,33 @@ export default function Navbar() {
                   Iniciar Sesión
                 </motion.button>
               )}
-
+              {isAuthenticated && (
+                <>
+                  <motion.a
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ delay: navLinks.length * 0.07 + 0.15 }}
+                    href={isAdmin ? '/admin' : '/cliente'}
+                    onClick={() => setMenuOpen(false)}
+                    className="flex items-center gap-2 text-ivory/70 hover:text-ivory font-dm text-sm transition-colors"
+                  >
+                    <LayoutDashboard size={16} />
+                    {isAdmin ? 'Panel Admin' : 'Mi Portal'}
+                  </motion.a>
+                  <motion.button
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ delay: navLinks.length * 0.07 + 0.18 }}
+                    onClick={() => { logout(); setMenuOpen(false) }}
+                    className="flex items-center gap-2 text-ivory/50 hover:text-danger font-dm text-sm transition-colors"
+                  >
+                    <LogOut size={16} />
+                    Cerrar sesión
+                  </motion.button>
+                </>
+              )}
               <motion.button
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -255,3 +281,4 @@ export default function Navbar() {
     </>
   )
 }
+

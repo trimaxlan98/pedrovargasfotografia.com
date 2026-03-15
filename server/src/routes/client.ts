@@ -2,7 +2,7 @@ import { Router } from 'express'
 import { body } from 'express-validator'
 import { authenticate } from '../middleware/auth'
 import { requireClient } from '../middleware/roles'
-import { uploadImage } from '../middleware/upload'
+import { uploadImage, uploadAudio } from '../middleware/upload'
 import * as client from '../controllers/clientController'
 
 const router = Router()
@@ -40,6 +40,7 @@ router.delete('/invitations/:id', client.deleteInvitation)
 router.post('/invitations/:id/archive', client.archiveInvitation)
 router.patch('/invitations/:id/toggle-published', client.toggleInvitationPublished)
 router.post('/invitations/:id/photos', uploadImage.array('images', 8), client.addInvitationPhotos)
+router.post('/invitations/:id/music', uploadAudio.single('audio'), client.addInvitationMusic)
 router.get('/invitations/:id/guests', client.listGuests)
 router.post('/invitations/:id/guests', client.addGuests)
 router.post('/invitations/:id/guests/dev-seed', client.seedGuestsForDevelopment)

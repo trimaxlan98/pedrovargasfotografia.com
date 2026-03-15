@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import { authenticate } from '../middleware/auth'
 import { requireAdmin } from '../middleware/roles'
-import { uploadImage } from '../middleware/upload'
+import { uploadImage, uploadAudio } from '../middleware/upload'
 import * as admin from '../controllers/adminController'
 import * as notifications from '../controllers/notificationController'
 
@@ -66,6 +66,7 @@ router.post('/invitations/:id/archive', admin.archiveInvitation)
 router.post('/invitations/:id/unarchive', admin.unarchiveInvitation)
 router.patch('/invitations/:id/toggle-published', admin.toggleInvitationPublished)
 router.post('/invitations/:id/photos', uploadImage.array('images', 8), admin.addInvitationPhotos)
+router.post('/invitations/:id/music', uploadAudio.single('audio'), admin.addInvitationMusic)
 router.get('/invitations/:id/guests', admin.listGuestsByInvitation)
 router.post('/invitations/:id/guests', admin.addGuestsByInvitation)
 router.patch('/invitations/:id/guests/:gid', admin.updateGuestByInvitation)

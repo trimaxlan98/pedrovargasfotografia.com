@@ -522,7 +522,7 @@ export async function createInvitation(req: AuthRequest, res: Response): Promise
     isPublished, rsvpDeadline, guestGreeting, defaultGuestName,
     ceremonyVenue, ceremonyAddress, ceremonyTime, ceremonyPhoto, ceremonyMapUrl,
     receptionVenue, receptionAddress, receptionTime, receptionPhoto, receptionMapUrl,
-    parentsInfo, sponsorsInfo, giftsInfo, instagramHandle,
+    parentsInfo, sponsorsInfo, giftsInfo, instagramHandle, enableTableNumber, backgroundMusic,
   } = req.body
 
   if (!clientId) { R.badRequest(res, 'Se requiere clientId'); return }
@@ -557,6 +557,8 @@ export async function createInvitation(req: AuthRequest, res: Response): Promise
       ceremonyVenue, ceremonyAddress, ceremonyTime, ceremonyPhoto, ceremonyMapUrl,
       receptionVenue, receptionAddress, receptionTime, receptionPhoto, receptionMapUrl,
       parentsInfo, sponsorsInfo, giftsInfo, instagramHandle,
+      enableTableNumber: enableTableNumber === true,
+      backgroundMusic: backgroundMusic || null,
     },
   })
   R.created(res, normalizeInvitation(invitation))
@@ -576,10 +578,11 @@ export async function updateInvitation(req: AuthRequest, res: Response): Promise
     isPublished, rsvpDeadline, guestGreeting, defaultGuestName,
     ceremonyVenue, ceremonyAddress, ceremonyTime, ceremonyPhoto, ceremonyMapUrl,
     receptionVenue, receptionAddress, receptionTime, receptionPhoto, receptionMapUrl,
-    parentsInfo, sponsorsInfo, giftsInfo, instagramHandle,
+    parentsInfo, sponsorsInfo, giftsInfo, instagramHandle, enableTableNumber, backgroundMusic,
   } = req.body
 
-  const resolvedRsvpValue = rsvpValue || rsvpContact || undefined
+  // rsvpContact is a legacy alias — null must be allowed to clear the field
+  const resolvedRsvpValue = rsvpValue !== undefined ? rsvpValue : (rsvpContact !== undefined ? rsvpContact : undefined)
 
   const payload: any = {
     invitationType, eventType, title, names, eventDate, eventTime, venue, locationNote,
@@ -589,6 +592,14 @@ export async function updateInvitation(req: AuthRequest, res: Response): Promise
     ceremonyVenue, ceremonyAddress, ceremonyTime, ceremonyPhoto, ceremonyMapUrl,
     receptionVenue, receptionAddress, receptionTime, receptionPhoto, receptionMapUrl,
     parentsInfo, sponsorsInfo, giftsInfo, instagramHandle,
+  }
+
+  if (enableTableNumber !== undefined) {
+    payload.enableTableNumber = enableTableNumber === true
+  }
+
+  if (backgroundMusic !== undefined) {
+    payload.backgroundMusic = backgroundMusic || null
   }
 
   if (gallery !== undefined) {
@@ -653,6 +664,23 @@ export async function addInvitationPhotos(req: AuthRequest, res: Response): Prom
   R.success(res, normalizeInvitation(updated))
 }
 
+export async function addInvitationMusic(req: AuthRequest, res: Response): Promise<void> {
+  const existing = await prisma.digitalInvitation.findFirst({
+    where: { id: req.params.id, archivedAt: null },
+  })
+  if (!existing) { R.notFound(res); return }
+
+  const file = req.file as Express.Multer.File | undefined
+  if (!file) { R.badRequest(res, 'Se requiere un archivo de audio'); return }
+
+  const url = `/uploads/${file.filename}`
+  const updated = await prisma.digitalInvitation.update({
+    where: { id: existing.id },
+    data: { backgroundMusic: url },
+  })
+  R.success(res, normalizeInvitation(updated))
+}
+
 export async function listGuestsByInvitation(req: AuthRequest, res: Response): Promise<void> {
   const invitation = await prisma.digitalInvitation.findFirst({
     where: { id: req.params.id, archivedAt: null },
@@ -699,12 +727,15 @@ export async function updateGuestByInvitation(req: AuthRequest, res: Response): 
   })
   if (!guest) { R.notFound(res, 'Invitado no encontrado'); return }
 
-  const { personalizedMessage } = req.body
+  const { personalizedMessage, tableNumber } = req.body
+  const data: any = {}
+  if (personalizedMessage !== undefined) data.personalizedMessage = personalizedMessage || null
+  if (tableNumber !== undefined) data.tableNumber = tableNumber !== null ? Number(tableNumber) : null
   const updated = await prisma.invitationGuest.update({
     where: { id: guest.id },
-    data: { personalizedMessage: personalizedMessage !== undefined ? (personalizedMessage || null) : undefined },
+    data,
   })
-  R.success(res, updated, 'Mensaje actualizado')
+  R.success(res, updated, 'Invitado actualizado')
 }
 
 export async function deleteGuestByInvitation(req: AuthRequest, res: Response): Promise<void> {
