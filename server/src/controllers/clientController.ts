@@ -217,7 +217,7 @@ export async function createInvitation(req: AuthRequest, res: Response): Promise
     isPublished, rsvpDeadline, guestGreeting, defaultGuestName,
     ceremonyVenue, ceremonyAddress, ceremonyTime, ceremonyPhoto, ceremonyMapUrl,
     receptionVenue, receptionAddress, receptionTime, receptionPhoto, receptionMapUrl,
-    parentsInfo, sponsorsInfo, giftsInfo, instagramHandle, enableTableNumber,
+    parentsInfo, sponsorsInfo, giftsInfo, instagramHandle, enableTableNumber, backgroundMusic,
   } = req.body
 
   const shareToken = uuidv4()
@@ -248,6 +248,7 @@ export async function createInvitation(req: AuthRequest, res: Response): Promise
       receptionVenue, receptionAddress, receptionTime, receptionPhoto, receptionMapUrl,
       parentsInfo, sponsorsInfo, giftsInfo, instagramHandle,
       enableTableNumber: enableTableNumber === true,
+      backgroundMusic: backgroundMusic || null,
     },
   })
   const invUser = await prisma.user.findUnique({ where: { id: req.user!.userId }, select: { name: true, email: true } })
@@ -277,7 +278,7 @@ export async function updateInvitation(req: AuthRequest, res: Response): Promise
     isPublished, rsvpDeadline, guestGreeting, defaultGuestName,
     ceremonyVenue, ceremonyAddress, ceremonyTime, ceremonyPhoto, ceremonyMapUrl,
     receptionVenue, receptionAddress, receptionTime, receptionPhoto, receptionMapUrl,
-    parentsInfo, sponsorsInfo, giftsInfo, instagramHandle, enableTableNumber,
+    parentsInfo, sponsorsInfo, giftsInfo, instagramHandle, enableTableNumber, backgroundMusic,
   } = req.body
 
   // rsvpContact is a legacy alias — null must be allowed to clear the field
@@ -295,6 +296,10 @@ export async function updateInvitation(req: AuthRequest, res: Response): Promise
 
   if (enableTableNumber !== undefined) {
     payload.enableTableNumber = enableTableNumber === true
+  }
+
+  if (backgroundMusic !== undefined) {
+    payload.backgroundMusic = backgroundMusic || null
   }
 
   if (gallery !== undefined) {
@@ -498,6 +503,23 @@ export async function addInvitationPhotos(req: AuthRequest, res: Response): Prom
     data: { gallery: JSON.stringify([...current, ...urls]) },
   })
   R.success(res, normalizeInvitation(updated), 'Fotos agregadas')
+}
+
+export async function addInvitationMusic(req: AuthRequest, res: Response): Promise<void> {
+  const existing = await prisma.digitalInvitation.findFirst({
+    where: { id: req.params.id, clientId: req.user!.userId, archivedAt: null },
+  })
+  if (!existing) { R.notFound(res, 'Invitación no encontrada'); return }
+
+  const file = req.file as Express.Multer.File | undefined
+  if (!file) { R.badRequest(res, 'Se requiere un archivo de audio'); return }
+
+  const url = `/uploads/${file.filename}`
+  const updated = await prisma.digitalInvitation.update({
+    where: { id: existing.id },
+    data: { backgroundMusic: url },
+  })
+  R.success(res, normalizeInvitation(updated), 'Música agregada')
 }
 
 export async function archiveInvitation(req: AuthRequest, res: Response): Promise<void> {

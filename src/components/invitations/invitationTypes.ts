@@ -87,6 +87,9 @@ export interface ApiInvitation {
 
   // Número de mesa
   enableTableNumber?: boolean
+
+  // Música de fondo
+  backgroundMusic?: string | null
 }
 
 export interface ApiInvitationGuest {

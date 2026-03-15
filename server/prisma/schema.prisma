@@ -200,6 +200,9 @@ model DigitalInvitation {
   // Número de mesa
   enableTableNumber Boolean @default(false)
 
+  // Música de fondo
+  backgroundMusic  String?
+
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 

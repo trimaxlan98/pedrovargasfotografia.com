@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect, useCallback } from 'react'
+﻿import { useMemo, useState, useEffect, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Copy, Check, MessageCircle, MapPin, X, Gift, Instagram } from 'lucide-react'
 import {
@@ -8,7 +8,7 @@ import {
 } from './invitationTypes'
 import QrCodeImage from './QrCodeImage'
 
-// ── Template styles ────────────────────────────────────────────────────────────
+// â”€â”€ Template styles â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 type TemplateStyle = {
   isDark: boolean
   bg: string
@@ -98,7 +98,7 @@ const TEMPLATE_STYLES: Record<string, TemplateStyle> = {
     divider: 'rgba(122,74,30,0.15)',
     rsvpBg: 'rgba(122,74,30,0.1)',
     rsvpText: '#7a4a1e',
-    ornament: '✦',
+    ornament: 'âœ¦',
   },
   pearl: {
     isDark: false,
@@ -113,7 +113,7 @@ const TEMPLATE_STYLES: Record<string, TemplateStyle> = {
     divider: 'rgba(120,120,170,0.14)',
     rsvpBg: 'rgba(120,120,170,0.1)',
     rsvpText: '#5858a0',
-    ornament: '◆',
+    ornament: 'â—†',
   },
   esmeralda: {
     isDark: true,
@@ -128,7 +128,7 @@ const TEMPLATE_STYLES: Record<string, TemplateStyle> = {
     divider: 'rgba(77,186,124,0.15)',
     rsvpBg: '#4dba7c',
     rsvpText: '#071510',
-    ornament: '✿',
+    ornament: 'âœ¿',
   },
   noir: {
     isDark: true,
@@ -143,7 +143,7 @@ const TEMPLATE_STYLES: Record<string, TemplateStyle> = {
     divider: 'rgba(255,255,255,0.09)',
     rsvpBg: '#e8e8e8',
     rsvpText: '#080808',
-    ornament: '—',
+    ornament: 'â€”',
   },
   lavanda: {
     isDark: false,
@@ -158,7 +158,7 @@ const TEMPLATE_STYLES: Record<string, TemplateStyle> = {
     divider: 'rgba(122,80,200,0.14)',
     rsvpBg: 'rgba(122,80,200,0.1)',
     rsvpText: '#7a50c8',
-    ornament: '❀',
+    ornament: 'â€',
   },
   terracota: {
     isDark: false,
@@ -173,11 +173,11 @@ const TEMPLATE_STYLES: Record<string, TemplateStyle> = {
     divider: 'rgba(170,75,45,0.14)',
     rsvpBg: 'rgba(170,75,45,0.12)',
     rsvpText: '#aa4b2d',
-    ornament: '∞',
+    ornament: 'âˆž',
   },
 }
 
-// ── Countdown helpers ─────────────────────────────────────────────────────────
+// â”€â”€ Countdown helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const ES_MONTHS: Record<string, number> = {
   enero: 1, febrero: 2, marzo: 3, abril: 4, mayo: 5, junio: 6,
   julio: 7, agosto: 8, septiembre: 9, octubre: 10, noviembre: 11, diciembre: 12,
@@ -209,7 +209,7 @@ function getCountdownUnits(target: Date) {
   const diff = Math.max(0, target.getTime() - Date.now())
   const total = Math.floor(diff / 1000)
   return [
-    { label: 'Días',  value: Math.floor(total / 86400) },
+    { label: 'DÃ­as',  value: Math.floor(total / 86400) },
     { label: 'Horas', value: Math.floor((total % 86400) / 3600) },
     { label: 'Min',   value: Math.floor((total % 3600) / 60) },
     { label: 'Seg',   value: total % 60 },
@@ -232,7 +232,7 @@ function HeroCountdown({ eventDate, s }: { eventDate: string; s: TemplateStyle }
   if (target.getTime() <= Date.now()) {
     return (
       <p className="text-xs font-dm uppercase tracking-widest" style={{ color: s.accent }}>
-        ¡El evento es hoy!
+        Â¡El evento es hoy!
       </p>
     )
   }
@@ -270,7 +270,7 @@ function HeroCountdown({ eventDate, s }: { eventDate: string; s: TemplateStyle }
   )
 }
 
-// ── Scroll fade-in wrapper ─────────────────────────────────────────────────────
+// â”€â”€ Scroll fade-in wrapper â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function FadeIn({
   children,
   delay = 0,
@@ -293,7 +293,7 @@ function FadeIn({
   )
 }
 
-// ── Shared UI ─────────────────────────────────────────────────────────────────
+// â”€â”€ Shared UI â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function Ornament({ s }: { s: TemplateStyle }) {
   return (
     <div className="flex items-center justify-center gap-4">
@@ -322,7 +322,122 @@ function SectionDivider({ s }: { s: TemplateStyle }) {
   )
 }
 
-// ── Lightbox ──────────────────────────────────────────────────────────────────
+// â”€â”€ Music Player â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+function MusicPlayer({ src, s }: { src: string; s: TemplateStyle }) {
+  const audioRef = useRef<HTMLAudioElement>(null)
+  const [playing, setPlaying] = useState(false)
+  const [waiting, setWaiting] = useState(false) // esperando gesto para activar sonido
+  const [progress, setProgress] = useState(0)
+
+  useEffect(() => {
+    const el = audioRef.current
+    if (!el) return
+
+    const onTimeUpdate = () => {
+      if (el.duration) setProgress(el.currentTime / el.duration)
+    }
+    const onEnded = () => setPlaying(false)
+    el.addEventListener('timeupdate', onTimeUpdate)
+    el.addEventListener('ended', onEnded)
+
+    const removeGestureListeners = (handler: () => void) => {
+      document.removeEventListener('click', handler)
+      document.removeEventListener('touchstart', handler)
+      document.removeEventListener('scroll', handler, true)
+      document.removeEventListener('keydown', handler)
+    }
+
+    const enableSoundOnGesture = () => {
+      el.muted = false
+      setWaiting(false)
+      el.play().then(() => { setPlaying(true) }).catch(() => {})
+      removeGestureListeners(enableSoundOnGesture)
+    }
+
+    const addGestureListeners = () => {
+      document.addEventListener('click', enableSoundOnGesture, { once: true })
+      document.addEventListener('touchstart', enableSoundOnGesture, { once: true })
+      document.addEventListener('scroll', enableSoundOnGesture, { once: true, capture: true })
+      document.addEventListener('keydown', enableSoundOnGesture, { once: true })
+    }
+
+    const tryPlay = async (muted: boolean) => {
+      el.muted = muted
+      try {
+        await el.play()
+        setPlaying(true)
+        setWaiting(muted)
+        return true
+      } catch {
+        return false
+      }
+    }
+
+    // Intentar autoplay con sonido. Si el navegador lo bloquea, iniciar en mute y
+    // habilitar sonido con el primer gesto del usuario (scroll/click/tecla).
+    void (async () => {
+      if (await tryPlay(false)) return
+      if (await tryPlay(true)) {
+        addGestureListeners()
+        return
+      }
+      addGestureListeners()
+    })()
+
+    return () => {
+      el.removeEventListener('timeupdate', onTimeUpdate)
+      el.removeEventListener('ended', onEnded)
+      el.pause()
+    }
+  }, [src])
+
+  const toggle = () => {
+    const el = audioRef.current
+    if (!el) return
+    if (playing) {
+      el.pause()
+      setPlaying(false)
+    } else {
+      el.play().then(() => { setPlaying(true); setWaiting(false) }).catch(() => {})
+    }
+  }
+
+  return (
+    <div
+      className="fixed bottom-6 right-5 z-50 flex items-center gap-2.5 rounded-full px-3 py-2 shadow-xl backdrop-blur-md"
+      style={{
+        background: s.isDark ? 'rgba(0,0,0,0.65)' : 'rgba(255,255,255,0.75)',
+        border: `1px solid ${s.accent}44`,
+      }}
+    >
+      <audio ref={audioRef} src={src} loop preload="auto" playsInline />
+      <button
+        onClick={toggle}
+        className="w-8 h-8 rounded-full flex items-center justify-center transition-all active:scale-90"
+        style={{ background: s.accent, color: s.isDark ? '#0a0a0a' : '#fff' }}
+        aria-label={playing ? 'Pausar música' : 'Reanudar música'}
+      >
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
+          <rect x="2" y="1" width="3" height="10" rx="1" />
+          <rect x="7" y="1" width="3" height="10" rx="1" />
+        </svg>
+      </button>
+      {/* Progress bar */}
+      <svg width="8" height="28" className="opacity-60">
+        <rect x="3" y="0" width="2" height="28" rx="1"
+          style={{ fill: `${s.accent}33` }} />
+        <rect x="3" y={28 - 28 * progress} width="2" height={28 * progress} rx="1"
+          style={{ fill: s.accent }} />
+      </svg>
+      <span
+        className="text-[0.52rem] uppercase tracking-[0.22em] font-dm leading-tight"
+        style={{ color: s.accent, maxWidth: 64 }}
+      >
+        {waiting ? 'Activa sonido' : playing ? 'Sonando' : 'Música'}
+      </span>
+    </div>
+  )
+}
 function Lightbox({
   images,
   initialIndex,
@@ -367,13 +482,13 @@ function Lightbox({
             className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/10 text-white/70 hover:text-white hover:bg-white/20 transition-colors flex items-center justify-center text-xl"
             onClick={e => { e.stopPropagation(); prev() }}
           >
-            ‹
+            â€¹
           </button>
           <button
             className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/10 text-white/70 hover:text-white hover:bg-white/20 transition-colors flex items-center justify-center text-xl"
             onClick={e => { e.stopPropagation(); next() }}
           >
-            ›
+            â€º
           </button>
         </>
       )}
@@ -407,7 +522,7 @@ function Lightbox({
   )
 }
 
-// ── Event card (Ceremony / Reception) ────────────────────────────────────────
+// â”€â”€ Event card (Ceremony / Reception) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function EventCard({
   label,
   venue,
@@ -485,7 +600,7 @@ function EventCard({
   )
 }
 
-// ── RSVP href helper ──────────────────────────────────────────────────────────
+// â”€â”€ RSVP href helper â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function getRsvpHref(rsvpValue: string): string {
   const clean = rsvpValue.replace(/^WhatsApp:\s*/i, '').trim()
   if (/^https?:\/\//i.test(clean)) return clean
@@ -496,11 +611,11 @@ function getRsvpHref(rsvpValue: string): string {
   return `https://wa.me/?text=${encodeURIComponent(`RSVP: ${clean}`)}`
 }
 
-// ── Layout constants ──────────────────────────────────────────────────────────
+// â”€â”€ Layout constants â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const PAD = 'px-7 sm:px-10'
 const SECTION = `${PAD} py-16 sm:py-20`
 
-// ── Main component ────────────────────────────────────────────────────────────
+// â”€â”€ Main component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export default function InvitationStrip({
   invitation,
   shareUrl,
@@ -598,6 +713,12 @@ export default function InvitationStrip({
     try { return JSON.parse(raw) as string[] } catch { return raw.split('\n').filter(Boolean) }
   }, [invitation.sponsorsInfo])
 
+  // Music
+  const backgroundMusicUrl = useMemo(
+    () => resolveInvitationImageUrl(invitation.backgroundMusic || ''),
+    [invitation.backgroundMusic]
+  )
+
   // Layout flags
   const hasEventCards = !!(ceremonyVenue || receptionVenue)
   const showWhereWhen = !hasEventCards && !!(venue || time || eventDate)
@@ -607,12 +728,12 @@ export default function InvitationStrip({
     setCopied(true)
     setTimeout(() => setCopied(false), 2500)
   }
-  const whatsappShare = `https://wa.me/?text=${encodeURIComponent(`Mira mi invitación: ${shareUrl}`)}`
+  const whatsappShare = `https://wa.me/?text=${encodeURIComponent(`Mira mi invitaciÃ³n: ${shareUrl}`)}`
 
   return (
     <div className="w-full text-sm leading-relaxed" style={{ background: s.bg, color: s.text }}>
 
-      {/* ══ 1. HERO ══════════════════════════════════════════════════════════════ */}
+      {/* â•â• 1. HERO â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       <section className="relative min-h-screen flex flex-col items-center justify-center text-center px-7 py-20 overflow-hidden">
         {/* Gradient overlay */}
         <div className="absolute inset-0 pointer-events-none" style={{ background: s.heroOverlay }} />
@@ -636,7 +757,7 @@ export default function InvitationStrip({
             <SectionLabel s={s}>{eventType}</SectionLabel>
           </motion.div>
 
-          {/* Main name — H1, most dominant element */}
+          {/* Main name â€” H1, most dominant element */}
           <motion.h1
             className={`font-cormorant font-light leading-[1.04] tracking-wide${hasFoil ? ' inv-foil-text' : ''}`}
             style={{
@@ -674,14 +795,14 @@ export default function InvitationStrip({
               className="text-[0.62rem] uppercase tracking-[0.35em] font-dm"
               style={{ color: s.textMuted }}
             >
-              {eventDate}{time ? ` · ${time}` : ''}
+              {eventDate}{time ? ` Â· ${time}` : ''}
             </p>
             {(venue || locationNote) && (
               <p
                 className="text-[0.58rem] uppercase tracking-[0.25em] font-dm"
                 style={{ color: s.textMuted, opacity: 0.7 }}
               >
-                {[venue, locationNote].filter(Boolean).join(' · ')}
+                {[venue, locationNote].filter(Boolean).join(' Â· ')}
               </p>
             )}
           </motion.div>
@@ -707,7 +828,7 @@ export default function InvitationStrip({
         </div>
       </section>
 
-      {/* ══ 2. FOTO PRINCIPAL ════════════════════════════════════════════════════ */}
+      {/* â•â• 2. FOTO PRINCIPAL â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       {heroPhoto && (
         <FadeIn>
           <section className={`${PAD} pb-16`}>
@@ -725,7 +846,7 @@ export default function InvitationStrip({
         </FadeIn>
       )}
 
-      {/* ══ 3. MENSAJE DE INVITACIÓN ═════════════════════════════════════════════ */}
+      {/* â•â• 3. MENSAJE DE INVITACIÃ“N â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       {(quote || message) && (
         <FadeIn>
           <section className={`${SECTION} text-center`}>
@@ -752,11 +873,11 @@ export default function InvitationStrip({
         </FadeIn>
       )}
 
-      {/* ══ 4. DÓNDE Y CUÁNDO (fallback si no hay ceremony/reception split) ════ */}
+      {/* â•â• 4. DÃ“NDE Y CUÃNDO (fallback si no hay ceremony/reception split) â•â•â•â• */}
       {showWhereWhen && (
         <FadeIn>
           <section className={`${SECTION} text-center`}>
-            <SectionLabel s={s}>Dónde y cuándo</SectionLabel>
+            <SectionLabel s={s}>DÃ³nde y cuÃ¡ndo</SectionLabel>
             <div className="mt-10 grid gap-10">
               {[
                 { label: 'Fecha', value: eventDate },
@@ -788,14 +909,14 @@ export default function InvitationStrip({
         </FadeIn>
       )}
 
-      {/* ══ 5 & 6. CEREMONIA / RECEPCIÓN ════════════════════════════════════════ */}
+      {/* â•â• 5 & 6. CEREMONIA / RECEPCIÃ“N â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       {hasEventCards && (
         <section className={`${SECTION}`}>
           <FadeIn>
             <div className="text-center mb-10">
-              <SectionLabel s={s}>El gran día</SectionLabel>
+              <SectionLabel s={s}>El gran dÃ­a</SectionLabel>
               <p className="font-cormorant text-lg mt-2" style={{ color: s.textMuted }}>
-                {eventDate}{time ? ` · ${time}` : ''}
+                {eventDate}{time ? ` Â· ${time}` : ''}
               </p>
             </div>
           </FadeIn>
@@ -817,7 +938,7 @@ export default function InvitationStrip({
             {receptionVenue && (
               <FadeIn delay={0.18}>
                 <EventCard
-                  label="Recepción"
+                  label="RecepciÃ³n"
                   venue={receptionVenue}
                   address={receptionAddress}
                   time={receptionTime}
@@ -832,7 +953,7 @@ export default function InvitationStrip({
         </section>
       )}
 
-      {/* ══ 7. CÓDIGO DE VESTIMENTA ══════════════════════════════════════════════ */}
+      {/* â•â• 7. CÃ“DIGO DE VESTIMENTA â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       {dressCode && (
         <FadeIn>
           <section className={`${SECTION} text-center`}>
@@ -844,7 +965,7 @@ export default function InvitationStrip({
                 ...embossPanel,
               }}
             >
-              <SectionLabel s={s}>Código de vestimenta</SectionLabel>
+              <SectionLabel s={s}>CÃ³digo de vestimenta</SectionLabel>
               <div className="h-px w-6 mx-auto my-3" style={{ background: s.divider }} />
               <p className="font-cormorant text-2xl mt-1" style={{ color: s.text }}>
                 {dressCode}
@@ -854,12 +975,12 @@ export default function InvitationStrip({
         </FadeIn>
       )}
 
-      {/* ══ 8. GALERÍA ═══════════════════════════════════════════════════════════ */}
+      {/* â•â• 8. GALERÃA â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       {normalizedGallery.length > 0 && (
         <FadeIn>
           <section className={`${SECTION}`}>
             <div className="text-center mb-9">
-              <SectionLabel s={s}>Galería</SectionLabel>
+              <SectionLabel s={s}>GalerÃ­a</SectionLabel>
               <p className="font-cormorant text-lg mt-2" style={{ color: s.textMuted }}>
                 Momentos especiales
               </p>
@@ -881,7 +1002,7 @@ export default function InvitationStrip({
                 >
                   <img
                     src={url}
-                    alt={`Galería ${idx + 1}`}
+                    alt={`GalerÃ­a ${idx + 1}`}
                     className="w-full h-full object-cover"
                     loading="lazy"
                   />
@@ -902,14 +1023,14 @@ export default function InvitationStrip({
         )}
       </AnimatePresence>
 
-      {/* ══ 9. PADRES Y PADRINOS ════════════════════════════════════════════════ */}
+      {/* â•â• 9. PADRES Y PADRINOS â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       {(parsedParents.length > 0 || parsedSponsors.length > 0) && (
         <FadeIn>
           <section className={`${SECTION} text-center`}>
             <SectionDivider s={s} />
             {parsedParents.length > 0 && (
               <div className="mb-12">
-                <SectionLabel s={s}>Papás</SectionLabel>
+                <SectionLabel s={s}>PapÃ¡s</SectionLabel>
                 <div className="mt-6 space-y-2">
                   {parsedParents.map((name, i) => (
                     <p key={i} className="font-cormorant text-xl leading-snug" style={{ color: s.text }}>
@@ -935,7 +1056,7 @@ export default function InvitationStrip({
         </FadeIn>
       )}
 
-      {/* ══ 10. REGALOS ══════════════════════════════════════════════════════════ */}
+      {/* â•â• 10. REGALOS â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       {giftsInfo && (
         <FadeIn>
           <section className={`${SECTION}`}>
@@ -959,7 +1080,7 @@ export default function InvitationStrip({
         </FadeIn>
       )}
 
-      {/* ══ 11. INSTAGRAM ════════════════════════════════════════════════════════ */}
+      {/* â•â• 11. INSTAGRAM â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       {(instagramHandle || hashtag) && (
         <FadeIn>
           <section className={`${SECTION} text-center`}>
@@ -987,7 +1108,7 @@ export default function InvitationStrip({
         </FadeIn>
       )}
 
-      {/* ══ 12. CONFIRMACIÓN DE ASISTENCIA ══════════════════════════════════════ */}
+      {/* â•â• 12. CONFIRMACIÃ“N DE ASISTENCIA â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       {rsvpValue && (
         <FadeIn>
           <section className={`${SECTION} text-center`}>
@@ -1009,7 +1130,7 @@ export default function InvitationStrip({
         </FadeIn>
       )}
 
-      {/* ══ 13. MENSAJE PERSONALIZADO AL INVITADO ═══════════════════════════════ */}
+      {/* â•â• 13. MENSAJE PERSONALIZADO AL INVITADO â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       {guestName && (
         <FadeIn>
           <section className={`${SECTION}`}>
@@ -1021,12 +1142,12 @@ export default function InvitationStrip({
                 ...embossPanel,
               }}
             >
-              <SectionLabel s={s}>Esta invitación es para ti</SectionLabel>
+              <SectionLabel s={s}>Esta invitaciÃ³n es para ti</SectionLabel>
               <p
                 className="font-cormorant italic mt-3 mb-1"
                 style={{ fontSize: '1.1rem', color: s.textMuted }}
               >
-                {invitation.guestGreeting || 'Con mucho cariño te invitamos'},
+                {invitation.guestGreeting || 'Con mucho cariÃ±o te invitamos'},
               </p>
               <p
                 className={`font-cormorant leading-snug mt-2${hasFoil ? ' inv-foil-text' : ''}`}
@@ -1075,11 +1196,11 @@ export default function InvitationStrip({
         </FadeIn>
       )}
 
-      {/* ══ 14. CIERRE / COMPARTIR ══════════════════════════════════════════════ */}
+      {/* â•â• 14. CIERRE / COMPARTIR â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       <FadeIn>
         <section className={`${PAD} pt-8 pb-20 text-center`}>
           <SectionDivider s={s} />
-          <SectionLabel s={s}>Compartir invitación</SectionLabel>
+          <SectionLabel s={s}>Compartir invitaciÃ³n</SectionLabel>
 
           {/* QR code */}
           <div
@@ -1128,11 +1249,15 @@ export default function InvitationStrip({
               className="text-[0.48rem] uppercase tracking-[0.32em]"
               style={{ color: s.textMuted, opacity: 0.38 }}
             >
-              Invitación creada por Pedro Vargas Fotografía
+              InvitaciÃ³n creada por Pedro Vargas FotografÃ­a
             </p>
           </div>
         </section>
       </FadeIn>
+
+      {/* â•â• FLOATING MUSIC PLAYER â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+      {backgroundMusicUrl && <MusicPlayer src={backgroundMusicUrl} s={s} />}
     </div>
   )
 }
+

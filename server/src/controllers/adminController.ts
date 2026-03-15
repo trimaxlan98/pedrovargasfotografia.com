@@ -522,7 +522,7 @@ export async function createInvitation(req: AuthRequest, res: Response): Promise
     isPublished, rsvpDeadline, guestGreeting, defaultGuestName,
     ceremonyVenue, ceremonyAddress, ceremonyTime, ceremonyPhoto, ceremonyMapUrl,
     receptionVenue, receptionAddress, receptionTime, receptionPhoto, receptionMapUrl,
-    parentsInfo, sponsorsInfo, giftsInfo, instagramHandle, enableTableNumber,
+    parentsInfo, sponsorsInfo, giftsInfo, instagramHandle, enableTableNumber, backgroundMusic,
   } = req.body
 
   if (!clientId) { R.badRequest(res, 'Se requiere clientId'); return }
@@ -558,6 +558,7 @@ export async function createInvitation(req: AuthRequest, res: Response): Promise
       receptionVenue, receptionAddress, receptionTime, receptionPhoto, receptionMapUrl,
       parentsInfo, sponsorsInfo, giftsInfo, instagramHandle,
       enableTableNumber: enableTableNumber === true,
+      backgroundMusic: backgroundMusic || null,
     },
   })
   R.created(res, normalizeInvitation(invitation))
@@ -577,7 +578,7 @@ export async function updateInvitation(req: AuthRequest, res: Response): Promise
     isPublished, rsvpDeadline, guestGreeting, defaultGuestName,
     ceremonyVenue, ceremonyAddress, ceremonyTime, ceremonyPhoto, ceremonyMapUrl,
     receptionVenue, receptionAddress, receptionTime, receptionPhoto, receptionMapUrl,
-    parentsInfo, sponsorsInfo, giftsInfo, instagramHandle, enableTableNumber,
+    parentsInfo, sponsorsInfo, giftsInfo, instagramHandle, enableTableNumber, backgroundMusic,
   } = req.body
 
   // rsvpContact is a legacy alias — null must be allowed to clear the field
@@ -595,6 +596,10 @@ export async function updateInvitation(req: AuthRequest, res: Response): Promise
 
   if (enableTableNumber !== undefined) {
     payload.enableTableNumber = enableTableNumber === true
+  }
+
+  if (backgroundMusic !== undefined) {
+    payload.backgroundMusic = backgroundMusic || null
   }
 
   if (gallery !== undefined) {
@@ -655,6 +660,23 @@ export async function addInvitationPhotos(req: AuthRequest, res: Response): Prom
   const updated = await prisma.digitalInvitation.update({
     where: { id: existing.id },
     data: { gallery: JSON.stringify([...current, ...urls]) },
+  })
+  R.success(res, normalizeInvitation(updated))
+}
+
+export async function addInvitationMusic(req: AuthRequest, res: Response): Promise<void> {
+  const existing = await prisma.digitalInvitation.findFirst({
+    where: { id: req.params.id, archivedAt: null },
+  })
+  if (!existing) { R.notFound(res); return }
+
+  const file = req.file as Express.Multer.File | undefined
+  if (!file) { R.badRequest(res, 'Se requiere un archivo de audio'); return }
+
+  const url = `/uploads/${file.filename}`
+  const updated = await prisma.digitalInvitation.update({
+    where: { id: existing.id },
+    data: { backgroundMusic: url },
   })
   R.success(res, normalizeInvitation(updated))
 }
