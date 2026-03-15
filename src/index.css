@@ -380,29 +380,29 @@ select option {
   color: #1F1C17 !important;
 }
 
-/* Invitation wizard fields: improve placeholder legibility in light mode */
+/* Invitation wizard fields — always light text (modal background is always dark) */
 .inv-wizard-field {
-  color: #1F1C17 !important;
+  color: #F5F0E8 !important;
 }
 .inv-wizard-field::placeholder {
-  color: rgba(31, 28, 23, 0.58) !important;
+  color: rgba(245, 240, 232, 0.45) !important;
   opacity: 1;
 }
 
-/* Invitation wizard modal — force readable text in light mode */
-html:not(.dark) .inv-wizard-modal h3,
-html:not(.dark) .inv-wizard-modal h4,
-html:not(.dark) .inv-wizard-modal p,
-html:not(.dark) .inv-wizard-modal label,
-html:not(.dark) .inv-wizard-modal span:not(.text-gold):not([class*="text-gold"]):not(.text-green-400):not(.text-red-400):not(.text-amber-300) {
-  color: #1a1a1a !important;
-}
-html:not(.dark) .inv-wizard-modal [class*="border-white\/"] {
-  border-color: rgba(0, 0, 0, 0.1) !important;
-}
-html:not(.dark) .inv-wizard-modal [class*="bg-white\/"] {
-  background-color: rgba(0, 0, 0, 0.04) !important;
-}
+/* Invitation wizard modal — always dark background.
+   tailwind.config defines ivory=#2A2620 (dark brown) for light mode.
+   Override all text-ivory variants inside the modal to use the actual white-ivory values. */
+.inv-wizard-modal .text-ivory    { color: #F5F0E8 !important; }
+.inv-wizard-modal .text-ivory\/80 { color: rgba(245,240,232,0.80) !important; }
+.inv-wizard-modal .text-ivory\/70 { color: rgba(245,240,232,0.70) !important; }
+.inv-wizard-modal .text-ivory\/60 { color: rgba(245,240,232,0.60) !important; }
+.inv-wizard-modal .text-ivory\/55 { color: rgba(245,240,232,0.55) !important; }
+.inv-wizard-modal .text-ivory\/50 { color: rgba(245,240,232,0.50) !important; }
+.inv-wizard-modal .text-ivory\/45 { color: rgba(245,240,232,0.45) !important; }
+.inv-wizard-modal .text-ivory\/40 { color: rgba(245,240,232,0.40) !important; }
+.inv-wizard-modal .text-ivory\/35 { color: rgba(245,240,232,0.35) !important; }
+.inv-wizard-modal .text-ivory\/30 { color: rgba(245,240,232,0.30) !important; }
+.inv-wizard-modal .text-ivory\/25 { color: rgba(245,240,232,0.25) !important; }
 
 /* ── Hero CSS-variable helpers ──────────────────────────── */
 .hero-text        { color: var(--hero-text); }

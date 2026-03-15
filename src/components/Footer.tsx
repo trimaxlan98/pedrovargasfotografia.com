@@ -86,7 +86,15 @@ export default function Footer() {
             Fotografía Profesional · Ciudad de México
           </p>
           <div className="flex items-center gap-3">
-            <span className="label-caps text-[#888888] dark:text-[#6E6E6E] text-[0.55rem]">v1.1.3</span>
+            <span className="label-caps text-[#888888] dark:text-[#6E6E6E] text-[0.55rem]">v1.1.3.1</span>
+            <a
+              href="https://codeaerospace.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-cormorant text-[#888888] dark:text-[#6E6E6E] text-xs tracking-[0.18em] uppercase hover:text-gold transition-colors pointer-events-auto relative z-10"
+            >
+              POWERED BY CO.DE Aerospace
+            </a>
             <button
               onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
               className="w-9 h-9 border border-black/15 dark:border-white/20 flex items-center justify-center text-ivory/60 hover:text-gold hover:border-gold/40 transition-all"

@@ -54,6 +54,7 @@ exports.listGuests = listGuests;
 exports.updateGuest = updateGuest;
 exports.deleteGuest = deleteGuest;
 exports.addInvitationPhotos = addInvitationPhotos;
+exports.addInvitationMusic = addInvitationMusic;
 exports.archiveInvitation = archiveInvitation;
 const express_validator_1 = require("express-validator");
 const uuid_1 = require("uuid");
@@ -248,7 +249,7 @@ async function createInvitation(req, res) {
         R.badRequest(res, 'Datos inválidos', errors.array().map(e => e.msg).join(', '));
         return;
     }
-    const { invitationType, eventType, title, names, eventDate, eventTime, venue, locationNote, message, quote, hashtag, template, primaryColor, textColor, fontStyle, isDark, dressCode, rsvpLabel, rsvpValue, rsvpContact, heroImage, gallery, isPublished, rsvpDeadline, guestGreeting, defaultGuestName, ceremonyVenue, ceremonyAddress, ceremonyTime, ceremonyPhoto, ceremonyMapUrl, receptionVenue, receptionAddress, receptionTime, receptionPhoto, receptionMapUrl, parentsInfo, sponsorsInfo, giftsInfo, instagramHandle, } = req.body;
+    const { invitationType, eventType, title, names, eventDate, eventTime, venue, locationNote, message, quote, hashtag, template, primaryColor, textColor, fontStyle, isDark, dressCode, rsvpLabel, rsvpValue, rsvpContact, heroImage, gallery, isPublished, rsvpDeadline, guestGreeting, defaultGuestName, ceremonyVenue, ceremonyAddress, ceremonyTime, ceremonyPhoto, ceremonyMapUrl, receptionVenue, receptionAddress, receptionTime, receptionPhoto, receptionMapUrl, parentsInfo, sponsorsInfo, giftsInfo, instagramHandle, enableTableNumber, backgroundMusic, } = req.body;
     const shareToken = (0, uuid_1.v4)();
     const resolvedRsvp = rsvpValue || rsvpContact;
     const invitation = await prisma_1.default.digitalInvitation.create({
@@ -275,6 +276,8 @@ async function createInvitation(req, res) {
             ceremonyVenue, ceremonyAddress, ceremonyTime, ceremonyPhoto, ceremonyMapUrl,
             receptionVenue, receptionAddress, receptionTime, receptionPhoto, receptionMapUrl,
             parentsInfo, sponsorsInfo, giftsInfo, instagramHandle,
+            enableTableNumber: enableTableNumber === true,
+            backgroundMusic: backgroundMusic || null,
         },
     });
     const invUser = await prisma_1.default.user.findUnique({ where: { id: req.user.userId }, select: { name: true, email: true } });
@@ -297,9 +300,9 @@ async function updateInvitation(req, res) {
         R.notFound(res, 'Invitación no encontrada');
         return;
     }
-    const { invitationType, eventType, title, names, eventDate, eventTime, venue, locationNote, message, quote, hashtag, template, primaryColor, textColor, fontStyle, isDark, dressCode, rsvpLabel, rsvpValue, rsvpContact, heroImage, gallery, isPublished, rsvpDeadline, guestGreeting, defaultGuestName, ceremonyVenue, ceremonyAddress, ceremonyTime, ceremonyPhoto, ceremonyMapUrl, receptionVenue, receptionAddress, receptionTime, receptionPhoto, receptionMapUrl, parentsInfo, sponsorsInfo, giftsInfo, instagramHandle, } = req.body;
-    // rsvpContact is a legacy alias — map it to rsvpValue, never send to Prisma directly
-    const resolvedRsvpValue = rsvpValue || rsvpContact || undefined;
+    const { invitationType, eventType, title, names, eventDate, eventTime, venue, locationNote, message, quote, hashtag, template, primaryColor, textColor, fontStyle, isDark, dressCode, rsvpLabel, rsvpValue, rsvpContact, heroImage, gallery, isPublished, rsvpDeadline, guestGreeting, defaultGuestName, ceremonyVenue, ceremonyAddress, ceremonyTime, ceremonyPhoto, ceremonyMapUrl, receptionVenue, receptionAddress, receptionTime, receptionPhoto, receptionMapUrl, parentsInfo, sponsorsInfo, giftsInfo, instagramHandle, enableTableNumber, backgroundMusic, } = req.body;
+    // rsvpContact is a legacy alias — null must be allowed to clear the field
+    const resolvedRsvpValue = rsvpValue !== undefined ? rsvpValue : (rsvpContact !== undefined ? rsvpContact : undefined);
     const payload = {
         invitationType, eventType, title, names, eventDate, eventTime, venue, locationNote,
         message, quote, hashtag, template, primaryColor, textColor, fontStyle,
@@ -309,6 +312,12 @@ async function updateInvitation(req, res) {
         receptionVenue, receptionAddress, receptionTime, receptionPhoto, receptionMapUrl,
         parentsInfo, sponsorsInfo, giftsInfo, instagramHandle,
     };
+    if (enableTableNumber !== undefined) {
+        payload.enableTableNumber = enableTableNumber === true;
+    }
+    if (backgroundMusic !== undefined) {
+        payload.backgroundMusic = backgroundMusic || null;
+    }
     if (gallery !== undefined) {
         payload.gallery = serializeGallery(gallery);
     }
@@ -456,12 +465,17 @@ async function updateGuest(req, res) {
         R.notFound(res, 'Invitado no encontrado');
         return;
     }
-    const { personalizedMessage } = req.body;
+    const { personalizedMessage, tableNumber } = req.body;
+    const data = {};
+    if (personalizedMessage !== undefined)
+        data.personalizedMessage = personalizedMessage || null;
+    if (tableNumber !== undefined)
+        data.tableNumber = tableNumber !== null ? Number(tableNumber) : null;
     const updated = await prisma_1.default.invitationGuest.update({
         where: { id: guest.id },
-        data: { personalizedMessage: personalizedMessage !== undefined ? (personalizedMessage || null) : undefined },
+        data,
     });
-    R.success(res, updated, 'Mensaje actualizado');
+    R.success(res, updated, 'Invitado actualizado');
 }
 async function deleteGuest(req, res) {
     const invitation = await prisma_1.default.digitalInvitation.findFirst({
@@ -498,6 +512,26 @@ async function addInvitationPhotos(req, res) {
         data: { gallery: JSON.stringify([...current, ...urls]) },
     });
     R.success(res, normalizeInvitation(updated), 'Fotos agregadas');
+}
+async function addInvitationMusic(req, res) {
+    const existing = await prisma_1.default.digitalInvitation.findFirst({
+        where: { id: req.params.id, clientId: req.user.userId, archivedAt: null },
+    });
+    if (!existing) {
+        R.notFound(res, 'Invitación no encontrada');
+        return;
+    }
+    const file = req.file;
+    if (!file) {
+        R.badRequest(res, 'Se requiere un archivo de audio');
+        return;
+    }
+    const url = `/uploads/${file.filename}`;
+    const updated = await prisma_1.default.digitalInvitation.update({
+        where: { id: existing.id },
+        data: { backgroundMusic: url },
+    });
+    R.success(res, normalizeInvitation(updated), 'Música agregada');
 }
 async function archiveInvitation(req, res) {
     const { reason } = req.body;

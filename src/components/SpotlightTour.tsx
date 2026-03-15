@@ -4,7 +4,7 @@
  */
 import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Camera, X, ArrowRight, ArrowLeft } from 'lucide-react'
+import { Camera, X, ArrowRight, ArrowLeft, GripVertical } from 'lucide-react'
 
 const IVORY = '#F5F0E8'
 const GOLD  = '#C9A96E'
@@ -121,6 +121,8 @@ function WelcomeCard({
   return (
     <div className="fixed inset-0 flex items-center justify-center p-4 pointer-events-none" style={{ zIndex: 9999 }}>
       <motion.div
+        drag
+        dragMomentum={false}
         initial={{ opacity: 0, scale: 0.93, y: 20 }}
         animate={{ opacity: 1, scale: 1,    y: 0  }}
         exit={{    opacity: 0, scale: 0.93, y: 20 }}
@@ -135,6 +137,15 @@ function WelcomeCard({
         {/* Top gold line */}
         <div className="absolute top-0 left-0 right-0 h-px"
           style={{ background: `linear-gradient(90deg, transparent, ${GOLD} 35%, ${GOLD} 65%, transparent)` }} />
+
+        {/* Drag handle */}
+        <div
+          className="absolute top-2.5 left-1/2 -translate-x-1/2 select-none pointer-events-none opacity-35"
+          style={{ color: GOLD }}
+          title="Arrastra para mover"
+        >
+          <GripVertical size={14} />
+        </div>
 
         {/* Close */}
         <button onClick={onSkip}
@@ -271,6 +282,8 @@ function TooltipCard({
   return (
     <motion.div
       key={stepIndex}
+      drag
+      dragMomentum={false}
       className="fixed pointer-events-auto"
       style={{ zIndex: 9999, left, top, width: W }}
       initial={{ opacity: 0, scale: 0.93 }}
@@ -288,6 +301,14 @@ function TooltipCard({
         {/* Top gold line */}
         <div className="absolute top-0 left-0 right-0 h-px rounded-t-2xl"
           style={{ background: `linear-gradient(90deg, transparent, ${GOLD} 40%, ${GOLD} 60%, transparent)` }} />
+
+        {/* Drag handle */}
+        <div
+          className="absolute top-2 left-1/2 -translate-x-1/2 select-none pointer-events-none opacity-30"
+          style={{ color: GOLD }}
+        >
+          <GripVertical size={12} />
+        </div>
 
         {arrowEl}
 

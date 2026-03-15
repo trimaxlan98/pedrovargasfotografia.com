@@ -13,6 +13,17 @@ type PrimaryColor = 'navy' | 'black' | 'gold' | 'rose' | 'emerald' | 'burgundy'
 type TextColor = 'ivory' | 'white' | 'black'
 type FontStyle = 'serif' | 'sans' | 'script'
 
+const ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp'])
+const ALLOWED_IMAGE_EXTS = new Set(['.jpg', '.jpeg', '.png', '.webp'])
+
+const isAllowedImage = (file: File) => {
+  if (ALLOWED_IMAGE_TYPES.has(file.type)) return true
+  const name = file.name.toLowerCase()
+  const dot = name.lastIndexOf('.')
+  if (dot === -1) return false
+  return ALLOWED_IMAGE_EXTS.has(name.slice(dot))
+}
+
 interface InviteData {
   eventType: EventType
   name: string
@@ -386,6 +397,7 @@ export default function InvitationBuilder() {
   const [savedInvitationId, setSavedInvitationId] = useState<string | null>(null)
   const [savedToken, setSavedToken] = useState<string | null>(null)
   const [photos, setPhotos] = useState<File[]>([])
+  const [photoWarnings, setPhotoWarnings] = useState<string[]>([])
   const [saveError, setSaveError] = useState('')
   const [copied, setCopied] = useState(false)
 
@@ -708,13 +720,30 @@ export default function InvitationBuilder() {
                       <input
                         type="file"
                         multiple
-                        accept="image/*"
-                        onChange={e => setPhotos(Array.from(e.target.files || []).slice(0, 8))}
+                        accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
+                        onChange={e => {
+                          const incoming = Array.from(e.target.files || [])
+                          const valid = incoming.filter(isAllowedImage)
+                          const invalid = incoming.filter(file => !isAllowedImage(file))
+                          setPhotoWarnings(
+                            invalid.map(file => `Formato no permitido: ${file.name}. Usa JPG, JPEG, PNG o WEBP.`)
+                          )
+                          setPhotos(valid.slice(0, 8))
+                        }}
                         className="w-full bg-black/20 border border-ivory/10 text-ivory/70 font-dm text-xs px-3 py-2"
                       />
                       <p className="font-dm text-ivory/35 text-[0.65rem] mt-2">
                         {photos.length > 0 ? photos.length + ' foto(s) lista(s) para subir.' : 'Aun no has agregado fotos.'}
                       </p>
+                      {photoWarnings.length > 0 && (
+                        <div className="mt-2 space-y-1">
+                          {photoWarnings.map((msg, idx) => (
+                            <p key={`${msg}-${idx}`} className="text-amber-400/80 text-[0.65rem] font-dm">
+                              {msg}
+                            </p>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </motion.div>

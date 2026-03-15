@@ -109,6 +109,7 @@ router.get('/guest/:guestToken', async (req, res) => {
             response: guest.response,
             respondedAt: guest.respondedAt,
             personalizedMessage: guest.personalizedMessage,
+            tableNumber: guest.tableNumber,
         },
         invitation: { ...invitation, gallery: parseGallery(invitation.gallery) },
     });

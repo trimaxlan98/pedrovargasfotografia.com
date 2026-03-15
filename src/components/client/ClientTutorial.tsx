@@ -101,7 +101,11 @@ const STEPS: TourStep[] = [
         </span>
         <br /><br />
         <b style={{ color: IVORY }}>Paso 5 — Galería:</b>{' '}
-        <span style={{ color: DIM }}>Sube hasta 8 fotos para mostrar dentro de tu invitación.</span>
+        <span style={{ color: DIM }}>
+          Sube hasta 8 fotos. También puedes agregar{' '}
+          <b style={{ color: IVORY }}>música de fondo</b> (MP3 / M4A — máx. 15 MB)
+          que sonará al abrir la invitación.
+        </span>
         <br /><br />
         <b style={{ color: IVORY }}>Paso 6 — Publicar:</b>
         <br />
@@ -110,8 +114,9 @@ const STEPS: TourStep[] = [
           · Fecha límite para confirmar asistencia
         </span>
         <br />
-        Activa <span style={{ color: GOLD }}>Publicar</span> para generar tu enlace compartible
-        y código QR. Nadie verá la invitación hasta que lo actives.
+        Activa <span style={{ color: GOLD }}>Publicar</span> para generar tu enlace y QR.
+        El toggle <span style={{ color: GOLD }}>Número de mesa</span> muestra la mesa
+        asignada en invitaciones individuales. Nadie ve la invitación hasta que actives Publicar.
       </>
     ),
     tip: 'Puedes editar cualquier dato después de publicar — el enlace permanece igual.',
