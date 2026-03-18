@@ -648,11 +648,27 @@ export default function InvitationStrip({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isCustomTemplate, invitation.customTemplatePages, invitation.customTemplate])
 
-  // Background: custom template uses an absolute flex overlay (see render), normal uses gradient
+  // Background style: custom template stacks N page images vertically using CSS multi-background
   const bgStyle: React.CSSProperties = useMemo(() => {
     if (!isCustomTemplate || bgPages.length === 0) return { background: s.bg }
-    return {}
-  }, [isCustomTemplate, bgPages.length, s.bg])
+    const N = bgPages.length
+    if (N === 1) {
+      return {
+        backgroundImage: `url(${bgPages[0]})`,
+        backgroundSize: '100% 100%',
+        backgroundPosition: '0 0',
+        backgroundRepeat: 'no-repeat',
+      }
+    }
+    const sizeY = (100 / N).toFixed(6)
+    const pos = (i: number) => `0 ${(i / (N - 1) * 100).toFixed(6)}%`
+    return {
+      backgroundImage: bgPages.map(u => `url(${u})`).join(', '),
+      backgroundSize: bgPages.map(() => `100% ${sizeY}%`).join(', '),
+      backgroundPosition: bgPages.map((_, i) => pos(i)).join(', '),
+      backgroundRepeat: bgPages.map(() => 'no-repeat').join(', '),
+    } as React.CSSProperties
+  }, [isCustomTemplate, bgPages, s.bg])
 
   const [copied, setCopied] = useState(false)
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
@@ -756,34 +772,11 @@ export default function InvitationStrip({
     >
 
       {/* â•â• 1. HERO â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
-      {/* Custom template: absolute background layer — N bands stacked, each covers 1/N of total height */}
-      {isCustomTemplate && bgPages.length > 0 && (
-        <div
-          aria-hidden="true"
-          style={{
-            position: 'absolute', inset: 0,
-            display: 'flex', flexDirection: 'column',
-            pointerEvents: 'none', zIndex: 0,
-          }}
-        >
-          {bgPages.map((url, i) => (
-            <div
-              key={i}
-              style={{
-                flex: 1,
-                backgroundImage: `url(${url})`,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center top',
-                backgroundRepeat: 'no-repeat',
-              }}
-            />
-          ))}
-        </div>
-      )}
-
       <section className="relative min-h-screen flex flex-col items-center justify-center text-center px-7 py-20 overflow-hidden">
-        {/* Gradient overlay */}
-        <div className="absolute inset-0 pointer-events-none" style={{ background: s.heroOverlay }} />
+        {/* Gradient overlay — suppressed for custom template so PNG design shows through */}
+        {!isCustomTemplate && (
+          <div className="absolute inset-0 pointer-events-none" style={{ background: s.heroOverlay }} />
+        )}
 
         <div className="relative z-10 flex flex-col items-center gap-5 w-full max-w-xs mx-auto">
           {/* Top ornament */}
