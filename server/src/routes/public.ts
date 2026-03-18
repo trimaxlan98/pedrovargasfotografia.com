@@ -70,12 +70,14 @@ router.get('/guest/:guestToken', async (req, res) => {
   R.success(res, {
     guest: {
       id: guest.id,
+      invitationId: guest.invitationId,
       name: guest.name,
       token: guest.token,
       response: guest.response,
       respondedAt: guest.respondedAt,
       personalizedMessage: guest.personalizedMessage,
       tableNumber: guest.tableNumber,
+      createdAt: guest.createdAt,
     },
     invitation: { ...invitation, gallery: parseGallery(invitation.gallery) },
   })

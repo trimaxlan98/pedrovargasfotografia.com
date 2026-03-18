@@ -229,7 +229,7 @@ export async function createInvitation(req: AuthRequest, res: Response): Promise
       clientId: req.user!.userId,
       eventType, title, names, eventDate, eventTime, venue, locationNote,
       message, quote, hashtag,
-      template: template || 'elegante',
+      template: template || 'warm',
       primaryColor: primaryColor || '#1a2744',
       textColor: textColor || '#F5F0E8',
       fontStyle: fontStyle || 'serif',

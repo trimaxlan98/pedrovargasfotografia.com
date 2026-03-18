@@ -98,7 +98,7 @@ const TEMPLATE_STYLES: Record<string, TemplateStyle> = {
     divider: 'rgba(122,74,30,0.15)',
     rsvpBg: 'rgba(122,74,30,0.1)',
     rsvpText: '#7a4a1e',
-    ornament: 'âœ¦',
+    ornament: '✦',
   },
   pearl: {
     isDark: false,
@@ -113,7 +113,7 @@ const TEMPLATE_STYLES: Record<string, TemplateStyle> = {
     divider: 'rgba(120,120,170,0.14)',
     rsvpBg: 'rgba(120,120,170,0.1)',
     rsvpText: '#5858a0',
-    ornament: 'â—†',
+    ornament: '◆',
   },
   esmeralda: {
     isDark: true,
@@ -128,7 +128,7 @@ const TEMPLATE_STYLES: Record<string, TemplateStyle> = {
     divider: 'rgba(77,186,124,0.15)',
     rsvpBg: '#4dba7c',
     rsvpText: '#071510',
-    ornament: 'âœ¿',
+    ornament: '✿',
   },
   noir: {
     isDark: true,
@@ -143,7 +143,7 @@ const TEMPLATE_STYLES: Record<string, TemplateStyle> = {
     divider: 'rgba(255,255,255,0.09)',
     rsvpBg: '#e8e8e8',
     rsvpText: '#080808',
-    ornament: 'â€”',
+    ornament: '—',
   },
   lavanda: {
     isDark: false,
@@ -158,7 +158,7 @@ const TEMPLATE_STYLES: Record<string, TemplateStyle> = {
     divider: 'rgba(122,80,200,0.14)',
     rsvpBg: 'rgba(122,80,200,0.1)',
     rsvpText: '#7a50c8',
-    ornament: 'â€',
+    ornament: '❀',
   },
   terracota: {
     isDark: false,
@@ -173,7 +173,7 @@ const TEMPLATE_STYLES: Record<string, TemplateStyle> = {
     divider: 'rgba(170,75,45,0.14)',
     rsvpBg: 'rgba(170,75,45,0.12)',
     rsvpText: '#aa4b2d',
-    ornament: 'âˆž',
+    ornament: '∞',
   },
 }
 
@@ -209,7 +209,7 @@ function getCountdownUnits(target: Date) {
   const diff = Math.max(0, target.getTime() - Date.now())
   const total = Math.floor(diff / 1000)
   return [
-    { label: 'DÃ­as',  value: Math.floor(total / 86400) },
+    { label: 'Días',  value: Math.floor(total / 86400) },
     { label: 'Horas', value: Math.floor((total % 86400) / 3600) },
     { label: 'Min',   value: Math.floor((total % 3600) / 60) },
     { label: 'Seg',   value: total % 60 },
@@ -232,7 +232,7 @@ function HeroCountdown({ eventDate, s }: { eventDate: string; s: TemplateStyle }
   if (target.getTime() <= Date.now()) {
     return (
       <p className="text-xs font-dm uppercase tracking-widest" style={{ color: s.accent }}>
-        Â¡El evento es hoy!
+        ¡El evento es hoy!
       </p>
     )
   }
@@ -482,13 +482,13 @@ function Lightbox({
             className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/10 text-white/70 hover:text-white hover:bg-white/20 transition-colors flex items-center justify-center text-xl"
             onClick={e => { e.stopPropagation(); prev() }}
           >
-            â€¹
+            ‹
           </button>
           <button
             className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/10 text-white/70 hover:text-white hover:bg-white/20 transition-colors flex items-center justify-center text-xl"
             onClick={e => { e.stopPropagation(); next() }}
           >
-            â€º
+            ›
           </button>
         </>
       )}
@@ -728,7 +728,7 @@ export default function InvitationStrip({
     setCopied(true)
     setTimeout(() => setCopied(false), 2500)
   }
-  const whatsappShare = `https://wa.me/?text=${encodeURIComponent(`Mira mi invitaciÃ³n: ${shareUrl}`)}`
+  const whatsappShare = `https://wa.me/?text=${encodeURIComponent(`Mira mi invitación: ${shareUrl}`)}`
 
   return (
     <div className="w-full text-sm leading-relaxed" style={{ background: s.bg, color: s.text }}>
@@ -795,14 +795,14 @@ export default function InvitationStrip({
               className="text-[0.62rem] uppercase tracking-[0.35em] font-dm"
               style={{ color: s.textMuted }}
             >
-              {eventDate}{time ? ` Â· ${time}` : ''}
+              {eventDate}{time ? ` · ${time}` : ''}
             </p>
             {(venue || locationNote) && (
               <p
                 className="text-[0.58rem] uppercase tracking-[0.25em] font-dm"
                 style={{ color: s.textMuted, opacity: 0.7 }}
               >
-                {[venue, locationNote].filter(Boolean).join(' Â· ')}
+                {[venue, locationNote].filter(Boolean).join(' · ')}
               </p>
             )}
           </motion.div>
@@ -877,7 +877,7 @@ export default function InvitationStrip({
       {showWhereWhen && (
         <FadeIn>
           <section className={`${SECTION} text-center`}>
-            <SectionLabel s={s}>DÃ³nde y cuÃ¡ndo</SectionLabel>
+            <SectionLabel s={s}>Dónde y cuándo</SectionLabel>
             <div className="mt-10 grid gap-10">
               {[
                 { label: 'Fecha', value: eventDate },
@@ -914,9 +914,9 @@ export default function InvitationStrip({
         <section className={`${SECTION}`}>
           <FadeIn>
             <div className="text-center mb-10">
-              <SectionLabel s={s}>El gran dÃ­a</SectionLabel>
+              <SectionLabel s={s}>El gran día</SectionLabel>
               <p className="font-cormorant text-lg mt-2" style={{ color: s.textMuted }}>
-                {eventDate}{time ? ` Â· ${time}` : ''}
+                {eventDate}{time ? ` · ${time}` : ''}
               </p>
             </div>
           </FadeIn>
@@ -938,7 +938,7 @@ export default function InvitationStrip({
             {receptionVenue && (
               <FadeIn delay={0.18}>
                 <EventCard
-                  label="RecepciÃ³n"
+                  label="Recepción"
                   venue={receptionVenue}
                   address={receptionAddress}
                   time={receptionTime}
@@ -965,7 +965,7 @@ export default function InvitationStrip({
                 ...embossPanel,
               }}
             >
-              <SectionLabel s={s}>CÃ³digo de vestimenta</SectionLabel>
+              <SectionLabel s={s}>Código de vestimenta</SectionLabel>
               <div className="h-px w-6 mx-auto my-3" style={{ background: s.divider }} />
               <p className="font-cormorant text-2xl mt-1" style={{ color: s.text }}>
                 {dressCode}
@@ -980,7 +980,7 @@ export default function InvitationStrip({
         <FadeIn>
           <section className={`${SECTION}`}>
             <div className="text-center mb-9">
-              <SectionLabel s={s}>GalerÃ­a</SectionLabel>
+              <SectionLabel s={s}>Galería</SectionLabel>
               <p className="font-cormorant text-lg mt-2" style={{ color: s.textMuted }}>
                 Momentos especiales
               </p>
@@ -1002,7 +1002,7 @@ export default function InvitationStrip({
                 >
                   <img
                     src={url}
-                    alt={`GalerÃ­a ${idx + 1}`}
+                    alt={`Galería ${idx + 1}`}
                     className="w-full h-full object-cover"
                     loading="lazy"
                   />
@@ -1030,7 +1030,7 @@ export default function InvitationStrip({
             <SectionDivider s={s} />
             {parsedParents.length > 0 && (
               <div className="mb-12">
-                <SectionLabel s={s}>PapÃ¡s</SectionLabel>
+                <SectionLabel s={s}>Papás</SectionLabel>
                 <div className="mt-6 space-y-2">
                   {parsedParents.map((name, i) => (
                     <p key={i} className="font-cormorant text-xl leading-snug" style={{ color: s.text }}>
@@ -1142,12 +1142,12 @@ export default function InvitationStrip({
                 ...embossPanel,
               }}
             >
-              <SectionLabel s={s}>Esta invitaciÃ³n es para ti</SectionLabel>
+              <SectionLabel s={s}>Esta invitación es para ti</SectionLabel>
               <p
                 className="font-cormorant italic mt-3 mb-1"
                 style={{ fontSize: '1.1rem', color: s.textMuted }}
               >
-                {invitation.guestGreeting || 'Con mucho cariÃ±o te invitamos'},
+                {invitation.guestGreeting || 'Con mucho cariño te invitamos'},
               </p>
               <p
                 className={`font-cormorant leading-snug mt-2${hasFoil ? ' inv-foil-text' : ''}`}
@@ -1200,7 +1200,7 @@ export default function InvitationStrip({
       <FadeIn>
         <section className={`${PAD} pt-8 pb-20 text-center`}>
           <SectionDivider s={s} />
-          <SectionLabel s={s}>Compartir invitaciÃ³n</SectionLabel>
+          <SectionLabel s={s}>Compartir invitación</SectionLabel>
 
           {/* QR code */}
           <div
@@ -1249,7 +1249,7 @@ export default function InvitationStrip({
               className="text-[0.48rem] uppercase tracking-[0.32em]"
               style={{ color: s.textMuted, opacity: 0.38 }}
             >
-              InvitaciÃ³n creada por Pedro Vargas FotografÃ­a
+              Invitación creada por Pedro Vargas Fotografía
             </p>
           </div>
         </section>
