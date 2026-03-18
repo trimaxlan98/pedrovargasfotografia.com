@@ -115,17 +115,17 @@ async function loadApp() {
     catch (e) {
         console.error('initServices error:', e.message);
     }
-    // Seed: XV Años de Grethel — one-time, idempotent
+    // Seed: XV Años de Gretthel — one-time, idempotent
     try {
         const GRETHEL_EMAIL = 'grethel.huerta@gmail.com';
-        const GRETHEL_TITLE = 'XV Años de Grethel';
-        // Check if already seeded
+        const GRETHEL_TITLE = 'XV Años de Gretthel';
+        // Check if already seeded (check both old and new title for idempotency)
         const existingClient = await prisma.user.findUnique({ where: { email: GRETHEL_EMAIL }, select: { id: true } });
         const alreadySeeded = existingClient
-            ? (await prisma.digitalInvitation.count({ where: { clientId: existingClient.id, title: GRETHEL_TITLE } })) > 0
+            ? (await prisma.digitalInvitation.count({ where: { clientId: existingClient.id, title: { in: [GRETHEL_TITLE, 'XV Años de Grethel'] } } })) > 0
             : false;
         if (!alreadySeeded) {
-            console.log('[startup] Sembrando invitaciones XV Grethel...');
+            console.log('[startup] Sembrando invitaciones XV Gretthel...');
             // Create or find client
             let clientId;
             if (existingClient) {
@@ -134,7 +134,7 @@ async function loadApp() {
             else {
                 const hashed = await hashPassword('Grethel2026!');
                 const user = await prisma.user.create({
-                    data: { name: 'Grethel Huerta', email: GRETHEL_EMAIL, phone: '527681000000', password: hashed, role: 'CLIENT', isActive: true },
+                    data: { name: 'Gretthel Huerta', email: GRETHEL_EMAIL, phone: '527681000000', password: hashed, role: 'CLIENT', isActive: true },
                     select: { id: true },
                 });
                 clientId = user.id;
@@ -145,7 +145,10 @@ async function loadApp() {
                     clientId,
                     invitationType: 'individual',
                     title: GRETHEL_TITLE,
-                    names: 'Grethel',
+                    names: 'Gretthel',
+                    heroImage: '/uploads/grethel-hero.jpeg',
+                    gallery: JSON.stringify(['/uploads/grethel-hero.jpeg', '/uploads/grethel-gallery-1.jpeg', '/uploads/grethel-gallery-2.jpeg', '/uploads/grethel-gallery-3.jpeg']),
+                    backgroundMusic: '/uploads/grethel-music.mp3',
                     eventType: 'XV Años',
                     eventDate: '2026-05-02',
                     eventTime: '18:00 hrs',
@@ -264,10 +267,10 @@ async function loadApp() {
                     personalizedMessage: buildMsg(name, passes),
                 })),
             });
-            console.log(`[startup] XV Grethel: 1 invitación + ${GUESTS.length} invitados creados ✅`);
+            console.log(`[startup] XV Gretthel: 1 invitación + ${GUESTS.length} invitados creados ✅`);
         }
         else {
-            console.log('[startup] XV Grethel: ya sembrado, omitiendo ✅');
+            console.log('[startup] XV Gretthel: ya sembrado, omitiendo ✅');
         }
     }
     catch (e) {
