@@ -46,6 +46,8 @@ async function loadApp() {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const { hashPassword } = require('./utils/password');
     console.log('[startup] Iniciando motor de base de datos...');
+    // Sync seed uploads (committed in git) to the persistent UPLOAD_DIR
+    syncSeedUploads();
     // Backup the DB before applying migrations so data can be recovered if something goes wrong
     backupDatabase();
     // Apply pending SQL migrations directly — no CLI needed, no permissions issues.
@@ -275,6 +277,38 @@ async function loadApp() {
     }
     catch (e) {
         console.error('initGrethelXV error:', e.message);
+    }
+}
+/**
+ * Copies files from the git-tracked uploads/ folder (seed assets like Gretthel photos)
+ * into the persistent UPLOAD_DIR so they survive redeploys even when UPLOAD_DIR is
+ * outside the project directory.
+ */
+function syncSeedUploads() {
+    const fs = require('fs');
+    const path = require('path');
+    const uploadDir = process.env.UPLOAD_DIR || 'uploads';
+    const persistentDir = path.resolve(uploadDir);
+    // Seed uploads live two levels above server/dist/ → project root /uploads/
+    const seedDir = path.join(__dirname, '..', '..', 'uploads');
+    if (!fs.existsSync(seedDir))
+        return;
+    if (!fs.existsSync(persistentDir))
+        fs.mkdirSync(persistentDir, { recursive: true });
+    // Only copy if the paths are different (i.e. UPLOAD_DIR is outside the project)
+    if (persistentDir === path.resolve(seedDir))
+        return;
+    try {
+        for (const file of fs.readdirSync(seedDir)) {
+            const dest = path.join(persistentDir, file);
+            if (!fs.existsSync(dest)) {
+                fs.copyFileSync(path.join(seedDir, file), dest);
+                console.log(`[startup] Upload copiado a persistente: ${file}`);
+            }
+        }
+    }
+    catch (e) {
+        console.warn('[startup] syncSeedUploads error:', e.message);
     }
 }
 /**
