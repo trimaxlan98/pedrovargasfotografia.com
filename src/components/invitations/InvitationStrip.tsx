@@ -633,7 +633,26 @@ export default function InvitationStrip({
   const hasEmboss = templateStr.endsWith('-emboss')
   const hasFoil   = templateStr.endsWith('-foil')
   const baseTemplateId = templateStr.replace(/-emboss$|-foil$/, '')
-  const s = TEMPLATE_STYLES[baseTemplateId] ?? TEMPLATE_STYLES.warm
+  const isCustomTemplate = baseTemplateId === 'custom'
+  const s = (!isCustomTemplate && TEMPLATE_STYLES[baseTemplateId]) ? TEMPLATE_STYLES[baseTemplateId] : TEMPLATE_STYLES.noir
+
+  // Build ordered list of background page URLs
+  const bgPages: string[] = useMemo(() => {
+    if (!isCustomTemplate) return []
+    const pages = Array.isArray(invitation.customTemplatePages) && invitation.customTemplatePages.length > 0
+      ? invitation.customTemplatePages
+      : invitation.customTemplate
+        ? [invitation.customTemplate]
+        : []
+    return pages.map(resolveInvitationImageUrl).filter(Boolean)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isCustomTemplate, invitation.customTemplatePages, invitation.customTemplate])
+
+  // Background: custom template uses an absolute flex overlay (see render), normal uses gradient
+  const bgStyle: React.CSSProperties = useMemo(() => {
+    if (!isCustomTemplate || bgPages.length === 0) return { background: s.bg }
+    return {}
+  }, [isCustomTemplate, bgPages.length, s.bg])
 
   const [copied, setCopied] = useState(false)
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
@@ -731,9 +750,37 @@ export default function InvitationStrip({
   const whatsappShare = `https://wa.me/?text=${encodeURIComponent(`Mira mi invitación: ${shareUrl}`)}`
 
   return (
-    <div className="w-full text-sm leading-relaxed" style={{ background: s.bg, color: s.text }}>
+    <div
+      className="w-full text-sm leading-relaxed relative"
+      style={{ ...bgStyle, color: s.text }}
+    >
 
       {/* â•â• 1. HERO â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+      {/* Custom template: absolute background layer — N bands stacked, each covers 1/N of total height */}
+      {isCustomTemplate && bgPages.length > 0 && (
+        <div
+          aria-hidden="true"
+          style={{
+            position: 'absolute', inset: 0,
+            display: 'flex', flexDirection: 'column',
+            pointerEvents: 'none', zIndex: 0,
+          }}
+        >
+          {bgPages.map((url, i) => (
+            <div
+              key={i}
+              style={{
+                flex: 1,
+                backgroundImage: `url(${url})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center top',
+                backgroundRepeat: 'no-repeat',
+              }}
+            />
+          ))}
+        </div>
+      )}
+
       <section className="relative min-h-screen flex flex-col items-center justify-center text-center px-7 py-20 overflow-hidden">
         {/* Gradient overlay */}
         <div className="absolute inset-0 pointer-events-none" style={{ background: s.heroOverlay }} />

@@ -22,6 +22,7 @@ function normalizeInvitation(invitation: any) {
   return {
     ...invitation,
     gallery: parseGallery(invitation.gallery),
+    customTemplatePages: parseGallery(invitation.customTemplatePages),
   }
 }
 
@@ -278,7 +279,7 @@ export async function updateInvitation(req: AuthRequest, res: Response): Promise
     isPublished, rsvpDeadline, guestGreeting, defaultGuestName,
     ceremonyVenue, ceremonyAddress, ceremonyTime, ceremonyPhoto, ceremonyMapUrl,
     receptionVenue, receptionAddress, receptionTime, receptionPhoto, receptionMapUrl,
-    parentsInfo, sponsorsInfo, giftsInfo, instagramHandle, enableTableNumber, backgroundMusic,
+    parentsInfo, sponsorsInfo, giftsInfo, instagramHandle, enableTableNumber, backgroundMusic, customTemplate,
   } = req.body
 
   // rsvpContact is a legacy alias — null must be allowed to clear the field
@@ -300,6 +301,10 @@ export async function updateInvitation(req: AuthRequest, res: Response): Promise
 
   if (backgroundMusic !== undefined) {
     payload.backgroundMusic = backgroundMusic || null
+  }
+
+  if (customTemplate !== undefined) {
+    payload.customTemplate = customTemplate || null
   }
 
   if (gallery !== undefined) {
@@ -520,6 +525,80 @@ export async function addInvitationMusic(req: AuthRequest, res: Response): Promi
     data: { backgroundMusic: url },
   })
   R.success(res, normalizeInvitation(updated), 'Música agregada')
+}
+
+export async function deleteInvitationPhoto(req: AuthRequest, res: Response): Promise<void> {
+  const idx = parseInt(req.params.index, 10)
+  if (isNaN(idx) || idx < 0) { R.badRequest(res, 'Índice inválido'); return }
+
+  const existing = await prisma.digitalInvitation.findFirst({
+    where: { id: req.params.id, clientId: req.user!.userId, archivedAt: null },
+  })
+  if (!existing) { R.notFound(res, 'Invitación no encontrada'); return }
+
+  const current = parseGallery(existing.gallery)
+  if (idx >= current.length) { R.badRequest(res, 'Índice fuera de rango'); return }
+
+  current.splice(idx, 1)
+  const updated = await prisma.digitalInvitation.update({
+    where: { id: existing.id },
+    data: { gallery: JSON.stringify(current) },
+  })
+  R.success(res, normalizeInvitation(updated), 'Foto eliminada')
+}
+
+export async function uploadCustomTemplate(req: AuthRequest, res: Response): Promise<void> {
+  const existing = await prisma.digitalInvitation.findFirst({
+    where: { id: req.params.id, clientId: req.user!.userId, archivedAt: null },
+  })
+  if (!existing) { R.notFound(res, 'Invitación no encontrada'); return }
+
+  const file = req.file as Express.Multer.File | undefined
+  if (!file) { R.badRequest(res, 'Se requiere una imagen'); return }
+
+  const url = `/uploads/${file.filename}`
+  const updated = await prisma.digitalInvitation.update({
+    where: { id: existing.id },
+    data: { customTemplate: url, template: 'custom' },
+  })
+  R.success(res, normalizeInvitation(updated), 'Plantilla personalizada cargada')
+}
+
+export async function uploadCustomTemplatePages(req: AuthRequest, res: Response): Promise<void> {
+  const existing = await prisma.digitalInvitation.findFirst({
+    where: { id: req.params.id, clientId: req.user!.userId, archivedAt: null },
+  })
+  if (!existing) { R.notFound(res, 'Invitación no encontrada'); return }
+
+  // keepPages: ordered array — URL strings are kept as-is, '__new__' is replaced by the next uploaded file
+  let keepPages: string[] = []
+  try { keepPages = JSON.parse(req.body.keepPages || '[]') } catch { /* ignore */ }
+
+  const newFiles = (req.files || []) as Express.Multer.File[]
+  const newUrls  = newFiles.map(f => `/uploads/${f.filename}`)
+
+  let fileIndex = 0
+  const pages: string[] = []
+  for (const entry of keepPages) {
+    if (entry === '__new__') {
+      if (fileIndex < newUrls.length) pages.push(newUrls[fileIndex++])
+    } else {
+      pages.push(entry)
+    }
+  }
+  while (fileIndex < newUrls.length) pages.push(newUrls[fileIndex++])
+  const finalPages = pages.slice(0, 4)
+  const primary    = finalPages[0] ?? null
+
+  const updated = await prisma.digitalInvitation.update({
+    where: { id: existing.id },
+    data: {
+      customTemplatePages: JSON.stringify(finalPages),
+      customTemplate: primary,
+      template: 'custom',
+    },
+  })
+  R.success(res, normalizeInvitation(updated), 'Páginas de plantilla actualizadas')
 }
 
 export async function archiveInvitation(req: AuthRequest, res: Response): Promise<void> {
