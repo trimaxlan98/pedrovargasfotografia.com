@@ -203,6 +203,11 @@ model DigitalInvitation {
   // Música de fondo
   backgroundMusic  String?
 
+  // Plantilla personalizada (PNG subido por el cliente)
+  customTemplate      String?
+  // Múltiples páginas de plantilla (JSON array de URLs, una por sección del scroll)
+  customTemplatePages String?
+
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 

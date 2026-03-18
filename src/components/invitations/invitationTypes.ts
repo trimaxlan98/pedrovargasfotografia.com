@@ -21,6 +21,7 @@ import eventXvPreparativos from '../../assets/photos-web/evento-xv-preparativos.
 export type InvitationTemplate =
   | 'warm' | 'floral' | 'rustic' | 'moderno'
   | 'vintage' | 'pearl' | 'esmeralda' | 'noir' | 'lavanda' | 'terracota'
+  | 'custom'
 
 export interface ApiInvitationGuestStats {
   total: number
@@ -90,6 +91,11 @@ export interface ApiInvitation {
 
   // Música de fondo
   backgroundMusic?: string | null
+
+  // Plantilla personalizada
+  customTemplate?: string | null
+  // Múltiples páginas de plantilla (una por sección del scroll)
+  customTemplatePages?: string[] | null
 }
 
 export interface ApiInvitationGuest {
@@ -165,6 +171,7 @@ export const DEMO_GALLERY_BY_TEMPLATE: Record<InvitationTemplate, string[]> = {
     portfolioBodasSesionCampo,
     portfolioBodaPreparativos,
   ],
+  custom: [],
 }
 
 export function getDemoGalleryForTemplate(template?: string): string[] {

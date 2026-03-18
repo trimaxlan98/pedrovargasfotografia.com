@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { CheckCircle, ChevronLeft, ChevronRight, Eye, Copy, Check, Trash2, Plus } from 'lucide-react'
+import { CheckCircle, ChevronLeft, ChevronRight, Eye, Copy, Check, Trash2, Plus, RefreshCw } from 'lucide-react'
 import api from '../../api/client'
 import { ApiInvitation, ApiInvitationGuest, InvitationTemplate, resolveInvitationImageUrl } from './invitationTypes'
+import ImageCropModal from './ImageCropModal'
 
 const ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp'])
 const ALLOWED_IMAGE_EXTS = new Set(['.jpg', '.jpeg', '.png', '.webp'])
@@ -14,6 +15,8 @@ const isAllowedImage = (file: File) => {
   if (dot === -1) return false
   return ALLOWED_IMAGE_EXTS.has(name.slice(dot))
 }
+
+type CustomPageEntry = { kind: 'saved'; url: string } | { kind: 'new'; file: File }
 
 const TEMPLATES: Array<{ id: InvitationTemplate; label: string; desc: string; gradient: string; isDark: boolean }> = [
   {
@@ -56,6 +59,10 @@ const TEMPLATES: Array<{ id: InvitationTemplate; label: string; desc: string; gr
     id: 'terracota', label: 'Terracota', desc: 'Tierra calida, estilo boho',
     gradient: 'linear-gradient(135deg, #f5ede2 0%, #ecdbc8 50%, #e0c8b0 100%)', isDark: false,
   },
+  {
+    id: 'custom', label: 'Personalizada', desc: 'Sube tu propio fondo PNG',
+    gradient: 'linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 50%, #1a1a1a 100%)', isDark: true,
+  },
 ]
 
 const STEPS_GENERAL    = ['Tipo', 'Plantilla', 'Datos', 'Contenido', 'Galeria', 'Publicar']
@@ -94,7 +101,9 @@ interface InvitationDraft {
   sponsorsInfo: string
   giftsInfo: string
   instagramHandle: string
-  backgroundMusic: string   // URL existente (cuando se edita)
+  backgroundMusic: string        // URL existente (cuando se edita)
+  customTemplate: string         // URL plantilla personalizada (cuando se edita)
+  customTemplatePages: string[]  // URLs de páginas de plantilla (cuando se edita)
   data: {
     title: string
     names: string
@@ -143,6 +152,8 @@ const emptyDraft: InvitationDraft = {
   giftsInfo: '',
   instagramHandle: '',
   backgroundMusic: '',
+  customTemplate: '',
+  customTemplatePages: [],
   data: {
     title: 'Estas invitado a nuestra boda',
     names: '', eventType: 'Boda', date: '', time: '',
@@ -188,6 +199,10 @@ function draftFromApi(inv: ApiInvitation, ownerName?: string, ownerEmail?: strin
     giftsInfo: inv.giftsInfo || '',
     instagramHandle: inv.instagramHandle || '',
     backgroundMusic: inv.backgroundMusic || '',
+    customTemplate: inv.customTemplate || '',
+    customTemplatePages: Array.isArray(inv.customTemplatePages) && inv.customTemplatePages.length > 0
+      ? inv.customTemplatePages
+      : inv.customTemplate ? [inv.customTemplate] : [],
     data: {
       title: inv.title,
       names: inv.names,
@@ -235,6 +250,25 @@ export default function InvitationWizard({
   const [musicFile, setMusicFile] = useState<File | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState('')
+
+  // Estado dinámico de galería (se actualiza tras cada guardado)
+  const [savedGallery, setSavedGallery] = useState<string[]>(() => initialData?.gallery || [])
+
+  // Archivos para fotos individuales (hero, ceremonia, recepción)
+  const [heroImageFile, setHeroImageFile] = useState<File | null>(null)
+  const [ceremonyPhotoFile, setCeremonyPhotoFile] = useState<File | null>(null)
+  const [receptionPhotoFile, setReceptionPhotoFile] = useState<File | null>(null)
+
+  // Plantilla personalizada multi-página — array unificado (saved URL | new File)
+  const [customPages, setCustomPages] = useState<CustomPageEntry[]>(() => {
+    const pages = Array.isArray(initialData?.customTemplatePages) && initialData.customTemplatePages.length > 0
+      ? initialData.customTemplatePages
+      : initialData?.customTemplate ? [initialData.customTemplate] : []
+    return pages.map(url => ({ kind: 'saved' as const, url }))
+  })
+  const [cropTarget,       setCropTarget]       = useState<File | null>(null)
+  const [replaceIndex,     setReplaceIndex]     = useState<number | null>(null)
+  const [pagePreviewUrls,  setPagePreviewUrls]  = useState<Map<number, string>>(new Map())
 
   const [guests, setGuests] = useState<ApiInvitationGuest[]>([])
   const [pendingGuests, setPendingGuests] = useState<PendingGuest[]>([])
@@ -285,6 +319,16 @@ export default function InvitationWizard({
 
   const next = () => setStep(s => Math.min(s + 1, activeSteps.length - 1))
   const prev = () => setStep(s => Math.max(s - 1, 0))
+
+  // Manage preview URLs for 'new' custom pages — revoke on change/unmount
+  useEffect(() => {
+    const urlMap = new Map<number, string>()
+    customPages.forEach((page, i) => {
+      if (page.kind === 'new') urlMap.set(i, URL.createObjectURL(page.file))
+    })
+    setPagePreviewUrls(urlMap)
+    return () => urlMap.forEach(url => URL.revokeObjectURL(url))
+  }, [customPages])
 
   useEffect(() => {
     if (guestStep < 0 || step !== guestStep || !savedInvitationId) return
@@ -356,6 +400,20 @@ export default function InvitationWizard({
       const base = mode === 'admin' ? '/admin/invitations' : '/client/invitations'
       await api.delete(`${base}/${savedInvitationId}/guests/${guestId}`)
       setGuests(prev => prev.filter(g => g.id !== guestId))
+    } catch {
+      // silent
+    }
+  }
+
+  async function handleDeletePhoto(index: number) {
+    if (!savedInvitationId) {
+      setSavedGallery(prev => prev.filter((_, i) => i !== index))
+      return
+    }
+    try {
+      const base = mode === 'admin' ? '/admin/invitations' : '/client/invitations'
+      const res = await api.delete<{ data: ApiInvitation }>(`${base}/${savedInvitationId}/photos/${index}`)
+      setSavedGallery(res.data.gallery || [])
     } catch {
       // silent
     }
@@ -435,11 +493,40 @@ export default function InvitationWizard({
       let saved = res.data
       setSavedInvitationId(saved.id)
 
+      // Subir fotos individuales (hero, ceremonia, recepción)
+      const singlePhotoUpdates: Record<string, string> = {}
+      const singleFiles: Array<{ file: File; field: string }> = []
+      if (heroImageFile) singleFiles.push({ file: heroImageFile, field: 'heroImage' })
+      if (ceremonyPhotoFile) singleFiles.push({ file: ceremonyPhotoFile, field: 'ceremonyPhoto' })
+      if (receptionPhotoFile) singleFiles.push({ file: receptionPhotoFile, field: 'receptionPhoto' })
+
+      for (const { file, field } of singleFiles) {
+        const form = new FormData()
+        form.append('images', file)
+        const up = await api.postForm<{ data: ApiInvitation }>(`${base}/${saved.id}/photos`, form)
+        const gallery = up.data.gallery || []
+        setSavedGallery(gallery)
+        singlePhotoUpdates[field] = gallery[gallery.length - 1] || ''
+      }
+
+      // Si hay fotos individuales, hacer un segundo PUT para guardar las URLs en los campos correctos
+      if (Object.keys(singlePhotoUpdates).length > 0) {
+        const urlPayload = { ...payload, ...singlePhotoUpdates }
+        const urlRes = await api.put<{ data: ApiInvitation }>(`${base}/${saved.id}`, urlPayload)
+        saved = urlRes.data
+        setDraft(p => ({ ...p, ...singlePhotoUpdates }))
+        setHeroImageFile(null)
+        setCeremonyPhotoFile(null)
+        setReceptionPhotoFile(null)
+      }
+
       if (photos.length > 0) {
         const form = new FormData()
         photos.forEach(p => form.append('images', p))
         const up = await api.postForm<{ data: ApiInvitation }>(`${base}/${saved.id}/photos`, form)
         saved = up.data
+        setSavedGallery(saved.gallery || [])
+        setPhotos([])
       }
 
       if (musicFile) {
@@ -449,6 +536,36 @@ export default function InvitationWizard({
         saved = up.data
         setMusicFile(null)
       }
+
+      if (draft.template === 'custom' && customPages.length > 0) {
+        const form = new FormData()
+        // Build ordered keepPages: saved URLs stay, new files become '__new__' placeholders
+        const pageOrder: string[] = []
+        const newFiles: File[] = []
+        for (const page of customPages) {
+          if (page.kind === 'saved') {
+            pageOrder.push(page.url)
+          } else {
+            pageOrder.push('__new__')
+            newFiles.push(page.file)
+          }
+        }
+        form.append('keepPages', JSON.stringify(pageOrder))
+        newFiles.forEach(f => form.append('pages', f))
+        const up = await api.postForm<{ data: ApiInvitation }>(`${base}/${saved.id}/custom-template-pages`, form)
+        saved = up.data
+        const finalPages = Array.isArray(up.data.customTemplatePages) ? up.data.customTemplatePages : []
+        setCustomPages(finalPages.map(url => ({ kind: 'saved' as const, url })))
+        setDraft(p => ({
+          ...p,
+          customTemplate: saved.customTemplate || '',
+          customTemplatePages: finalPages,
+          template: 'custom',
+        }))
+      }
+
+      // Actualizar galería desde el resultado final
+      setSavedGallery(saved.gallery || [])
 
       if (!savedInvitationId && pendingGuests.length > 0) {
         await api.post(`${base}/${saved.id}/guests`, { names: pendingGuests.map(g => g.name) })
@@ -577,6 +694,85 @@ export default function InvitationWizard({
                   ))}
                 </div>
               </div>
+
+              {/* Plantilla personalizada — páginas */}
+              {draft.template === 'custom' && (
+                <div className="space-y-3">
+                  <div>
+                    <p className="label-caps text-ivory/40 text-[0.6rem] mb-1">Páginas de la plantilla</p>
+                    <p className="text-ivory/30 text-xs font-dm">
+                      Sube 1–4 imágenes (una por sección del scroll). Se recortarán automáticamente a formato 9:16.
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    {customPages.map((page, i) => {
+                      const imgSrc = page.kind === 'saved'
+                        ? resolveInvitationImageUrl(page.url)
+                        : pagePreviewUrls.get(i) ?? ''
+                      const isPending = page.kind === 'new'
+                      return (
+                        <div
+                          key={i}
+                          className={`relative rounded-xl overflow-hidden border flex flex-col ${isPending ? 'border-gold/40' : 'border-white/15'}`}
+                          style={{ aspectRatio: '9/16' }}
+                        >
+                          <img src={imgSrc} className="absolute inset-0 w-full h-full object-cover" alt={`Hoja ${i + 1}`} />
+                          {/* Bottom bar — always visible, label + action buttons */}
+                          <div className="relative z-10 mt-auto flex items-end justify-between px-2 pb-2 pt-6 bg-gradient-to-t from-black/75 to-transparent">
+                            <p className={`text-[0.6rem] font-dm leading-none ${isPending ? 'text-gold' : 'text-ivory/60'}`}>
+                              Hoja {i + 1}{isPending ? <><br /><span className="opacity-70">pendiente</span></> : ''}
+                            </p>
+                            <div className="flex items-center gap-1">
+                              {/* Replace */}
+                              <label
+                                className="bg-black/60 text-ivory/50 hover:text-gold rounded-full p-1.5 cursor-pointer transition-colors"
+                                title="Reemplazar hoja"
+                              >
+                                <input
+                                  type="file"
+                                  accept="image/png,image/jpeg,image/webp,.png,.jpg,.jpeg,.webp"
+                                  className="hidden"
+                                  onChange={e => { const f = e.target.files?.[0]; if (f) { e.target.value = ''; setReplaceIndex(i); setCropTarget(f) } }}
+                                />
+                                <RefreshCw size={10} />
+                              </label>
+                              {/* Delete */}
+                              <button
+                                onClick={() => setCustomPages(prev => prev.filter((_, j) => j !== i))}
+                                className="bg-black/60 text-red-400/80 hover:text-red-400 rounded-full p-1.5 transition-colors"
+                                title="Eliminar hoja"
+                              >
+                                <Trash2 size={10} />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })}
+                    {/* Add button */}
+                    {customPages.length < 4 && (
+                      <label
+                        className="rounded-xl border-2 border-dashed border-white/20 flex flex-col items-center justify-center cursor-pointer hover:border-gold/40 transition-colors gap-2"
+                        style={{ aspectRatio: '9/16' }}
+                      >
+                        <input
+                          type="file"
+                          accept="image/png,image/jpeg,image/webp,.png,.jpg,.jpeg,.webp"
+                          className="hidden"
+                          onChange={e => { const f = e.target.files?.[0]; if (f) { e.target.value = ''; setReplaceIndex(null); setCropTarget(f) } }}
+                        />
+                        <Plus size={22} className="text-ivory/25" />
+                        <p className="text-ivory/25 text-[0.6rem] font-dm text-center px-3">
+                          {customPages.length === 0 ? 'Agregar hoja 1' : `Agregar hoja ${customPages.length + 1}`}
+                        </p>
+                      </label>
+                    )}
+                  </div>
+                  <p className="text-ivory/25 text-[0.62rem] font-dm">
+                    Hoja 1 = héroe · Hoja 2 = eventos · Hoja 3 = galería · Hoja 4 = cierre
+                  </p>
+                </div>
+              )}
 
               {/* Relief effect */}
               <div>
@@ -759,9 +955,15 @@ export default function InvitationWizard({
                 <input value={draft.data.locationNote} onChange={e => setData('locationNote')(e.target.value)} className={ic} placeholder="Ciudad, Pais" />
               </div>
               <div className="md:col-span-2">
-                <label className="block text-ivory/80 text-xs font-dm mb-1.5">Foto principal (URL)</label>
-                <input value={draft.heroImage} onChange={e => setField('heroImage')(e.target.value)} className={ic} placeholder="https://... o /uploads/archivo.jpg" />
-                <p className="text-ivory/30 text-[0.65rem] mt-1">Tip: puedes reutilizar una foto ya subida a galeria y copiar su URL.</p>
+                <label className="block text-ivory/80 text-xs font-dm mb-1.5">Foto principal</label>
+                <div className="flex gap-2">
+                  <input value={draft.heroImage} onChange={e => setField('heroImage')(e.target.value)} className={`${ic} flex-1`} placeholder="https://... o /uploads/archivo.jpg" />
+                  <label className="btn-outline px-3 py-2 text-xs cursor-pointer flex items-center gap-1 flex-shrink-0 whitespace-nowrap">
+                    <input type="file" accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f && isAllowedImage(f)) setHeroImageFile(f) }} />
+                    {heroImageFile ? '✓ ' + heroImageFile.name.slice(0, 12) + '…' : '↑ Subir'}
+                  </label>
+                </div>
+                {heroImageFile && <p className="text-gold text-[0.65rem] mt-1">Se subirá al guardar: {heroImageFile.name}</p>}
               </div>
 
               <div className="md:col-span-2 border border-white/10 rounded-xl p-4 space-y-3 bg-white/5">
@@ -780,9 +982,15 @@ export default function InvitationWizard({
                     <input value={draft.ceremonyAddress} onChange={e => setField('ceremonyAddress')(e.target.value)} className={ic} placeholder="Calle, Colonia, Ciudad" />
                   </div>
                   <div className="md:col-span-2">
-                    <label className="block text-ivory/80 text-xs font-dm mb-1.5">Foto ceremonia (URL)</label>
-                    <input value={draft.ceremonyPhoto} onChange={e => setField('ceremonyPhoto')(e.target.value)} className={ic} placeholder="https://... o /uploads/archivo.jpg" />
-                    <p className="text-ivory/30 text-[0.65rem] mt-1">Tip: sube la foto en el paso Galería y copia su URL aquí.</p>
+                    <label className="block text-ivory/80 text-xs font-dm mb-1.5">Foto ceremonia</label>
+                    <div className="flex gap-2">
+                      <input value={draft.ceremonyPhoto} onChange={e => setField('ceremonyPhoto')(e.target.value)} className={`${ic} flex-1`} placeholder="https://... o /uploads/archivo.jpg" />
+                      <label className="btn-outline px-3 py-2 text-xs cursor-pointer flex items-center gap-1 flex-shrink-0 whitespace-nowrap">
+                        <input type="file" accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f && isAllowedImage(f)) setCeremonyPhotoFile(f) }} />
+                        {ceremonyPhotoFile ? '✓ ' + ceremonyPhotoFile.name.slice(0, 12) + '…' : '↑ Subir'}
+                      </label>
+                    </div>
+                    {ceremonyPhotoFile && <p className="text-gold text-[0.65rem] mt-1">Se subirá al guardar: {ceremonyPhotoFile.name}</p>}
                   </div>
                   <div className="md:col-span-2">
                     <div className="flex items-center justify-between mb-1.5">
@@ -820,9 +1028,15 @@ export default function InvitationWizard({
                     <input value={draft.receptionAddress} onChange={e => setField('receptionAddress')(e.target.value)} className={ic} placeholder="Calle, Colonia, Ciudad" />
                   </div>
                   <div className="md:col-span-2">
-                    <label className="block text-ivory/80 text-xs font-dm mb-1.5">Foto recepcion (URL)</label>
-                    <input value={draft.receptionPhoto} onChange={e => setField('receptionPhoto')(e.target.value)} className={ic} placeholder="https://... o /uploads/archivo.jpg" />
-                    <p className="text-ivory/30 text-[0.65rem] mt-1">Tip: sube la foto en el paso Galería y copia su URL aquí.</p>
+                    <label className="block text-ivory/80 text-xs font-dm mb-1.5">Foto recepción</label>
+                    <div className="flex gap-2">
+                      <input value={draft.receptionPhoto} onChange={e => setField('receptionPhoto')(e.target.value)} className={`${ic} flex-1`} placeholder="https://... o /uploads/archivo.jpg" />
+                      <label className="btn-outline px-3 py-2 text-xs cursor-pointer flex items-center gap-1 flex-shrink-0 whitespace-nowrap">
+                        <input type="file" accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f && isAllowedImage(f)) setReceptionPhotoFile(f) }} />
+                        {receptionPhotoFile ? '✓ ' + receptionPhotoFile.name.slice(0, 12) + '…' : '↑ Subir'}
+                      </label>
+                    </div>
+                    {receptionPhotoFile && <p className="text-gold text-[0.65rem] mt-1">Se subirá al guardar: {receptionPhotoFile.name}</p>}
                   </div>
                   <div className="md:col-span-2">
                     <div className="flex items-center justify-between mb-1.5">
@@ -980,20 +1194,27 @@ export default function InvitationWizard({
 
           {step === galleryStep && (
             <div className="space-y-5">
-              {isEdit && (initialData?.gallery?.length ?? 0) > 0 && (
+              {savedGallery.length > 0 && (
                 <div>
-                  <p className="text-ivory/60 text-xs font-dm mb-3">Fotos actuales ({initialData!.gallery!.length})</p>
+                  <p className="text-ivory/60 text-xs font-dm mb-3">Fotos actuales ({savedGallery.length})</p>
                   <div className="grid grid-cols-4 gap-2">
-                    {initialData!.gallery!.map((url, i) => (
-                      <div key={i} className="aspect-square rounded-lg overflow-hidden border border-white/10">
+                    {savedGallery.map((url, i) => (
+                      <div key={i} className="relative aspect-square rounded-lg overflow-hidden border border-white/10 group">
                         <img src={resolveInvitationImageUrl(url)} alt="" className="w-full h-full object-cover" />
+                        <button
+                          onClick={() => handleDeletePhoto(i)}
+                          className="absolute top-1 right-1 bg-black/70 text-red-400 rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                          title="Eliminar foto"
+                        >
+                          <Trash2 size={11} />
+                        </button>
                       </div>
                     ))}
                   </div>
                 </div>
               )}
               <div>
-                <label className="block text-ivory/80 text-xs font-dm mb-1.5">{isEdit ? 'Agregar mas fotos' : 'Subir fotos de galeria'}</label>
+                <label className="block text-ivory/80 text-xs font-dm mb-1.5">{savedGallery.length > 0 ? 'Agregar mas fotos' : 'Subir fotos de galeria'}</label>
                 <input
                   type="file"
                   multiple
@@ -1177,6 +1398,24 @@ export default function InvitationWizard({
           )}
         </div>
       </motion.div>
+
+      {/* Sub-modal de recorte de imagen */}
+      {cropTarget && (
+        <ImageCropModal
+          file={cropTarget}
+          pageLabel={replaceIndex !== null ? `Reemplazar hoja ${replaceIndex + 1}` : `Hoja ${customPages.length + 1}`}
+          onConfirm={croppedFile => {
+            if (replaceIndex !== null) {
+              setCustomPages(prev => prev.map((p, j) => j === replaceIndex ? { kind: 'new' as const, file: croppedFile } : p))
+              setReplaceIndex(null)
+            } else {
+              setCustomPages(prev => [...prev, { kind: 'new' as const, file: croppedFile }])
+            }
+            setCropTarget(null)
+          }}
+          onCancel={() => { setCropTarget(null); setReplaceIndex(null) }}
+        />
+      )}
     </div>
   )
 }

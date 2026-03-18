@@ -39,7 +39,7 @@ export default function GuestInvitationPage() {
       .get<{ data: GuestData }>(`/public/guest/${guestToken}`)
       .then(res => {
         setData(res.data)
-        setRsvpStatus(res.data.guest.response as 'PENDING' | 'ACCEPTED' | 'DECLINED')
+        setRsvpStatus(res.data.guest.response)
         const dl = res.data.invitation.rsvpDeadline
         if (dl && new Date(dl) <= new Date()) setDeadlineExpired(true)
       })
