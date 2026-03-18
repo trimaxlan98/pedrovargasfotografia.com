@@ -1,6 +1,6 @@
 # TÉRMINOS Y CONDICIONES DE SERVICIO — PEDRO VARGAS FOTOGRAFÍA
 
-**Versión 2.0 — Última actualización: 6 de marzo de 2026**
+**Versión 2.0 — Última actualización: 17 de marzo de 2026**
 
 Los presentes Términos y Condiciones ("Términos") regulan el acceso y uso de los servicios de fotografía profesional, portal de clientes y herramienta de generación de invitaciones digitales proporcionados a través de esta plataforma web (el "Servicio"), operada por **Pedro Vargas Fotografía** ("el Fotógrafo", "nosotros"). Al crear una cuenta, contratar cualquiera de nuestros servicios o utilizar esta aplicación, usted ("el Cliente") acepta íntegra e incondicionalmente las disposiciones aquí contenidas. Si no está de acuerdo con alguna de ellas, deberá abstenerse de utilizar la plataforma.
 
