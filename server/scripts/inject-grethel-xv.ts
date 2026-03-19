@@ -58,6 +58,11 @@ const CONFIG = {
 
   giftsInfo:        'Lluvia de sobres',
   guestGreeting:    'Con mucho cariño te invitamos',
+
+  // Tipografía: familia-tamaño
+  // Familias: cormorant | playfair | lora | greatvibes | dm | montserrat | raleway | josefin
+  // Tamaños:  sm | md | lg
+  fontStyle:        'greatvibes-xl',
 } as const
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -329,6 +334,7 @@ async function createMasterInvitation(clientId: string, dryRun: boolean): Promis
       eventDate:        CONFIG.eventDate,
       eventTime:        CONFIG.eventTime      || null,
       template:         CONFIG.template,
+      fontStyle:        CONFIG.fontStyle,
       quote:            CONFIG.quote          || null,
       dressCode:        CONFIG.dressCode      || null,
       hashtag:          CONFIG.hashtag        || null,

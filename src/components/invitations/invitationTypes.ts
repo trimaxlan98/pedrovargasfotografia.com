@@ -23,6 +23,16 @@ export type InvitationTemplate =
   | 'vintage' | 'pearl' | 'esmeralda' | 'noir' | 'lavanda' | 'terracota'
   | 'custom'
 
+export interface StickerLayer {
+  id: string
+  src: string      // URL al sticker (/stickers/1.png o /uploads/uuid.png)
+  x: number        // % del ancho del contenedor (centro del sticker, 0-100)
+  y: number        // % del ancho del contenedor desde arriba (puede ser >100)
+  w: number        // % del ancho del contenedor (tamaño del sticker, 10-80)
+  rotation: number // grados (-180 a 180)
+  zIndex: number
+}
+
 export interface ApiInvitationGuestStats {
   total: number
   confirmed: number
@@ -96,6 +106,9 @@ export interface ApiInvitation {
   customTemplate?: string | null
   // Múltiples páginas de plantilla (una por sección del scroll)
   customTemplatePages?: string[] | null
+
+  // Capas de stickers
+  stickerLayers?: StickerLayer[]
 }
 
 export interface ApiInvitationGuest {

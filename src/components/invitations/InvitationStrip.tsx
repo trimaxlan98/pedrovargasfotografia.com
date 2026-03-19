@@ -1,8 +1,9 @@
-﻿import { useMemo, useState, useEffect, useCallback, useRef } from 'react'
+﻿import { useMemo, useState, useEffect, useCallback, useRef, memo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Copy, Check, MessageCircle, MapPin, X, Gift, Instagram } from 'lucide-react'
 import {
   ApiInvitation,
+  StickerLayer,
   getDemoGalleryForTemplate,
   resolveInvitationImageUrl,
 } from './invitationTypes'
@@ -615,6 +616,38 @@ function getRsvpHref(rsvpValue: string): string {
 const PAD = 'px-7 sm:px-10'
 const SECTION = `${PAD} py-16 sm:py-20`
 
+// ── Sticker overlay ──────────────────────────────────────────────────────────
+const StickerOverlay = memo(function StickerOverlay({
+  layers,
+  containerWidth,
+}: {
+  layers: StickerLayer[]
+  containerWidth: number
+}) {
+  if (!layers.length) return null
+  return (
+    <div className="absolute inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 40 }}>
+      {layers.map(s => (
+        <img
+          key={s.id}
+          src={s.src}
+          alt=""
+          draggable={false}
+          style={{
+            position: 'absolute',
+            left: `${s.x}%`,
+            top: `${(s.y / 100) * containerWidth}px`,
+            width: `${s.w}%`,
+            transform: `translate(-50%, -50%) rotate(${s.rotation}deg)`,
+            zIndex: s.zIndex,
+            userSelect: 'none',
+          }}
+        />
+      ))}
+    </div>
+  )
+})
+
 // â”€â”€ Main component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export default function InvitationStrip({
   invitation,
@@ -635,6 +668,22 @@ export default function InvitationStrip({
   const baseTemplateId = templateStr.replace(/-emboss$|-foil$/, '')
   const isCustomTemplate = baseTemplateId === 'custom'
   const s = (!isCustomTemplate && TEMPLATE_STYLES[baseTemplateId]) ? TEMPLATE_STYLES[baseTemplateId] : TEMPLATE_STYLES.noir
+
+  // Font settings
+  const HEADING_FONTS: Record<string, string> = {
+    cormorant:  '"Cormorant Garamond", serif',
+    playfair:   '"Playfair Display", serif',
+    lora:       '"Lora", serif',
+    greatvibes: '"Great Vibes", cursive',
+    dm:         '"DM Sans", sans-serif',
+    montserrat: '"Montserrat", sans-serif',
+    raleway:    '"Raleway", sans-serif',
+    josefin:    '"Josefin Sans", sans-serif',
+  }
+  const FONT_SIZE_SCALE: Record<string, number> = { sm: 0.82, md: 1, lg: 1.2, xl: 1.5 }
+  const [parsedFontFamily = 'cormorant', parsedFontSize = 'md'] = (invitation.fontStyle || 'cormorant-md').split('-')
+  const headingFont = HEADING_FONTS[parsedFontFamily] ?? HEADING_FONTS.cormorant
+  const fontScale   = FONT_SIZE_SCALE[parsedFontSize] ?? 1
 
   // Build ordered list of background page URLs
   const bgPages: string[] = useMemo(() => {
@@ -672,6 +721,21 @@ export default function InvitationStrip({
 
   const [copied, setCopied] = useState(false)
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
+
+  // Sticker overlay
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [invW, setInvW] = useState(390)
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+    const ro = new ResizeObserver(entries => setInvW(entries[0].contentRect.width))
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+  const stickerLayers = useMemo(
+    () => Array.isArray(invitation.stickerLayers) ? invitation.stickerLayers : [],
+    [invitation.stickerLayers]
+  )
 
   const embossText: React.CSSProperties = hasEmboss
     ? {
@@ -765,11 +829,20 @@ export default function InvitationStrip({
   }
   const whatsappShare = `https://wa.me/?text=${encodeURIComponent(`Mira mi invitación: ${shareUrl}`)}`
 
+  const stripId = `inv-strip-${invitation.id}`
+
   return (
     <div
+      ref={containerRef}
+      id={stripId}
       className="w-full text-sm leading-relaxed relative"
       style={{ ...bgStyle, color: s.text }}
     >
+      {/* Capa de stickers flotante */}
+      <StickerOverlay layers={stickerLayers} containerWidth={invW} />
+      {parsedFontFamily !== 'cormorant' && (
+        <style>{`#${stripId} .font-cormorant { font-family: ${headingFont} !important; }`}</style>
+      )}
 
       {/* â•â• 1. HERO â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       <section className="relative min-h-screen flex flex-col items-center justify-center text-center px-7 py-20 overflow-hidden">
@@ -801,7 +874,8 @@ export default function InvitationStrip({
           <motion.h1
             className={`font-cormorant font-light leading-[1.04] tracking-wide${hasFoil ? ' inv-foil-text' : ''}`}
             style={{
-              fontSize: 'clamp(2.8rem, 13vw, 5.5rem)',
+              fontFamily: headingFont,
+              fontSize: `clamp(${(2.8 * fontScale).toFixed(2)}rem, ${13 * fontScale}vw, ${(5.5 * fontScale).toFixed(2)}rem)`,
               ...(hasFoil
                 ? { background: foilGradient }
                 : { color: s.text, ...embossText }),
@@ -816,7 +890,7 @@ export default function InvitationStrip({
           {/* Subtitle / title */}
           <motion.p
             className="font-cormorant text-lg italic"
-            style={{ color: s.accent }}
+            style={{ color: s.accent, fontFamily: headingFont }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6, delay: 0.28 }}
@@ -1192,7 +1266,7 @@ export default function InvitationStrip({
               <p
                 className={`font-cormorant leading-snug mt-2${hasFoil ? ' inv-foil-text' : ''}`}
                 style={{
-                  fontSize: 'clamp(2.2rem, 9vw, 3rem)',
+                  fontSize: `clamp(${(2.2 * fontScale).toFixed(2)}rem, ${9 * fontScale}vw, ${(3 * fontScale).toFixed(2)}rem)`,
                   ...(hasFoil ? { background: foilGradient } : { color: s.accent, ...embossText }),
                 }}
               >
