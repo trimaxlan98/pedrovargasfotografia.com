@@ -240,7 +240,7 @@ function HeroCountdown({ eventDate, s }: { eventDate: string; s: TemplateStyle }
 
   return (
     <div className="flex flex-col items-center gap-3">
-      <p className="text-[0.55rem] uppercase tracking-[0.4em] font-dm" style={{ color: `${s.accent}88` }}>
+      <p className="text-[1.1rem] uppercase tracking-[0.4em] font-dm" style={{ color: `${s.accent}88` }}>
         Cuenta regresiva
       </p>
       <div className="flex items-end gap-5 sm:gap-7">
@@ -254,12 +254,12 @@ function HeroCountdown({ eventDate, s }: { eventDate: string; s: TemplateStyle }
           >
             <span
               className="font-cormorant font-semibold tabular-nums leading-none"
-              style={{ fontSize: 'clamp(2rem, 8vw, 3rem)', color: s.accent }}
+              style={{ fontSize: 'clamp(4rem, 16vw, 6rem)', color: s.accent }}
             >
               {String(u.value).padStart(2, '0')}
             </span>
             <span
-              className="text-[0.48rem] uppercase tracking-widest font-dm mt-1.5"
+              className="text-[0.96rem] uppercase tracking-widest font-dm mt-1"
               style={{ color: `${s.accent}66` }}
             >
               {u.label}
@@ -309,7 +309,7 @@ function Ornament({ s }: { s: TemplateStyle }) {
 
 function SectionLabel({ children, s }: { children: string; s: TemplateStyle }) {
   return (
-    <p className="text-[0.58rem] uppercase tracking-[0.42em] font-dm" style={{ color: s.accent }}>
+    <p className="text-[1.16rem] uppercase tracking-[0.42em] font-dm" style={{ color: s.accent }}>
       {children}
     </p>
   )
@@ -317,7 +317,7 @@ function SectionLabel({ children, s }: { children: string; s: TemplateStyle }) {
 
 function SectionDivider({ s }: { s: TemplateStyle }) {
   return (
-    <div className="py-10 flex items-center justify-center">
+    <div className="py-3 flex items-center justify-center">
       <Ornament s={s} />
     </div>
   )
@@ -563,18 +563,18 @@ function EventCard({
           <img src={photo} alt={venue} className="w-full h-full object-cover" loading="lazy" />
         </div>
       )}
-      <div className="px-6 py-7 text-center space-y-2">
+      <div className="px-4 py-4 text-center space-y-1">
         <SectionLabel s={s}>{label}</SectionLabel>
-        <h3 className="font-cormorant text-2xl sm:text-3xl leading-tight" style={{ color: s.text }}>
+        <h3 className="font-cormorant text-4xl sm:text-5xl leading-tight" style={{ color: s.text }}>
           {venue}
         </h3>
         {time && (
-          <p className="text-sm font-dm font-medium" style={{ color: s.accent }}>
+          <p className="text-2xl font-dm font-medium" style={{ color: s.accent }}>
             {time}
           </p>
         )}
         {address && (
-          <p className="text-xs font-dm leading-relaxed" style={{ color: s.textMuted }}>
+          <p className="text-xl font-dm leading-relaxed" style={{ color: s.textMuted }}>
             {address}
           </p>
         )}
@@ -614,9 +614,12 @@ function getRsvpHref(rsvpValue: string): string {
 
 // â”€â”€ Layout constants â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const PAD = 'px-7 sm:px-10'
-const SECTION = `${PAD} py-16 sm:py-20`
+const SECTION = `${PAD} py-8 sm:py-10`
 
 // ── Sticker overlay ──────────────────────────────────────────────────────────
+// Stickers are rendered as direct siblings inside the root div so their
+// individual zIndex values interact correctly with the rest of the invitation
+// content (e.g. zIndex < 10 = behind hero text, zIndex > 10 = in front).
 const StickerOverlay = memo(function StickerOverlay({
   layers,
   containerWidth,
@@ -626,7 +629,7 @@ const StickerOverlay = memo(function StickerOverlay({
 }) {
   if (!layers.length) return null
   return (
-    <div className="absolute inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 40 }}>
+    <>
       {layers.map(s => (
         <img
           key={s.id}
@@ -641,10 +644,11 @@ const StickerOverlay = memo(function StickerOverlay({
             transform: `translate(-50%, -50%) rotate(${s.rotation}deg)`,
             zIndex: s.zIndex,
             userSelect: 'none',
+            pointerEvents: 'none',
           }}
         />
       ))}
-    </div>
+    </>
   )
 })
 
@@ -851,7 +855,7 @@ export default function InvitationStrip({
           <div className="absolute inset-0 pointer-events-none" style={{ background: s.heroOverlay }} />
         )}
 
-        <div className="relative z-10 flex flex-col items-center gap-5 w-full max-w-xs mx-auto">
+        <div className="relative z-10 flex flex-col items-center gap-2 w-full max-w-xs mx-auto">
           {/* Top ornament */}
           <motion.div
             initial={{ opacity: 0, y: -12 }}
@@ -875,7 +879,7 @@ export default function InvitationStrip({
             className={`font-cormorant font-light leading-[1.04] tracking-wide${hasFoil ? ' inv-foil-text' : ''}`}
             style={{
               fontFamily: headingFont,
-              fontSize: `clamp(${(2.8 * fontScale).toFixed(2)}rem, ${13 * fontScale}vw, ${(5.5 * fontScale).toFixed(2)}rem)`,
+              fontSize: `clamp(${(5.6 * fontScale).toFixed(2)}rem, ${26 * fontScale}vw, ${(11 * fontScale).toFixed(2)}rem)`,
               ...(hasFoil
                 ? { background: foilGradient }
                 : { color: s.text, ...embossText }),
@@ -889,7 +893,7 @@ export default function InvitationStrip({
 
           {/* Subtitle / title */}
           <motion.p
-            className="font-cormorant text-lg italic"
+            className="font-cormorant text-3xl italic"
             style={{ color: s.accent, fontFamily: headingFont }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -906,14 +910,14 @@ export default function InvitationStrip({
             transition={{ duration: 0.6, delay: 0.38 }}
           >
             <p
-              className="text-[0.62rem] uppercase tracking-[0.35em] font-dm"
+              className="text-[1.24rem] uppercase tracking-[0.35em] font-dm"
               style={{ color: s.textMuted }}
             >
               {eventDate}{time ? ` · ${time}` : ''}
             </p>
             {(venue || locationNote) && (
               <p
-                className="text-[0.58rem] uppercase tracking-[0.25em] font-dm"
+                className="text-[1.16rem] uppercase tracking-[0.25em] font-dm"
                 style={{ color: s.textMuted, opacity: 0.7 }}
               >
                 {[venue, locationNote].filter(Boolean).join(' · ')}
@@ -965,10 +969,10 @@ export default function InvitationStrip({
         <FadeIn>
           <section className={`${SECTION} text-center`}>
             <SectionLabel s={s}>Con mucho amor</SectionLabel>
-            <div className="mt-8 space-y-7">
+            <div className="mt-3 space-y-2">
               {quote && (
                 <blockquote
-                  className="font-cormorant text-2xl sm:text-3xl italic leading-relaxed"
+                  className="font-cormorant text-4xl sm:text-5xl italic leading-tight"
                   style={{ color: s.text, ...embossText }}
                 >
                   "{quote}"
@@ -976,7 +980,7 @@ export default function InvitationStrip({
               )}
               {message && (
                 <p
-                  className="font-cormorant text-lg sm:text-xl leading-relaxed max-w-[280px] mx-auto"
+                  className="font-cormorant text-3xl sm:text-4xl leading-snug max-w-[280px] mx-auto"
                   style={{ color: s.text, opacity: 0.85 }}
                 >
                   {message}
@@ -1002,17 +1006,17 @@ export default function InvitationStrip({
                 .map(item => (
                   <div key={item.label}>
                     <p
-                      className="text-[0.55rem] uppercase tracking-[0.38em] font-dm"
+                      className="text-[1.1rem] uppercase tracking-[0.38em] font-dm"
                       style={{ color: s.accent }}
                     >
                       {item.label}
                     </p>
-                    <div className="h-px w-6 mx-auto my-2.5" style={{ background: s.divider }} />
-                    <p className="font-cormorant text-2xl" style={{ color: s.text }}>
+                    <div className="h-px w-6 mx-auto my-1" style={{ background: s.divider }} />
+                    <p className="font-cormorant text-4xl" style={{ color: s.text }}>
                       {item.value}
                     </p>
                     {item.note && (
-                      <p className="text-xs mt-1 font-dm" style={{ color: s.textMuted }}>
+                      <p className="text-xl mt-0.5 font-dm" style={{ color: s.textMuted }}>
                         {item.note}
                       </p>
                     )}
@@ -1027,9 +1031,9 @@ export default function InvitationStrip({
       {hasEventCards && (
         <section className={`${SECTION}`}>
           <FadeIn>
-            <div className="text-center mb-10">
+            <div className="text-center mb-4">
               <SectionLabel s={s}>El gran día</SectionLabel>
-              <p className="font-cormorant text-lg mt-2" style={{ color: s.textMuted }}>
+              <p className="font-cormorant text-3xl mt-1" style={{ color: s.textMuted }}>
                 {eventDate}{time ? ` · ${time}` : ''}
               </p>
             </div>
@@ -1081,7 +1085,7 @@ export default function InvitationStrip({
             >
               <SectionLabel s={s}>Código de vestimenta</SectionLabel>
               <div className="h-px w-6 mx-auto my-3" style={{ background: s.divider }} />
-              <p className="font-cormorant text-2xl mt-1" style={{ color: s.text }}>
+              <p className="font-cormorant text-4xl mt-1" style={{ color: s.text }}>
                 {dressCode}
               </p>
             </div>
@@ -1093,9 +1097,9 @@ export default function InvitationStrip({
       {normalizedGallery.length > 0 && (
         <FadeIn>
           <section className={`${SECTION}`}>
-            <div className="text-center mb-9">
+            <div className="text-center mb-3">
               <SectionLabel s={s}>Galería</SectionLabel>
-              <p className="font-cormorant text-lg mt-2" style={{ color: s.textMuted }}>
+              <p className="font-cormorant text-3xl mt-1" style={{ color: s.textMuted }}>
                 Momentos especiales
               </p>
             </div>
@@ -1143,11 +1147,11 @@ export default function InvitationStrip({
           <section className={`${SECTION} text-center`}>
             <SectionDivider s={s} />
             {parsedParents.length > 0 && (
-              <div className="mb-12">
+              <div className="mb-4">
                 <SectionLabel s={s}>Papás</SectionLabel>
-                <div className="mt-6 space-y-2">
+                <div className="mt-2 space-y-1">
                   {parsedParents.map((name, i) => (
-                    <p key={i} className="font-cormorant text-xl leading-snug" style={{ color: s.text }}>
+                    <p key={i} className="font-cormorant text-4xl leading-snug" style={{ color: s.text }}>
                       {name}
                     </p>
                   ))}
@@ -1157,9 +1161,9 @@ export default function InvitationStrip({
             {parsedSponsors.length > 0 && (
               <div>
                 <SectionLabel s={s}>Padrinos</SectionLabel>
-                <div className="mt-6 space-y-2">
+                <div className="mt-2 space-y-1">
                   {parsedSponsors.map((name, i) => (
-                    <p key={i} className="font-cormorant text-xl leading-snug" style={{ color: s.text }}>
+                    <p key={i} className="font-cormorant text-4xl leading-snug" style={{ color: s.text }}>
                       {name}
                     </p>
                   ))}
@@ -1184,7 +1188,7 @@ export default function InvitationStrip({
               <SectionLabel s={s}>Mesa de regalos</SectionLabel>
               <div className="h-px w-6 mx-auto my-3" style={{ background: s.divider }} />
               <p
-                className="font-cormorant text-lg leading-relaxed whitespace-pre-line"
+                className="font-cormorant text-3xl leading-snug whitespace-pre-line"
                 style={{ color: s.text }}
               >
                 {giftsInfo}
@@ -1199,21 +1203,21 @@ export default function InvitationStrip({
         <FadeIn>
           <section className={`${SECTION} text-center`}>
             <SectionLabel s={s}>Comparte tu experiencia</SectionLabel>
-            <div className="mt-7 flex flex-col items-center gap-3">
+            <div className="mt-3 flex flex-col items-center gap-2">
               {instagramHandle && (
                 <a
                   href={`https://instagram.com/${instagramHandle.replace(/^@/, '')}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 text-base font-dm transition-opacity hover:opacity-65"
+                  className="inline-flex items-center gap-2 text-3xl font-dm transition-opacity hover:opacity-65"
                   style={{ color: s.accent }}
                 >
-                  <Instagram size={17} />
+                  <Instagram size={28} />
                   {instagramHandle.startsWith('@') ? instagramHandle : `@${instagramHandle}`}
                 </a>
               )}
               {hashtag && (
-                <p className="text-sm font-dm" style={{ color: s.textMuted }}>
+                <p className="text-2xl font-dm" style={{ color: s.textMuted }}>
                   {hashtag}
                 </p>
               )}
@@ -1227,7 +1231,7 @@ export default function InvitationStrip({
         <FadeIn>
           <section className={`${SECTION} text-center`}>
             <SectionLabel s={s}>{rsvpLabel}</SectionLabel>
-            <p className="font-cormorant text-xl mt-3 mb-8" style={{ color: s.text }}>
+            <p className="font-cormorant text-4xl mt-1 mb-3" style={{ color: s.text }}>
               {rsvpValue}
             </p>
             <a
@@ -1258,15 +1262,15 @@ export default function InvitationStrip({
             >
               <SectionLabel s={s}>Esta invitación es para ti</SectionLabel>
               <p
-                className="font-cormorant italic mt-3 mb-1"
-                style={{ fontSize: '1.1rem', color: s.textMuted }}
+                className="font-cormorant italic mt-2 mb-0.5"
+                style={{ fontSize: '2.2rem', color: s.textMuted }}
               >
                 {invitation.guestGreeting || 'Con mucho cariño te invitamos'},
               </p>
               <p
-                className={`font-cormorant leading-snug mt-2${hasFoil ? ' inv-foil-text' : ''}`}
+                className={`font-cormorant leading-snug mt-1${hasFoil ? ' inv-foil-text' : ''}`}
                 style={{
-                  fontSize: `clamp(${(2.2 * fontScale).toFixed(2)}rem, ${9 * fontScale}vw, ${(3 * fontScale).toFixed(2)}rem)`,
+                  fontSize: `clamp(${(4.4 * fontScale).toFixed(2)}rem, ${18 * fontScale}vw, ${(6 * fontScale).toFixed(2)}rem)`,
                   ...(hasFoil ? { background: foilGradient } : { color: s.accent, ...embossText }),
                 }}
               >
@@ -1278,7 +1282,7 @@ export default function InvitationStrip({
                     <Ornament s={s} />
                   </div>
                   <p
-                    className="text-base font-cormorant italic leading-relaxed"
+                    className="text-3xl font-cormorant italic leading-snug"
                     style={{ color: s.text, opacity: 0.82 }}
                   >
                     {guestMessage}

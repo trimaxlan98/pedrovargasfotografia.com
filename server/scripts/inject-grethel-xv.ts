@@ -24,20 +24,20 @@ const DRY_RUN = process.argv.includes('--dry-run')
 // CONFIGURACIÓN DEL EVENTO
 // ═══════════════════════════════════════════════════════════════════════════
 const CONFIG = {
-  clientName:     'Grethel Huerta',
+  clientName:     'Gretthel Huerta',
   clientEmail:    'grethel.huerta@gmail.com',
   clientPhone:    '527681000000',
   clientPassword: 'Grethel2026!',
 
-  title:          'XV Años de Grethel',
-  names:          'Grethel',
+  title:          'XV Años de Gretthel',
+  names:          'Gretthel',
   eventType:      'XV Años',
   eventDate:      '2026-05-02',
   eventTime:      '18:00 hrs',
   template:       'floral',
   quote:          '"Hoy comienzan los mejores años de mi vida"',
   dressCode:      'Formal',
-  hashtag:        '#XVGrethel',
+  hashtag:        '#XVGretthel',
 
   parentsInfo:    'Ramón Rojas González;Grissel Huerta Méndez',
   sponsorsInfo:   'Rogelio Huerta Méndez;Erika Michel Zepeda Vicencio',
@@ -46,24 +46,28 @@ const CONFIG = {
   rsvpValue:      '527681000000',
   rsvpDeadline:   '2026-04-14',
 
-  ceremonyVenue:    'Hotel Royal Garden',
-  ceremonyAddress:  'Hotel Royal Garden',
+  ceremonyVenue:    'Parroquia de Coatzacoalcos',
+  ceremonyAddress:  'Coatzacoalcos, Veracruz',
   ceremonyTime:     '18:00 hrs',
   ceremonyMapUrl:   '',
 
-  receptionVenue:   'Hotel Royal Garden',
-  receptionAddress: 'Hotel Royal Garden',
+  receptionVenue:   'Grand Hotel Duval Coatzacoalcos',
+  receptionAddress: 'Grand Hotel Duval, Coatzacoalcos, Veracruz',
   receptionTime:    '19:00 hrs',
   receptionMapUrl:  '',
 
   giftsInfo:        'Lluvia de sobres',
   guestGreeting:    'Con mucho cariño te invitamos',
 
+  message:          'Con la ilusión de ayer, la fuerza de hoy y la esperanza del mañana, doy gracias a Dios por permitirme llegar a mis 15. Acompáñame en esta noche mágica.',
+  instagramHandle:  '@gretthel_xv',
+
   // Tipografía: familia-tamaño
   // Familias: cormorant | playfair | lora | greatvibes | dm | montserrat | raleway | josefin
   // Tamaños:  sm | md | lg
   fontStyle:        'greatvibes-xl',
 } as const
+
 
 // ═══════════════════════════════════════════════════════════════════════════
 // LISTA DE INVITADOS (embebida — sin CSV)
@@ -335,9 +339,11 @@ async function createMasterInvitation(clientId: string, dryRun: boolean): Promis
       eventTime:        CONFIG.eventTime      || null,
       template:         CONFIG.template,
       fontStyle:        CONFIG.fontStyle,
+      message:          CONFIG.message         || null,
       quote:            CONFIG.quote          || null,
       dressCode:        CONFIG.dressCode      || null,
       hashtag:          CONFIG.hashtag        || null,
+      instagramHandle:  CONFIG.instagramHandle || null,
       parentsInfo:      toArr(CONFIG.parentsInfo),
       sponsorsInfo:     toArr(CONFIG.sponsorsInfo),
       giftsInfo:        CONFIG.giftsInfo      || null,
@@ -401,7 +407,7 @@ async function injectGuests(invitationId: string, dryRun: boolean) {
 
 async function main() {
   console.log('═'.repeat(60))
-  console.log('  XV Años Grethel — Inyección de invitaciones')
+  console.log('  XV Años Gretthel — Inyección de invitaciones')
   if (DRY_RUN) console.log('  🔍 MODO DRY-RUN — sin cambios en la BD')
   console.log('═'.repeat(60))
   console.log(`\n📋 Invitados embebidos: ${GUESTS.length}`)

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { CheckCircle, ChevronLeft, ChevronRight, Eye, Copy, Check, Trash2, Plus, RefreshCw, Upload, Type, Sparkles } from 'lucide-react'
 import api from '../../api/client'
@@ -479,21 +479,49 @@ export default function InvitationWizard({
   const [showFontWizard, setShowFontWizard] = useState(false)
   const [showStickerWizard, setShowStickerWizard] = useState(false)
   const [selectedStickerId, setSelectedStickerId] = useState<string | null>(null)
+  const stepBodyRef = useRef<HTMLDivElement>(null)
   const stickerPreviewRef = useRef<HTMLDivElement>(null)
+  const stickerInnerPreviewRef = useRef<HTMLDivElement>(null)
 
   // Estado para el panel de stickers
   const [stickerUploadLoading, setStickerUploadLoading] = useState(false)
   const [stickerUploadError, setStickerUploadError] = useState('')
   const stickerIdCounter = useRef(0)
+  const [stickerHistory, setStickerHistory] = useState<StickerLayer[][]>([])
+  const stickerBeforeDrag = useRef<StickerLayer[] | null>(null)
+
+  const pushStickerHistory = (layers: StickerLayer[]) =>
+    setStickerHistory(h => [...h.slice(-29), layers.map(l => ({ ...l }))])
+
+  const undoSticker = useCallback(() => {
+    setStickerHistory(h => {
+      if (h.length === 0) return h
+      const prev = h[h.length - 1]
+      setDraft(d => ({ ...d, stickerLayers: prev }))
+      return h.slice(0, -1)
+    })
+  }, [])
+
+  // Ctrl+Z / Cmd+Z mientras el wizard de stickers está abierto
+  useEffect(() => {
+    if (!showStickerWizard) return
+    const handler = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z') { e.preventDefault(); undoSticker() }
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [showStickerWizard, undoSticker])
 
   const addSticker = (src: string) => {
     const id = `sticker-${Date.now()}-${++stickerIdCounter.current}`
-    const newSticker: StickerLayer = { id, src, x: 50, y: 50, w: 35, rotation: 0, zIndex: stickerIdCounter.current }
+    const newSticker: StickerLayer = { id, src, x: 50, y: 50, w: 35, rotation: 0, zIndex: 15 }
+    pushStickerHistory(draft.stickerLayers)
     setDraft(p => ({ ...p, stickerLayers: [...p.stickerLayers, newSticker] }))
     setSelectedStickerId(id)
   }
 
   const removeSticker = (id: string) => {
+    pushStickerHistory(draft.stickerLayers)
     setDraft(p => ({ ...p, stickerLayers: p.stickerLayers.filter(s => s.id !== id) }))
   }
 
@@ -504,14 +532,40 @@ export default function InvitationWizard({
     }))
   }
 
+  // Para sliders: capturar estado antes de empezar a arrastrar
+  const handleSliderMouseDown = () => {
+    stickerBeforeDrag.current = draft.stickerLayers.map(l => ({ ...l }))
+  }
+  const handleSliderMouseUp = () => {
+    if (stickerBeforeDrag.current) {
+      setStickerHistory(h => [...h.slice(-29), stickerBeforeDrag.current!])
+      stickerBeforeDrag.current = null
+    }
+  }
+
+  // Para botones +/- de precisión: empuja historial en cada clic
+  const stepSticker = (id: string, key: 'x' | 'y' | 'w' | 'rotation', delta: number, min: number, max: number) => {
+    pushStickerHistory(draft.stickerLayers)
+    setDraft(p => ({
+      ...p,
+      stickerLayers: p.stickerLayers.map(s =>
+        s.id === id ? { ...s, [key]: Math.max(min, Math.min(max, (s[key] as number) + delta)) } : s
+      ),
+    }))
+  }
+
   const handlePreviewClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!selectedStickerId) return
-    const el = stickerPreviewRef.current
-    if (!el) return
-    const rect = el.getBoundingClientRect()
+    const inner = stickerInnerPreviewRef.current
+    if (!inner) return
+    const rect = inner.getBoundingClientRect()
     const w = rect.width
+    if (w === 0) return
+    // getBoundingClientRect() already accounts for scroll inside the parent,
+    // so we do NOT add scrollTop — doing so would double-count the offset.
     const x = Math.max(0, Math.min(100, Math.round(((e.clientX - rect.left) / w) * 100)))
-    const y = Math.max(0, Math.round(((e.clientY - rect.top + el.scrollTop) / w) * 100))
+    const y = Math.max(0, Math.round(((e.clientY - rect.top) / w) * 100))
+    pushStickerHistory(draft.stickerLayers)
     updateSticker(selectedStickerId, { x, y })
   }
 
@@ -572,8 +626,8 @@ export default function InvitationWizard({
   const setDataAndTop = (df: keyof InvitationDraft['data'], tf: keyof InvitationDraft) => (v: string) =>
     setDraft(p => ({ ...p, [tf]: v as never, data: { ...p.data, [df]: v } }))
 
-  const next = () => setStep(s => Math.min(s + 1, activeSteps.length - 1))
-  const prev = () => setStep(s => Math.max(s - 1, 0))
+  const next = () => { setStep(s => Math.min(s + 1, activeSteps.length - 1)); stepBodyRef.current?.scrollTo({ top: 0 }) }
+  const prev = () => { setStep(s => Math.max(s - 1, 0)); stepBodyRef.current?.scrollTo({ top: 0 }) }
 
   // Manage preview URLs for 'new' custom pages — revoke on change/unmount
   useEffect(() => {
@@ -859,7 +913,7 @@ export default function InvitationWizard({
           {activeSteps.map((label, idx) => (
             <button
               key={label}
-              onClick={() => setStep(idx)}
+              onClick={() => { setStep(idx); stepBodyRef.current?.scrollTo({ top: 0 }) }}
               className={`flex-1 rounded-full text-[0.6rem] uppercase tracking-[0.2em] px-2 py-2 text-center transition-colors ${
                 idx === step
                   ? 'bg-gold/20 text-gold'
@@ -873,7 +927,7 @@ export default function InvitationWizard({
           ))}
         </div>
 
-        <div className="p-6 max-h-[68vh] overflow-y-auto space-y-1">
+        <div ref={stepBodyRef} className="p-6 max-h-[68vh] overflow-y-auto space-y-1">
           {step === typeStep && (
             <div className="space-y-5">
               <div>
@@ -1198,7 +1252,34 @@ export default function InvitationWizard({
               </div>
               <div>
                 <label className="block text-ivory/80 text-xs font-dm mb-1.5">Fecha</label>
-                <input value={draft.data.date} onChange={e => setDataAndTop('date', 'eventDate')(e.target.value)} className={ic} placeholder="12 junio 2026" />
+                <div className="flex gap-2 items-center">
+                  <input value={draft.data.date} onChange={e => setDataAndTop('date', 'eventDate')(e.target.value)} className={`${ic} flex-1`} placeholder="12 junio 2026" />
+                  {/* Hidden date picker triggered by the button */}
+                  <input
+                    id="inv-fecha-picker"
+                    type="date"
+                    tabIndex={-1}
+                    aria-hidden="true"
+                    style={{ position: 'fixed', opacity: 0, top: 0, left: 0, width: 1, height: 1 }}
+                    onChange={e => {
+                      if (!e.target.value) return
+                      const [y, m, d] = e.target.value.split('-').map(Number)
+                      const MONTHS = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre']
+                      setDataAndTop('date', 'eventDate')(`${d} de ${MONTHS[m - 1]} de ${y}`)
+                    }}
+                  />
+                  <button
+                    type="button"
+                    title="Abrir calendario"
+                    className="btn-outline px-3 py-2 text-sm flex-shrink-0"
+                    onClick={() => {
+                      const el = document.getElementById('inv-fecha-picker') as HTMLInputElement | null
+                      ;(el as any)?.showPicker?.()
+                    }}
+                  >
+                    📅
+                  </button>
+                </div>
               </div>
               <div>
                 <label className="block text-ivory/80 text-xs font-dm mb-1.5">Hora</label>
@@ -1655,7 +1736,7 @@ export default function InvitationWizard({
                 </div>
                 <div className="md:col-span-2">
                   <label className="block text-ivory/80 text-xs font-dm mb-1.5">Fecha limite para confirmar asistencia</label>
-                  <input type="datetime-local" value={draft.rsvpDeadline} onChange={e => setField('rsvpDeadline')(e.target.value)} className={ic} />
+                  <input type="datetime-local" value={draft.rsvpDeadline} onChange={e => setField('rsvpDeadline')(e.target.value)} className={ic} style={{ colorScheme: 'dark' }} />
                   <p className="text-ivory/30 text-xs mt-1">Opcional. Los invitados no podran responder despues de esta fecha.</p>
                 </div>
               </div>
@@ -1865,56 +1946,58 @@ export default function InvitationWizard({
             >✕</button>
           </div>
 
-          {/* Body: 3 columns */}
-          <div className="flex flex-1 overflow-hidden min-h-0">
-            {/* Col 1: Library */}
-            <div className="w-52 border-r border-white/5 flex-shrink-0 overflow-y-auto p-4 space-y-4">
-              <div>
-                <p className="text-ivory/60 text-xs font-dm mb-2">Biblioteca</p>
-                <div className="grid grid-cols-3 gap-1.5">
-                  {SYSTEM_STICKERS.map(s => (
-                    <button
-                      key={s.id}
-                      type="button"
-                      title={s.label}
-                      onClick={() => addSticker(s.src)}
-                      className="aspect-square rounded-lg border border-white/10 hover:border-gold/50 bg-white/5 p-1 transition-all active:scale-95 flex items-center justify-center"
-                    >
-                      <img src={s.src} alt={s.label} className="w-full h-full object-contain" />
-                    </button>
-                  ))}
+          {/* Body: 3 columns on desktop / stacked on mobile */}
+          <div className="flex flex-col md:flex-row flex-1 overflow-hidden min-h-0">
+            {/* Col 1: Library — horizontal strip on mobile, sidebar on desktop */}
+            <div className="md:w-52 border-b md:border-b-0 md:border-r border-white/5 flex-shrink-0 overflow-x-auto md:overflow-x-hidden md:overflow-y-auto p-3 md:p-4">
+              <div className="flex md:block gap-3 md:space-y-4 items-start min-w-max md:min-w-0">
+                <div className="flex-shrink-0">
+                  <p className="text-ivory/60 text-xs font-dm mb-2 hidden md:block">Biblioteca</p>
+                  <div className="flex md:grid md:grid-cols-3 gap-1.5">
+                    {SYSTEM_STICKERS.map(s => (
+                      <button
+                        key={s.id}
+                        type="button"
+                        title={s.label}
+                        onClick={() => addSticker(s.src)}
+                        className="w-10 h-10 md:aspect-square flex-shrink-0 rounded-lg border border-white/10 hover:border-gold/50 bg-white/5 p-1 transition-all active:scale-95 flex items-center justify-center"
+                      >
+                        <img src={s.src} alt={s.label} className="w-full h-full object-contain" />
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
-              <div>
-                <p className="text-ivory/60 text-xs font-dm mb-2">Subir PNG propio</p>
-                <label className={`cursor-pointer flex items-center gap-2 px-3 py-2 rounded-lg border border-white/10 hover:border-gold/30 bg-white/5 text-ivory/60 text-xs font-dm transition-all ${stickerUploadLoading ? 'opacity-60 cursor-not-allowed' : ''}`}>
-                  <Upload size={11} />
-                  {stickerUploadLoading ? 'Subiendo...' : 'Seleccionar'}
-                  <input type="file" accept="image/png" className="hidden" disabled={stickerUploadLoading} onChange={handleStickerUpload} />
-                </label>
-                {stickerUploadError && <p className="text-red-400 text-[0.6rem] mt-1">{stickerUploadError}</p>}
+                <div className="flex-shrink-0">
+                  <p className="text-ivory/60 text-xs font-dm mb-2 hidden md:block">Subir PNG propio</p>
+                  <label className={`cursor-pointer flex items-center gap-2 px-3 py-2 rounded-lg border border-white/10 hover:border-gold/30 bg-white/5 text-ivory/60 text-xs font-dm transition-all ${stickerUploadLoading ? 'opacity-60 cursor-not-allowed' : ''}`}>
+                    <Upload size={11} />
+                    {stickerUploadLoading ? '...' : 'Subir'}
+                    <input type="file" accept="image/png" className="hidden" disabled={stickerUploadLoading} onChange={handleStickerUpload} />
+                  </label>
+                  {stickerUploadError && <p className="text-red-400 text-[0.6rem] mt-1">{stickerUploadError}</p>}
+                </div>
               </div>
             </div>
 
             {/* Col 2: Preview clickeable */}
             <div
               ref={stickerPreviewRef}
-              className={`flex-1 overflow-y-auto min-w-0 relative ${selectedStickerId ? 'cursor-crosshair' : 'cursor-default'}`}
+              className={`flex-1 overflow-y-auto min-w-0 min-h-0 relative ${selectedStickerId ? 'cursor-crosshair' : 'cursor-default'}`}
               onClick={handlePreviewClick}
             >
               <div className="sticky top-0 z-10 border-b border-white/5 px-4 py-2 text-center backdrop-blur-sm" style={{ background: selectedStickerId ? 'rgba(201,169,110,0.12)' : 'rgba(255,255,255,0.04)' }}>
                 {selectedStickerId
-                  ? <span className="text-gold text-xs font-dm">☝ Haz clic en la invitación para posicionar el sticker seleccionado</span>
-                  : <span className="text-ivory/40 text-xs font-dm">Selecciona un sticker de la lista para editar · luego clic aquí para posicionarlo</span>
+                  ? <span className="text-gold text-xs font-dm">☝ Toca la invitación para posicionar · Ctrl+Z para deshacer</span>
+                  : <span className="text-ivory/40 text-xs font-dm">Selecciona un sticker de la lista para editar · luego toca aquí para posicionarlo</span>
                 }
               </div>
-              <div className="max-w-sm mx-auto">
+              <div ref={stickerInnerPreviewRef} className="max-w-[520px] mx-auto">
                 <InvitationStrip invitation={draftToPreviewInvitation(draft)} shareUrl="" />
               </div>
             </div>
 
-            {/* Col 3: Placed stickers */}
-            <div className="w-64 border-l border-white/5 flex-shrink-0 overflow-y-auto p-4">
+            {/* Col 3: Placed stickers — bottom panel on mobile, sidebar on desktop */}
+            <div className="md:w-64 border-t md:border-t-0 md:border-l border-white/5 flex-shrink-0 overflow-y-auto p-4 max-md:max-h-56">
               <p className="text-ivory/60 text-xs font-dm mb-3">
                 Stickers colocados{draft.stickerLayers.length > 0 ? ` (${draft.stickerLayers.length})` : ''}
               </p>
@@ -1957,25 +2040,66 @@ export default function InvitationWizard({
 
                       {selectedStickerId === sticker.id && (
                         <div className="space-y-2 mt-2 pt-2 border-t border-white/10" onClick={e => e.stopPropagation()}>
+                          {/* Alineación horizontal rápida */}
+                          <div>
+                            <p className="text-ivory/40 text-[0.58rem] font-dm mb-1">Alineación horizontal</p>
+                            <div className="flex gap-1">
+                              {([['Izq', 10], ['Centro', 50], ['Der', 88]] as const).map(([lbl, val]) => (
+                                <button key={lbl} type="button"
+                                  onClick={() => { pushStickerHistory(draft.stickerLayers); updateSticker(sticker.id, { x: val }) }}
+                                  className="flex-1 text-[0.58rem] font-dm py-1 rounded border border-white/10 hover:border-gold/50 text-ivory/60 hover:text-gold transition-colors"
+                                >{lbl}</button>
+                              ))}
+                            </div>
+                          </div>
+                          {/* Capa (z-index) — hero text is z-10 so 15=front, 5=behind */}
+                          <div>
+                            <p className="text-ivory/40 text-[0.58rem] font-dm mb-1">Capa</p>
+                            <div className="flex gap-1">
+                              <button type="button"
+                                onClick={() => { pushStickerHistory(draft.stickerLayers); updateSticker(sticker.id, { zIndex: 15 }) }}
+                                className="flex-1 text-[0.58rem] font-dm py-1 rounded border border-white/10 hover:border-gold/50 text-ivory/60 hover:text-gold transition-colors"
+                              >↑ Frente del texto</button>
+                              <button type="button"
+                                onClick={() => { pushStickerHistory(draft.stickerLayers); updateSticker(sticker.id, { zIndex: 5 }) }}
+                                className="flex-1 text-[0.58rem] font-dm py-1 rounded border border-white/10 hover:border-gold/50 text-ivory/60 hover:text-gold transition-colors"
+                              >↓ Atrás del texto</button>
+                            </div>
+                          </div>
+                          {/* Sliders con flechas de precisión */}
                           {([
-                            { key: 'x',        label: 'X',        min: 0,    max: 100,  unit: '%' },
-                            { key: 'y',        label: 'Y',        min: 0,    max: 800,  unit: ''  },
-                            { key: 'w',        label: 'Tamaño',   min: 5,    max: 90,   unit: '%' },
-                            { key: 'rotation', label: 'Rotación', min: -180, max: 180,  unit: '°' },
+                            { key: 'x',        label: 'X',        min: 0,    max: 100,  unit: '%', step: 1  },
+                            { key: 'y',        label: 'Y',        min: 0,    max: 800,  unit: '',  step: 2  },
+                            { key: 'w',        label: 'Tamaño',   min: 5,    max: 90,   unit: '%', step: 1  },
+                            { key: 'rotation', label: 'Rotación', min: -180, max: 180,  unit: '°', step: 1  },
                           ] as const).map(ctrl => (
                             <div key={ctrl.key}>
                               <div className="flex justify-between mb-0.5">
                                 <p className="text-ivory/40 text-[0.58rem] font-dm">{ctrl.label}</p>
                                 <span className="text-gold/60 text-[0.58rem] font-dm">{sticker[ctrl.key]}{ctrl.unit}</span>
                               </div>
-                              <input
-                                type="range"
-                                min={ctrl.min}
-                                max={ctrl.max}
-                                value={sticker[ctrl.key]}
-                                onChange={e => updateSticker(sticker.id, { [ctrl.key]: Number(e.target.value) })}
-                                className="w-full h-1.5 accent-gold"
-                              />
+                              <div className="flex items-center gap-1">
+                                <button type="button"
+                                  onMouseDown={e => { e.stopPropagation(); stepSticker(sticker.id, ctrl.key, -ctrl.step, ctrl.min, ctrl.max) }}
+                                  className="w-5 h-5 flex-shrink-0 rounded bg-white/8 hover:bg-gold/20 text-ivory/60 hover:text-gold text-xs leading-none flex items-center justify-center transition-colors select-none"
+                                >‹</button>
+                                <input
+                                  type="range"
+                                  min={ctrl.min}
+                                  max={ctrl.max}
+                                  value={sticker[ctrl.key]}
+                                  onMouseDown={handleSliderMouseDown}
+                                  onMouseUp={handleSliderMouseUp}
+                                  onTouchStart={handleSliderMouseDown}
+                                  onTouchEnd={handleSliderMouseUp}
+                                  onChange={e => updateSticker(sticker.id, { [ctrl.key]: Number(e.target.value) })}
+                                  className="flex-1 h-1.5 accent-gold"
+                                />
+                                <button type="button"
+                                  onMouseDown={e => { e.stopPropagation(); stepSticker(sticker.id, ctrl.key, ctrl.step, ctrl.min, ctrl.max) }}
+                                  className="w-5 h-5 flex-shrink-0 rounded bg-white/8 hover:bg-gold/20 text-ivory/60 hover:text-gold text-xs leading-none flex items-center justify-center transition-colors select-none"
+                                >›</button>
+                              </div>
                             </div>
                           ))}
                         </div>
@@ -1989,11 +2113,19 @@ export default function InvitationWizard({
 
           {/* Footer */}
           <div className="px-6 py-4 border-t border-white/5 flex justify-between items-center flex-shrink-0">
-            <p className="text-ivory/30 text-xs font-dm">
-              {selectedStickerId
-                ? 'Sticker seleccionado — clic en la preview para posicionar, usa sliders para ajustar'
-                : 'Selecciona un sticker de la lista para editar su posición y tamaño'}
-            </p>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={undoSticker}
+                disabled={stickerHistory.length === 0}
+                className="px-3 py-1.5 rounded-lg border border-white/10 text-ivory/50 hover:text-ivory hover:border-white/25 disabled:opacity-30 disabled:cursor-not-allowed text-xs font-dm transition-colors"
+              >
+                ↩ Deshacer <span className="text-ivory/30 text-[0.6rem]">(Ctrl+Z)</span>
+              </button>
+              <p className="text-ivory/30 text-xs font-dm hidden sm:block">
+                {selectedStickerId ? 'Clic en la preview para posicionar' : 'Selecciona un sticker para editar'}
+              </p>
+            </div>
             <button
               onClick={() => { setShowStickerWizard(false); setSelectedStickerId(null) }}
               className="btn-primary px-8 py-2 text-xs"
