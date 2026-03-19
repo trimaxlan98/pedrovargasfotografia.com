@@ -46,7 +46,16 @@
       "WebFetch(domain:pedrovargasfotografia.com)",
       "Bash(find C:\\\\\\\\Users\\\\\\\\GIRTEC\\\\\\\\Documents\\\\\\\\GitHub\\\\\\\\pedrovargasfotografia.com\\\\\\\\src -name \"*routes*\" -o -name \"*router*\" -o -name \"*invitation*\" 2>/dev/null | head -20)",
       "Bash(find \"C:\\\\Users\\\\GIRTEC\\\\Documents\\\\GitHub\\\\pedrovargasfotografia.com\" -name \"adminController.ts\" -o -name \"*adminController*\" 2>/dev/null | head -20)",
-      "Bash(python3 -c \"import json; json.load\\(open\\('/mnt/c/Users/ADMIN/Documents/GitHub/pedrovargasfotografia.com/.claude/settings.local.json'\\)\\); print\\('JSON válido'\\)\")"
+      "Bash(python3 -c \"import json; json.load\\(open\\('/mnt/c/Users/ADMIN/Documents/GitHub/pedrovargasfotografia.com/.claude/settings.local.json'\\)\\); print\\('JSON válido'\\)\")",
+      "Bash(grep:*)",
+      "Bash(node:*)",
+      "Bash(npx vite:*)",
+      "Bash(find C:UsersGIRTECDocumentsGitHubpedrovargasfotografia.com -name *.tsx -not -path */node_modules/*)",
+      "Bash(ls:*)",
+      "Bash(unzip:*)",
+      "Bash(cd:*)",
+      "Bash(python3 -c \"import os; files=[f for f in os.listdir\\(''.''\\) if f.endswith\\(''.pdf''\\)]; print\\(repr\\(files[0]\\)\\); import shutil; shutil.copy\\(files[0], ''boceto.pdf''\\); print\\(''copied''\\)\")",
+      "Bash(find /c/Users/GIRTEC/Documents/GitHub/pedrovargasfotografia.com/server -name invitation*)"
     ]
   }
 }

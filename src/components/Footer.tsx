@@ -86,7 +86,7 @@ export default function Footer() {
             Fotografía Profesional · Ciudad de México
           </p>
           <div className="flex items-center gap-3">
-            <span className="label-caps text-[#888888] dark:text-[#6E6E6E] text-[0.55rem]">v1.1.3.1</span>
+            <span className="label-caps text-[#888888] dark:text-[#6E6E6E] text-[0.55rem]">v1.1.3.3</span>
             <a
               href="https://codeaerospace.com/"
               target="_blank"

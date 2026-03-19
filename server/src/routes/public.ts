@@ -14,6 +14,16 @@ function parseGallery(raw?: string | null): string[] {
   }
 }
 
+function parseStickerLayers(raw?: string | null): unknown[] {
+  if (!raw) return []
+  try {
+    const parsed = JSON.parse(raw)
+    return Array.isArray(parsed) ? parsed : []
+  } catch {
+    return []
+  }
+}
+
 // GET /api/public/portfolio
 router.get('/portfolio', async (req, res) => {
   const { category, featured } = req.query
@@ -79,7 +89,7 @@ router.get('/guest/:guestToken', async (req, res) => {
       tableNumber: guest.tableNumber,
       createdAt: guest.createdAt,
     },
-    invitation: { ...invitation, gallery: parseGallery(invitation.gallery) },
+    invitation: { ...invitation, gallery: parseGallery(invitation.gallery), customTemplatePages: parseGallery(invitation.customTemplatePages), stickerLayers: parseStickerLayers(invitation.stickerLayers) },
   })
 })
 
@@ -130,7 +140,7 @@ router.get('/invitation/:token', async (req, res) => {
     where: { id: invitation.id },
     data: { views: { increment: 1 } },
   })
-  R.success(res, { ...invitation, gallery: parseGallery(invitation.gallery) })
+  R.success(res, { ...invitation, gallery: parseGallery(invitation.gallery), customTemplatePages: parseGallery(invitation.customTemplatePages), stickerLayers: parseStickerLayers(invitation.stickerLayers) })
 })
 
 export default router

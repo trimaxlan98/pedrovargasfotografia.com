@@ -1,6 +1,6 @@
 {
   "name": "pedro-vargas-fotografia-api",
-  "version": "1.1.2.9",
+  "version": "1.1.3.3",
   "description": "Backend API para Pedro Vargas Fotografía",
   "main": "dist/server.js",
   "type": "commonjs",

@@ -18,11 +18,22 @@ function parseGallery(raw?: string | null): string[] {
   }
 }
 
+function parseStickerLayers(raw?: string | null): any[] {
+  if (!raw) return []
+  try {
+    const parsed = JSON.parse(raw)
+    return Array.isArray(parsed) ? parsed : []
+  } catch {
+    return []
+  }
+}
+
 function normalizeInvitation(invitation: any) {
   return {
     ...invitation,
     gallery: parseGallery(invitation.gallery),
     customTemplatePages: parseGallery(invitation.customTemplatePages),
+    stickerLayers: parseStickerLayers(invitation.stickerLayers),
   }
 }
 
@@ -219,6 +230,7 @@ export async function createInvitation(req: AuthRequest, res: Response): Promise
     ceremonyVenue, ceremonyAddress, ceremonyTime, ceremonyPhoto, ceremonyMapUrl,
     receptionVenue, receptionAddress, receptionTime, receptionPhoto, receptionMapUrl,
     parentsInfo, sponsorsInfo, giftsInfo, instagramHandle, enableTableNumber, backgroundMusic,
+    stickerLayers,
   } = req.body
 
   const shareToken = uuidv4()
@@ -250,6 +262,7 @@ export async function createInvitation(req: AuthRequest, res: Response): Promise
       parentsInfo, sponsorsInfo, giftsInfo, instagramHandle,
       enableTableNumber: enableTableNumber === true,
       backgroundMusic: backgroundMusic || null,
+      stickerLayers: stickerLayers ? JSON.stringify(stickerLayers) : null,
     },
   })
   const invUser = await prisma.user.findUnique({ where: { id: req.user!.userId }, select: { name: true, email: true } })
@@ -280,6 +293,7 @@ export async function updateInvitation(req: AuthRequest, res: Response): Promise
     ceremonyVenue, ceremonyAddress, ceremonyTime, ceremonyPhoto, ceremonyMapUrl,
     receptionVenue, receptionAddress, receptionTime, receptionPhoto, receptionMapUrl,
     parentsInfo, sponsorsInfo, giftsInfo, instagramHandle, enableTableNumber, backgroundMusic, customTemplate,
+    stickerLayers,
   } = req.body
 
   // rsvpContact is a legacy alias — null must be allowed to clear the field
@@ -305,6 +319,10 @@ export async function updateInvitation(req: AuthRequest, res: Response): Promise
 
   if (customTemplate !== undefined) {
     payload.customTemplate = customTemplate || null
+  }
+
+  if (stickerLayers !== undefined) {
+    payload.stickerLayers = stickerLayers ? JSON.stringify(stickerLayers) : null
   }
 
   if (gallery !== undefined) {
@@ -599,6 +617,13 @@ export async function uploadCustomTemplatePages(req: AuthRequest, res: Response)
     },
   })
   R.success(res, normalizeInvitation(updated), 'Páginas de plantilla actualizadas')
+}
+
+export async function uploadCustomSticker(req: AuthRequest, res: Response): Promise<void> {
+  const file = req.file as Express.Multer.File | undefined
+  if (!file) { R.badRequest(res, 'Se requiere una imagen PNG'); return }
+  const url = `/uploads/${file.filename}`
+  R.success(res, { url }, 'Sticker subido correctamente')
 }
 
 export async function archiveInvitation(req: AuthRequest, res: Response): Promise<void> {
